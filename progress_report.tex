@@ -50,6 +50,20 @@
 
 % Describe the CAD design decisions, iterations, and remaining work.
 
+The outer mechanical design is based on the SMORES-EP modular robot developed by the ModLab at the University of Pennsylvania \cite{smores_ep}. The original SMORES-EP module is approximately \(80\) mm in size. For our prototype, the main dimensions were adapted to \(100\) mm to provide more space for the required mechanical and electronic components.
+
+\subsection{Outer Wheels}
+
+Two independently driven outer wheels were designed based on the differential-drive arrangement of SMORES-EP. Each wheel has a diameter of \(100\) mm and includes a groove for an NBR N70 O-ring with a cross-section of approximately \(1.5\) mm, which is used as the rubber tire. Space for the EP-magnet docking mechanism is also provided in the wheel. Mounting posts were added to provide a mounting location for the PCB that will generate the electrical pulse for switching the EP-magnet coil.
+
+\subsection{Pan Face}
+
+The pan face was designed based on the SMORES-EP pan mechanism. It has a diameter of \(90\) mm and does not include the O-ring groove used on the driving wheels. Space for the EP-magnet docking mechanism is included in the face.
+
+\subsection{Tilt Face}
+
+The tilt face was adapted from the SMORES-EP tilt mechanism. The outer rectangular part has dimensions of approximately \(90 \times 71.6\) mm and includes space for the EP-magnet docking mechanism. An additional motor mount was added to accommodate the motor used in our prototype.
+
 \section{Electronics: Project Plan and Current State}
 \label{sec:electronics}
 % Natttt
@@ -63,82 +77,28 @@
 
 % Record the preparation required for the magnet stage, including parts,
 % design changes, risks, and outstanding actions.
+The magnetic docking system is based on the Electro-Permanent Magnet EPM connector developed for SMORES-EP \cite{ep_face}. The original SMORES-EP module has a characteristic length of approximately \(80\) mm, and its EP-Face uses four EP magnets arranged in a ring on the connecting face. Each EP magnet consists of an AlNiCo 5 cylindrical magnet and an NdFeB magnet placed side by side, two low-carbon steel pole pieces, and a copper coil wound around the magnetic assembly. The original EP-Face uses magnet cylinders \(4.76\) mm in diameter and \(9.53\) mm in length, with the four-magnet arrangement fitting within a \(42\) mm diameter circular region. The magnets protrude approximately \(0.5\) mm from the connecting face. The copper coil uses 30 AWG wire with 200 turns \cite{ep_face}. For our \(100\) mm prototype, this arrangement and its associated dimensions serve as the design reference and are being adapted to fit our larger face and mechanical structure.
 
-\section{Software Testing Plan for Phase A}
-\label{sec:software-testing}
-This section describes the testing plan for evaluating the software system during Phase A. The objective is to verify that the software system can reliably detect and identify the robot ID from AprilTags using an external camera and image processing techniques. The detected information will be used to correct the robot's position and orientation in real time, enabling effective navigation within the environment. In addition, the software system will control the robot's actuators and sensors to ensure that the robot performs its intended functions accurately and efficiently using PID control. The system will also be tested for its ability to plan and execute paths for the MSRR configuration of the robot.
+The operating principle relies on the contrasting magnetic properties of \textbf{AlNiCo 5} and \textbf{NdFeB}. AlNiCo 5 has relatively low coercivity, meaning its magnetization direction can be reversed by an external magnetic field. NdFeB, in contrast, has high coercivity and retains its magnetization under the same field pulse. This difference allows the two magnets to work together as a switchable permanent-magnet system.
 
-	\subsection{Testing Objectives}
-	The main objectives of the software testing are:
-		\begin{itemize}
-		\item Verify that the software system can accurately detect and identify the robot ID from AprilTags using an external camera and image processing techniques.
-		\item Verify that the software system can use the detected AprilTag information to estimate and correct the robot's position and orientation in real time.
-		\item Verify that the software system can control the robot's actuators and sensors accurately and efficiently using PID control.
-		\item Verify that the software system can reliably plan and execute paths for the MSRR configuration of the robot.
-		\item Evaluate the overall integration between perception, localization, control, and path planning components.
-		\end{itemize}
+A short electrical pulse is sent through the \textbf{copper coil}, generating a magnetic field around the magnet assembly. This pulse reverses the magnetization direction of the AlNiCo 5 while the NdFeB remains magnetized in its original direction. When the two magnetic fields are aligned, they reinforce each other and the resulting magnetic flux is guided through the \textbf{steel pole pieces} toward the connecting face. This produces the \textbf{ON state}, generating an attractive force with a mating EP connector.
 
-	\subsection{Testing Setup}
-	The software will be tested using the MSRR robot in a controlled indoor environment. An external camera will be positioned to provide a view of the robot and the AprilTags placed within the testing area. The camera image will be processed by the perception system to detect the AprilTags and obtain the corresponding robot ID and pose information.
-	The detected pose information will be transmitted to the robot control system and used to estimate the robot's position and orientation. The robot will then use this information for localization, path planning, and motion control. The actuators will be controlled using PID controllers to achieve the desired wheel velocities and robot motion.
-	The testing setup will include:
-		\begin{itemize}
-		\item MSRR robot equipped with the required actuators and onboard sensors.
-		\item External camera for AprilTag detection and robot localization.
-		\item AprilTags with unique IDs for identifying the robot and reference locations.
-		\item Computing system for image processing, localization, path planning, and control.
-		\item Controlled testing area with predefined waypoints and paths.
-		\end{itemize}
+When a pulse is applied in the opposite direction, the AlNiCo 5 magnetization reverses while the NdFeB remains unchanged. The two magnetic fields then oppose each other, reducing the magnetic flux reaching the connecting face. This produces the \textbf{OFF state}, allowing the modules to separate. Since the magnetic state remains after the pulse, continuous power is not required to maintain the ON or OFF state.
 
-	\subsection{Goal Configurations}
-	The software testing plan will evaluate the following robot configurations:
+The original EP-Face uses AlNiCo 5, NdFeB, ASTM 1018 low-carbon steel pole pieces, and a copper coil with 30 AWG wire and 200 turns. For our prototype, the selected materials are:
 
-	\begin{table}[htbp]
-		\centering
-		\caption{Goal configurations for Phase A testing}
-		\label{tab:goal-configurations}
-		\begin{tabular}{|l|}
-		\hline
-		\textbf{Configuration} \\ \hline
-		Snake \\ \hline
-		StairClimber \\ \hline
-		Proboscis \\ \hline
-		Car \\ \hline
-		DoubleDriver \\ \hline
-		SwerveLifter \\ \hline
-		Scorpion \\ \hline
-		\end{tabular}
-	\end{table}
+\begin{itemize}
+\item AlNiCo 5 rod magnet
+\item NdFeB magnet
+\item Mild steel 1018 / S20C
+\item 30 AWG enamelled copper wire
+\end{itemize}
 
-	\subsection{Testing Procedure}
-	The testing procedure will be divided into several stages. First, the external camera will capture images of the testing environment and the perception system will detect the AprilTags. The detected tag ID and pose will then be compared with the known tag information to verify the accuracy of the detection and localization.
-	Next, the estimated robot position and orientation will be provided to the control system. The robot will be commanded to move to predefined target positions and orientations. The difference between the desired and measured states will be used to evaluate the performance of the localization and PID controllers.
-	Finally, predefined paths will be provided to the path planning system. The robot will be required to generate and execute the planned paths while maintaining the required position and orientation. The complete software pipeline will be tested to verify the interaction between perception, localization, path planning, and motion control.
+The EP-magnet dimensions, coil winding parameters, and driving circuit will be finalized through fabrication and testing in Phase B.
 
-	\subsection{Evaluation Metrics}
-	The performance of the software system will be evaluated using the following metrics:
-		\begin{itemize}
-		\item \textbf{AprilTag Detection Rate:} The percentage of test frames in which the correct AprilTag is successfully detected and identified.
-		\item \textbf{Position Error:} The difference between the robot's estimated position and its known or reference position, measured in meters.
-		\item \textbf{Orientation Error:} The difference between the estimated robot orientation and the reference orientation, measured in degrees.
-		\item \textbf{Position Tracking Error:} The difference between the desired robot position and the actual robot position while following a planned path.
-		\item \textbf{Orientation Tracking Error:} The difference between the desired and actual robot orientation during motion.
-		\item \textbf{Path Execution Error:} The deviation of the robot from the planned path during navigation.
-		\item \textbf{Control Response:} The ability of the PID controllers to reach and maintain the desired actuator commands with minimal overshoot and steady-state error.
-		\item \textbf{Processing Rate:} The frequency at which the perception and control system can process sensor information and update the robot's state and control commands.
-		\end{itemize}
-
-	\subsection{Acceptance Criteria}
-	The software system will be considered to satisfy the Phase A requirements if it can reliably detect the correct AprilTag ID, estimate the robot's position and orientation with an acceptable error, and provide sufficiently frequent updates for real-time control. The robot must also be able to follow predefined paths while maintaining acceptable position and orientation errors.
-	The PID controllers must allow the robot to reach the desired motion commands with stable behavior and without excessive oscillation. The complete software system must also operate continuously without critical failures during the testing period.
-	Specific numerical thresholds for detection accuracy, localization error, tracking error, and processing rate will be defined based on the requirements of the MSRR system and the physical limitations of the robot.
-
-	\subsection{Expected Results}
-	The expected outcome of Phase A testing is a software system that can reliably integrate external-camera perception, AprilTag-based robot identification and localization, path planning, and PID-based motion control. The system is expected to provide sufficiently accurate and stable position and orientation estimates for real-time robot navigation.
-	The robot is expected to successfully follow predefined paths and reach target positions while maintaining acceptable tracking errors. Successful completion of these tests will demonstrate that the software components are sufficiently integrated and reliable to support the subsequent development and testing phases of the MSRR system.
-
+\section{Perception Testing Plan for Phase A}
+\label{sec:perception-testing}
+% Jai
 
 
 \end{document}
-
-

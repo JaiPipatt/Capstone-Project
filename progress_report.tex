@@ -4,10 +4,6 @@
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \usepackage{parskip}
-\usepackage{amsmath}
-\usepackage{graphicx}
-\usepackage{booktabs}
-\usepackage{hyperref}
 
 \title{Capstone Project Progress Report}
 \author{}
@@ -17,36 +13,42 @@
 
 \maketitle
 
+% Keep each main topic in its own section so contributors can edit and
+% commit one part of the report without changing the rest of the document.
+
 \section{Project Timeline}
 \label{sec:project-timeline}
 
+% Add dated milestones, completed work, and upcoming deadlines here.
 \begin{itemize}
-\item \textbf{Completed:}
-
-\item \textbf{In progress:}
-
-\item \textbf{Next:}
-
+	\item \textbf{Completed:} % Add completed milestones.
+	\item \textbf{In progress:} % Add current work.
+	\item \textbf{Next:} % Add the next milestone and its target date.
 \end{itemize}
 
 \section{Project Phases}
 \label{sec:project-phases}
 
+% Describe the purpose, status, and deliverables of each project phase.
 \subsection{Phase A}
-<<<<<<< Updated upstream
-ahnyeonghasaeyo
+
 % Add the current status and key deliverables for Phase A.
-=======
->>>>>>> Stashed changes
 
 \subsection{Phase B}
+% Add the current status and key deliverables for Phase B.
 
 \subsection{Phase C}
+% Add the current status and key deliverables for Phase C.
 
 \subsection{Phase D}
+% Add the current status and key deliverables for Phase D.
 
 \section{Module CAD Design}
 \label{sec:module-cad-design}
+% wait for image from jai
+% each person describes their CAD design decisions, iterations, and remaining work.
+
+% Describe the CAD design decisions, iterations, and remaining work.
 
 The outer mechanical design is based on the SMORES-EP modular robot developed by the ModLab at the University of Pennsylvania \cite{smores_ep}. The original SMORES-EP module is approximately \(80\) mm in size. For our prototype, the main dimensions were adapted to \(100\) mm to provide more space for the required mechanical and electronic components.
 
@@ -64,18 +66,17 @@ The tilt face was adapted from the SMORES-EP tilt mechanism. The outer rectangul
 
 \section{Electronics: Project Plan and Current State}
 \label{sec:electronics}
-<<<<<<< Updated upstream
-=======
-
 % Natttt
->>>>>>> Stashed changes
 
-% Document the electronics plan, selected components, wiring,
-% testing, and current implementation status.
+% Document the electronics plan, selected components, wiring, testing,
+% and the current implementation status.
 
 \section{Preparation for Phase B: Magnet}
 \label{sec:phase-b-magnet}
+% Prae
 
+% Record the preparation required for the magnet stage, including parts,
+% design changes, risks, and outstanding actions.
 The magnetic docking system is based on the Electro-Permanent Magnet EPM connector developed for SMORES-EP \cite{ep_face}. The original SMORES-EP module has a characteristic length of approximately \(80\) mm, and its EP-Face uses four EP magnets arranged in a ring on the connecting face. Each EP magnet consists of an AlNiCo 5 cylindrical magnet and an NdFeB magnet placed side by side, two low-carbon steel pole pieces, and a copper coil wound around the magnetic assembly. The original EP-Face uses magnet cylinders \(4.76\) mm in diameter and \(9.53\) mm in length, with the four-magnet arrangement fitting within a \(42\) mm diameter circular region. The magnets protrude approximately \(0.5\) mm from the connecting face. The copper coil uses 30 AWG wire with 200 turns \cite{ep_face}. For our \(100\) mm prototype, this arrangement and its associated dimensions serve as the design reference and are being adapted to fit our larger face and mechanical structure.
 
 The operating principle relies on the contrasting magnetic properties of \textbf{AlNiCo 5} and \textbf{NdFeB}. AlNiCo 5 has relatively low coercivity, meaning its magnetization direction can be reversed by an external magnetic field. NdFeB, in contrast, has high coercivity and retains its magnetization under the same field pulse. This difference allows the two magnets to work together as a switchable permanent-magnet system.
@@ -95,34 +96,11 @@ The original EP-Face uses AlNiCo 5, NdFeB, ASTM 1018 low-carbon steel pole piece
 
 The EP-magnet dimensions, coil winding parameters, and driving circuit will be finalized through fabrication and testing in Phase B.
 
-
 \section{Perception Testing Plan for Phase A}
 \label{sec:perception-testing}
-<<<<<<< Updated upstream
-=======
-
 % Jai
->>>>>>> Stashed changes
 
-% Describe the test objectives, setup, procedure, measurements,
-% and acceptance criteria for the Phase A perception system.
-
-\begin{thebibliography}{9}
-
-\bibitem{smores_ep}
-T. Tosun, J. Davey, C. Liu, and M. Yim,
-``SMORES-EP,''
-ModLab, University of Pennsylvania.
-Available at:
-\url{https://www.modlabupenn.org/smores-ep/}
-
-\bibitem{ep_face}
-T. Tosun, J. Davey, C. Liu, and M. Yim,
-``Design and Characterization of the EP-Face Connector,''
-2016 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS), 2016.
-Available at:
-\url{https://www.modlabupenn.org/wp-content/uploads/tosun2016epface.pdf}
-
-\end{thebibliography}
+% Describe the test objectives, setup, procedure, measurements, and
+% acceptance criteria for the Phase A perception system.
 
 \end{document}

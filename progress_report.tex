@@ -4,6 +4,12 @@
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \usepackage{parskip}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{siunitx}
+
+\sisetup{detect-weight=true, detect-family=true}
 
 \title{Capstone Project Progress Report}
 \author{}
@@ -48,7 +54,428 @@
 % wait for image from jai
 % each person describes their CAD design decisions, iterations, and remaining work.
 
-% Describe the CAD design decisions, iterations, and remaining work.
+\subsection{Design Decisions: Wheel Gear, Pan/Tilt Crown Gear, and Pinions}
+\label{sec:gear-design}
+
+\subsubsection{Starting Point: Reverse-Engineering the SMORES-EP Reference}
+
+SMORES-EP is not open-source, so no CAD or drawing set was available. The gear
+train therefore had to be reconstructed from published dimensions and
+photographs and then re-derived from first principles.
+
+The known reference parameters are listed in Table~\ref{tab:smores-ref}.
+
+\begin{table}[htbp]
+	\centering
+	\caption{Reconstructed SMORES-EP reference parameters.}
+	\label{tab:smores-ref}
+	\begin{tabular}{ll}
+		\toprule
+		\textbf{Parameter} & \textbf{SMORES-EP} \\
+		\midrule
+		Module envelope & $80 \times 80 \times 80$\,mm \\
+		Spur gear       & 48 teeth \\
+		Crown gear      & Same part as the spur gear, used at \SI{90}{\degree} \\
+		Pinion          & 9 teeth \\
+		Gearbox         & 298:1 \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+Assuming the \SI{80}{\milli\metre} cube is the full envelope (wheels included),
+the largest gear that can physically fit is approximately \SI{70}{\milli\metre}
+in outside diameter. Using the outside-diameter relation
+\begin{equation}
+	D_o = m(z + 2),
+\end{equation}
+\begin{equation}
+	m = \frac{70}{48 + 2} = 1.4 .
+\end{equation}
+
+This gives a consistent, self-checking picture of the original: module
+\num{1.4}, pitch diameter \SI{67.2}{\milli\metre}, and a stage ratio of
+$48/9 = 5.33$. This reconstructed module is the baseline against which all
+scaling decisions below are made.
+
+\subsubsection{Envelope Change and Its Consequences}
+
+The new module is $100 \times 100 \times 100$\,mm rather than
+\SI{80}{\milli\metre}. This was driven by internal packaging (motors,
+gearboxes, electronics, and the pan/tilt joint) rather than by the gears
+themselves, but it directly sets the available gear space.
+
+Allowing for wall thickness, bearing seats, and clearance to the housing, the
+largest practical spur gear outside diameter is \SI{90}{\milli\metre}.
+Everything downstream follows from that number.
+
+\subsubsection{Wheel Spur Gear and Pinion}
+
+\paragraph{Tooth counts --- why the ratio was held constant.}
+The decision made first, before any dimension was fixed, was to preserve the
+original \num{5.33}:1 stage ratio:
+\begin{itemize}
+	\item Spur gear: \textbf{64 teeth}
+	\item Pinion: \textbf{12 teeth}
+	\item Ratio: $64/12 = 5.33$ --- identical to $48/9$
+\end{itemize}
+
+The ratio was prioritised over any other parameter for three reasons:
+\begin{enumerate}
+	\item \textbf{The gearbox selection stays valid.} The 298:1 gearbox
+	      reduction combines with the external stage to give the same total
+	      reduction as the reference design. Output speed and stall torque at
+	      the wheel therefore remain comparable, so motor and gearbox sizing
+	      carried over from SMORES-EP remains a defensible starting point
+	      instead of an unverified guess.
+	\item \textbf{Published SMORES-EP performance data remains a usable
+	      benchmark.} Locomotion speed, climbing ability, and joint torque
+	      figures reported for the original can be treated as an approximate
+	      expectation for this design. If the ratio had been changed, every
+	      performance claim would have had to be re-derived from scratch with
+	      no reference to check against.
+	\item \textbf{Control and firmware behaviour is preserved.} Encoder counts
+	      per wheel revolution, velocity limits, and any feed-forward torque
+	      terms scale with the total reduction. Holding it constant removes a
+	      whole class of retuning work.
+\end{enumerate}
+
+\paragraph{Why 64/12 rather than 48/9 scaled directly.}
+Multiple tooth-count pairs give \num{5.33}:1. The pair 64/12 was chosen because
+increasing the pinion from 9 to 12 teeth materially improves the pinion, which
+is always the weakest and most heavily loaded element in the stage:
+\begin{itemize}
+	\item \textbf{Reduced undercutting.} At a \SI{20}{\degree} pressure angle
+	      the theoretical minimum tooth count before undercut is
+	      $z_{\min} = 2/\sin^{2}\SI{20}{\degree} \approx 17$. A 9-tooth pinion
+	      is far below this and suffers severe undercut at the tooth root,
+	      removing material exactly where bending stress is highest. A 12-tooth
+	      pinion is still below the theoretical limit, but the root section is
+	      considerably healthier.
+	\item \textbf{Higher contact ratio.} More teeth on the pinion increases the
+	      length of the line of action relative to the base pitch, so more teeth
+	      share the load at any instant. This reduces peak tooth stress and
+	      smooths torque transmission.
+	\item \textbf{Better load sharing per cycle.} A 12-tooth pinion completes
+	      fewer revolutions per gear revolution than a 9-tooth pinion, so each
+	      pinion tooth accumulates fewer loading cycles over the robot's life
+	      --- a direct fatigue-life benefit for the most stressed part.
+	\item \textbf{Larger pinion bore.} A 12-tooth pinion at this module has
+	      enough body to carry the motor shaft bore and the wall thickness
+	      around it without the bore breaking into the tooth roots.
+\end{itemize}
+
+\paragraph{Undercut outcome at 12 teeth.}
+Because 12 teeth sits below the \num{17}-tooth theoretical threshold, some root
+undercut is expected in the generated profile. On inspection of the generated
+geometry and on assembling the mesh in CAD, the undercut present at 12 teeth
+\textbf{does not cause interference}: the mating spur gear tooth tips clear the
+undercut region throughout the mesh cycle at the design centre distance, and no
+tip-to-root fouling is observed. The undercut is therefore accepted as a minor
+reduction in root section rather than treated as a defect requiring correction,
+and no profile shift was applied. This keeps the pinion a standard,
+directly generated part.
+
+\paragraph{Resulting geometry.}
+With 64 teeth at a \SI{90}{\milli\metre} outside diameter,
+\begin{equation}
+	m = \frac{90}{64 + 2} = 1.3636 \approx 1.36 .
+\end{equation}
+
+The resulting geometry is summarised in Table~\ref{tab:spur-geom}.
+
+\begin{table}[htbp]
+	\centering
+	\caption{Wheel spur gear and pinion geometry.}
+	\label{tab:spur-geom}
+	\begin{tabular}{ll}
+		\toprule
+		\textbf{Parameter} & \textbf{Value} \\
+		\midrule
+		Module, $m$                 & \num{1.36} \\
+		Pressure angle              & \SI{20}{\degree} (standard) \\
+		Spur gear teeth             & 64 \\
+		Spur pitch diameter         & \SI{87.04}{\milli\metre} \\
+		Spur outside diameter       & \SI{90}{\milli\metre} \\
+		Pinion teeth                & 12 \\
+		Pinion pitch diameter       & \SI{16.32}{\milli\metre} \\
+		Pinion outside diameter     & \SI{19.04}{\milli\metre} \\
+		Theoretical centre distance & \SI{51.68}{\milli\metre} \\
+		Face width                  & \SI{5}{\milli\metre} \\
+		Backlash                    & \SI{0.2}{\milli\metre} \\
+		Root fillet                 & \SI{0.3}{\milli\metre} \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+A \SI{20}{\degree} pressure angle was used throughout. It is the industry
+standard, it gives thicker tooth roots and better load capacity than
+\SI{14.5}{\degree}, it tolerates small centre-distance errors well (important
+for a printed or lightly-toleranced housing), and it is the default assumption
+of every standard gear generator and cutting tool, which keeps the design
+manufacturable by more than one process.
+
+The gears were generated using the \textbf{Fusion~360 spur gear extension},
+entering pressure angle, module, tooth count, backlash, root fillet, and face
+width directly. Using a parametric generator rather than hand-sketched profiles
+guarantees a true involute flank and makes it cheap to regenerate the part when
+an upstream parameter changes --- which, as the following subsection shows,
+happened repeatedly.
+
+The \SI{0.2}{\milli\metre} backlash and \SI{0.3}{\milli\metre} root fillet are
+deliberate manufacturing allowances rather than theoretical values. Backlash
+absorbs centre-distance error, shaft deflection, bearing play, and thermal
+expansion, preventing tooth binding; the root fillet reduces the stress
+concentration at the tooth root, which is the standard bending-failure
+location.
+
+\subsubsection{Pan/Tilt Crown Gear}
+
+\paragraph{Departure from the SMORES-EP approach.}
+SMORES-EP used a single gear part in two roles: as a conventional spur gear,
+and as a de facto crown gear meshing at \SI{90}{\degree}. This is convenient for
+manufacturing --- one part number, one tool --- but it is a compromise. A spur
+profile engaged at \SI{90}{\degree} does not have conjugate contact with its
+mate; contact degenerates toward a point or a short line near the tooth tip,
+which concentrates stress, increases wear, and produces a mesh that is
+sensitive to axial position.
+
+This design instead uses a \textbf{true crown (face) gear}, with teeth formed on
+the face of the disc and oriented vertically so that they mesh with the mating
+spur gear. This gives line contact across the tooth face and a substantially
+better load distribution for the same envelope.
+
+\paragraph{Iteration history.}
+The crown gear was the most constrained part in the assembly, because its
+diameter had to coexist with the motors, the gearboxes, the two wheel gear
+trains, and the structural frame --- all inside the \SI{100}{\milli\metre} cube.
+The iterations are given in Table~\ref{tab:crown-iter}.
+
+\begin{table}[htbp]
+	\centering
+	\caption{Crown gear sizing iterations.}
+	\label{tab:crown-iter}
+	\begin{tabular}{lllp{5.2cm}}
+		\toprule
+		\textbf{Iteration} & \textbf{Diameter} & \textbf{Teeth / Module} & \textbf{Outcome} \\
+		\midrule
+		1     & \SI{90}{\milli\metre} & 48 / \num{1.8}  & Interference with surrounding assembly --- rejected \\
+		Final & \SI{84}{\milli\metre} & 46 / \num{1.75} & Fits with clearance \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+The first attempt simply mirrored the spur gear's \SI{90}{\milli\metre}
+diameter. On assembly it fouled adjacent components, so the diameter had to be
+reduced. The final geometry is consistent with the same outside-diameter
+relation:
+\begin{equation}
+	D_o = 1.75 \times (46 + 2) = \SI{84}{\milli\metre}.
+\end{equation}
+
+\paragraph{Module mismatch: an accepted, envelope-driven compromise.}
+Standard gear practice requires that two meshing gears share the same module
+and the same pressure angle, since the module fixes the circular pitch and
+therefore whether the teeth index correctly against one another. That condition
+could not be satisfied here. Two constraints fixed the geometry before the
+module could be chosen freely:
+
+\begin{enumerate}
+	\item \textbf{Both diameters are fixed by packaging.} The spur gear outside
+	      diameter is capped at \SI{90}{\milli\metre} by the
+	      \SI{100}{\milli\metre} envelope, and the crown gear outside diameter
+	      is capped at \SI{84}{\milli\metre} by interference with the motors,
+	      gearboxes, and frame --- as established in the iteration above. Neither
+	      diameter is a free variable.
+	\item \textbf{The tooth counts are fixed by the ratios being preserved.} The
+	      spur gear must have 64 teeth to hold the \num{5.33}:1 wheel stage
+	      ratio, and the crown gear must stay near 46--48 teeth to hold the
+	      near-1:1 spur-to-crown relationship of the original design.
+\end{enumerate}
+
+With both $D_o$ and $z$ fixed on each part, $m = D_o/(z+2)$ is fully determined,
+and the two values simply are not equal: \num{1.36} for the spur gear against
+\num{1.75} for the crown gear. Forcing a common module would have required
+either abandoning the preserved gear ratios --- discarding the benchmark value
+of the SMORES-EP reference data and the validity of the motor and gearbox
+selection --- or enlarging a gear beyond the envelope it has to fit in.
+
+The design therefore treats matched modules as the parameter to sacrifice,
+because it is the one whose relaxation is recoverable at assembly (through
+tooth-depth and backlash adjustment) rather than structural. Concretely, the
+crown tooth depth was tuned during iteration to obtain a working mesh at the
+assembled centre distance, and the dedendum modification described below is
+part of that adjustment. This is a documented deviation from standard practice
+rather than an oversight, and it is one of the primary items to be validated
+once physical parts exist.
+
+\paragraph{Why tooth count was held near 1:1 with the spur gear.}
+The original design has an effective 1:1 tooth-count relationship between spur
+and crown (48 and 48). Rather than abandoning this when the diameter had to
+shrink, the design keeps the counts as close as the envelope permits:
+\textbf{46 teeth against the original's 48}, a \SI{4}{\percent} deviation.
+
+Keeping the tooth counts nearly equal, and therefore the tooth size nearly
+equal, matters for several reasons:
+\begin{itemize}
+	\item \textbf{The pan/tilt joint ratio stays near unity.} With a near-1:1
+	      mesh, output speed and torque at the joint are close to what the
+	      driving stage delivers. The joint's angular velocity and holding
+	      torque are therefore predictable from the motor and gearbox
+	      specification without an extra reduction factor to characterise, and
+	      the SMORES-EP joint performance data stays usable as a benchmark.
+	\item \textbf{Tooth size --- not just ratio --- sets load capacity.} Tooth
+	      bending strength scales roughly with the square of the module for a
+	      given face width and material (Lewis bending equation). A 46-tooth
+	      crown at $m = 1.75$ has \emph{larger} teeth than the 64-tooth spur at
+	      $m = 1.36$, so the crown teeth are individually stronger. This is
+	      desirable: the crown gear carries the full pan/tilt reaction load,
+	      including any static holding torque when the joint is supporting the
+	      robot's own weight or resisting an external load, and it is the harder
+	      part to replace.
+	\item \textbf{Mesh symmetry between the two driving gears.} Because two
+	      identical spur gears drive the single crown from opposite sides,
+	      keeping the crown's tooth size and count close to symmetric ensures
+	      both meshes see comparable loading and wear, rather than one side
+	      dominating.
+	\item \textbf{No hidden speed asymmetry between pan and tilt.} Pan and tilt
+	      are produced by the same two inputs in common mode or differential
+	      mode. A near-1:1 crown keeps the effective ratio for both modes
+	      similar, so the two motions have comparable speed and torque
+	      characteristics and can share a single control tuning.
+\end{itemize}
+
+\paragraph{Dedendum modification.}
+Standard practice sets the dedendum to $1.25\,m$, which for $m = 1.75$ gives
+\SI{2.1875}{\milli\metre}. The design uses a slightly reduced
+\SI{2.15}{\milli\metre}.
+
+This small reduction (\SI{0.0375}{\milli\metre}, about \SI{1.7}{\percent}) trims
+the root depth just enough to clear the mating tooth tip within the assembled
+centre distance without carving further into the root section. Because tooth
+bending strength is governed by the root thickness, a shallower dedendum
+marginally \emph{increases} the root section and therefore does not weaken the
+tooth --- the trade-off is a small reduction in tip clearance, which is
+acceptable given the \SI{0.2}{\milli\metre} backlash already designed in. It is
+a compromise between manufacturing feasibility and the clearance required to
+avoid tip-to-root interference.
+
+\subsubsection{Pinion Mounting and Tolerances}
+
+The two pinion variants differ only in how they attach to the motor shaft,
+which is dictated by their position in the assembly
+(Table~\ref{tab:pinion-mount}).
+
+\begin{table}[htbp]
+	\centering
+	\caption{Pinion bore variants.}
+	\label{tab:pinion-mount}
+	\begin{tabular}{llp{6.2cm}}
+		\toprule
+		\textbf{Pinion} & \textbf{Bore} & \textbf{Rationale} \\
+		\midrule
+		Pan/tilt & Through-hole &
+		The motor shaft passes fully through the pinion, allowing the shaft to be
+		supported on both sides and the pinion to sit at an arbitrary axial
+		position along it \\
+		\addlinespace
+		Wheel & Blind hole &
+		Fitted onto the end of the shaft; the closed face provides a positive
+		axial stop and a sealed, stiffer end \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+A \SI{0.1}{\milli\metre} tolerance is applied to the shaft bores. This is a
+clearance/transition allowance covering manufacturing variation in both the
+printed or machined bore and the shaft diameter. Too tight and the pinion cracks
+or cannot be assembled; too loose and backlash appears at the shaft interface,
+degrading positional accuracy and introducing shock loading on direction
+reversal.
+
+The spur gear carries a bolt-hole pattern on its web for attachment to the wheel
+hub and to adjacent structural parts. Placing the holes in the web rather than
+near the rim keeps them clear of the tooth root region, where bending stress is
+highest.
+
+\subsubsection{Drivetrain Architecture}
+
+The module uses \textbf{four motors driving four spur gears}:
+\begin{itemize}
+	\item \textbf{Outer two spur gears} --- one per side, each driving a wheel
+	      directly. These provide differential-drive locomotion.
+	\item \textbf{Inner two spur gears} --- both mesh with the \textbf{single
+	      crown gear} that carries the two side-mounted spur gears.
+\end{itemize}
+
+The pan/tilt degrees of freedom are produced differentially from these two
+inner inputs:
+\begin{itemize}
+	\item Inner gears rotating in the \textbf{same direction} (common mode)
+	      $\rightarrow$ \textbf{pan}
+	\item Inner gears rotating in \textbf{opposite directions} (differential
+	      mode) $\rightarrow$ \textbf{tilt}
+\end{itemize}
+
+This differential arrangement is the main structural reason the crown gear
+geometry matters so much. Both inner spur gears must mesh with the same crown
+gear simultaneously and symmetrically; any asymmetry in the two meshes appears
+as a coupling error between the pan and tilt axes, not merely as local wear. It
+also explains why crown gear diameter was the binding constraint during
+iteration --- it must remain concentric with the joint axis while two separate
+drive trains and two wheel trains are packed around it.
+
+\subsubsection{Summary of Final Parameters}
+
+\begin{table}[htbp]
+	\centering
+	\caption{Final gear train parameters.}
+	\label{tab:final-params}
+	\begin{tabular}{llllp{4.0cm}}
+		\toprule
+		\textbf{Component} & \textbf{Teeth} & \textbf{Module} & \textbf{Outside dia.} & \textbf{Notes} \\
+		\midrule
+		Wheel/drive spur gear & 64 & \num{1.36} & \SI{90}{\milli\metre} &
+		\SI{5}{\milli\metre} face width, mounting holes in web \\
+		\addlinespace
+		Pinion (both types) & 12 & \num{1.36} & \SI{19.04}{\milli\metre} &
+		Through-bore (pan/tilt) or blind bore (wheel) \\
+		\addlinespace
+		Crown gear & 46 & \num{1.75} & \SI{84}{\milli\metre} &
+		Dedendum \SI{2.15}{\milli\metre}; true face-gear teeth \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+Common to all: \SI{20}{\degree} pressure angle, \SI{0.2}{\milli\metre} backlash,
+\SI{0.3}{\milli\metre} root fillet, \SI{0.1}{\milli\metre} bore tolerance.
+
+\subsubsection{Current Status and Remaining Work}
+
+All of the geometry above exists as a CAD model only. \textbf{No part of the
+gear train has been 3D printed, manufactured, or tested in the real world at the
+time of writing.} Every clearance, interference, and mesh result reported in
+this section was obtained from the CAD assembly, not from physical hardware, and
+should be read as a design intent rather than a verified outcome.
+
+The following items are therefore outstanding and are the priority for the next
+phase:
+\begin{itemize}
+	\item Print a first article of the spur gear, both pinions, and the crown
+	      gear, and verify that the spur/crown mesh functions despite the
+	      module mismatch discussed above.
+	\item Confirm that the 12-tooth pinion's undercut remains non-interfering at
+	      real printed tolerances, where layer resolution and shrinkage are
+	      additional error sources not captured in CAD.
+	\item Check that the \SI{0.2}{\milli\metre} backlash and
+	      \SI{0.1}{\milli\metre} bore tolerance are appropriate for the chosen
+	      printing process and material; adjust and reprint if the fit is tight
+	      or loose.
+	\item Measure the achieved pan and tilt ranges and the joint holding torque
+	      against the SMORES-EP benchmark figures used to justify the ratio
+	      decisions.
+	\item Run an endurance check on the crown gear teeth, which carry the
+	      highest sustained load in the assembly.
+\end{itemize}
 
 \section{Electronics: Project Plan and Current State}
 \label{sec:electronics}
@@ -72,5 +499,3 @@
 % acceptance criteria for the Phase A perception system.
 
 \end{document}
-
-

@@ -505,9 +505,77 @@ The original EP-Face uses AlNiCo 5, NdFeB, ASTM 1018 low-carbon steel pole piece
 
 The EP-magnet dimensions, coil winding parameters, and driving circuit will be finalized through fabrication and testing in Phase B.
 
-\section{Perception Testing Plan for Phase A}
-\label{sec:perception-testing}
-% Jai
+\section{Software Testing Plan for Phase A}
+\label{sec:software-testing}
+This section describes the testing plan for evaluating the software system during Phase A. The objective is to verify that the software system can reliably detect and identify the robot ID from AprilTags using an external camera and image processing techniques. The detected information will be used to correct the robot's position and orientation in real time, enabling effective navigation within the environment. In addition, the software system will control the robot's actuators and sensors to ensure that the robot performs its intended functions accurately and efficiently using PID control. The system will also be tested for its ability to plan and execute paths for the MSRR configuration of the robot.
 
+	\subsection{Testing Objectives}
+	The main objectives of the software testing are:
+		\begin{itemize}
+		\item Verify that the software system can accurately detect and identify the robot ID from AprilTags using an external camera and image processing techniques.
+		\item Verify that the software system can use the detected AprilTag information to estimate and correct the robot's position and orientation in real time.
+		\item Verify that the software system can control the robot's actuators and sensors accurately and efficiently using PID control.
+		\item Verify that the software system can reliably plan and execute paths for the MSRR configuration of the robot.
+		\item Evaluate the overall integration between perception, localization, control, and path planning components.
+		\end{itemize}
+
+	\subsection{Testing Setup}
+	The software will be tested using the MSRR robot in a controlled indoor environment. An external camera will be positioned to provide a view of the robot and the AprilTags placed within the testing area. The camera image will be processed by the perception system to detect the AprilTags and obtain the corresponding robot ID and pose information.
+	The detected pose information will be transmitted to the robot control system and used to estimate the robot's position and orientation. The robot will then use this information for localization, path planning, and motion control. The actuators will be controlled using PID controllers to achieve the desired wheel velocities and robot motion.
+	The testing setup will include:
+		\begin{itemize}
+		\item MSRR robot equipped with the required actuators and onboard sensors.
+		\item External camera for AprilTag detection and robot localization.
+		\item AprilTags with unique IDs for identifying the robot and reference locations.
+		\item Computing system for image processing, localization, path planning, and control.
+		\item Controlled testing area with predefined waypoints and paths.
+		\end{itemize}
+
+	\subsection{Goal Configurations}
+	The software testing plan will evaluate the following robot configurations:
+
+	\begin{table}[htbp]
+		\centering
+		\caption{Goal configurations for Phase A testing}
+		\label{tab:goal-configurations}
+		\begin{tabular}{|l|}
+		\hline
+		\textbf{Configuration} \\ \hline
+		Snake \\ \hline
+		StairClimber \\ \hline
+		Proboscis \\ \hline
+		Car \\ \hline
+		DoubleDriver \\ \hline
+		SwerveLifter \\ \hline
+		Scorpion \\ \hline
+		\end{tabular}
+	\end{table}
+
+	\subsection{Testing Procedure}
+	The testing procedure will be divided into several stages. First, the external camera will capture images of the testing environment and the perception system will detect the AprilTags. The detected tag ID and pose will then be compared with the known tag information to verify the accuracy of the detection and localization.
+	Next, the estimated robot position and orientation will be provided to the control system. The robot will be commanded to move to predefined target positions and orientations. The difference between the desired and measured states will be used to evaluate the performance of the localization and PID controllers.
+	Finally, predefined paths will be provided to the path planning system. The robot will be required to generate and execute the planned paths while maintaining the required position and orientation. The complete software pipeline will be tested to verify the interaction between perception, localization, path planning, and motion control.
+
+	\subsection{Evaluation Metrics}
+	The performance of the software system will be evaluated using the following metrics:
+		\begin{itemize}
+		\item \textbf{AprilTag Detection Rate:} The percentage of test frames in which the correct AprilTag is successfully detected and identified.
+		\item \textbf{Position Error:} The difference between the robot's estimated position and its known or reference position, measured in meters.
+		\item \textbf{Orientation Error:} The difference between the estimated robot orientation and the reference orientation, measured in degrees.
+		\item \textbf{Position Tracking Error:} The difference between the desired robot position and the actual robot position while following a planned path.
+		\item \textbf{Orientation Tracking Error:} The difference between the desired and actual robot orientation during motion.
+		\item \textbf{Path Execution Error:} The deviation of the robot from the planned path during navigation.
+		\item \textbf{Control Response:} The ability of the PID controllers to reach and maintain the desired actuator commands with minimal overshoot and steady-state error.
+		\item \textbf{Processing Rate:} The frequency at which the perception and control system can process sensor information and update the robot's state and control commands.
+		\end{itemize}
+
+	\subsection{Acceptance Criteria}
+	The software system will be considered to satisfy the Phase A requirements if it can reliably detect the correct AprilTag ID, estimate the robot's position and orientation with an acceptable error, and provide sufficiently frequent updates for real-time control. The robot must also be able to follow predefined paths while maintaining acceptable position and orientation errors.
+	The PID controllers must allow the robot to reach the desired motion commands with stable behavior and without excessive oscillation. The complete software system must also operate continuously without critical failures during the testing period.
+	Specific numerical thresholds for detection accuracy, localization error, tracking error, and processing rate will be defined based on the requirements of the MSRR system and the physical limitations of the robot.
+
+	\subsection{Expected Results}
+	The expected outcome of Phase A testing is a software system that can reliably integrate external-camera perception, AprilTag-based robot identification and localization, path planning, and PID-based motion control. The system is expected to provide sufficiently accurate and stable position and orientation estimates for real-time robot navigation.
+	The robot is expected to successfully follow predefined paths and reach target positions while maintaining acceptable tracking errors. Successful completion of these tests will demonstrate that the software components are sufficiently integrated and reliable to support the subsequent development and testing phases of the MSRR system.
 
 \end{document}

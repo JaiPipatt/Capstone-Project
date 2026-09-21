@@ -64,17 +64,57 @@
 
 \section{Module CAD Design}
 \label{sec:module-cad-design}
-% wait for image from jai
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=0.8\textwidth]{image\exploded_view.png}
+	\includegraphics[width=0.8\textwidth]{image/exploded_view.png}
 	\caption{Exploded view of the module CAD design.}
 	\label{fig:exploded-view}
 \end{figure}
-% each person describes their CAD design decisions, iterations, and remaining work.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{image/front.png}
+	\caption{Front view of the module CAD design.}
+	\label{fig:cad-front}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{image/rear.png}
+	\caption{Rear view of the module CAD design.}
+	\label{fig:cad-rear}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{image/top.png}
+	\caption{Top view of the module CAD design.}
+	\label{fig:cad-top}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{image/tilt.png}
+	\caption{Tilted sectional view of the module CAD design.}
+	\label{fig:cad-tilt}
+\end{figure}
 
 \subsection{Design Decisions: Wheel Gear, Pan/Tilt Crown Gear, and Pinions}
 \label{sec:gear-design}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{image/GearCAD.png}
+	\caption{CAD view of the gear train and motor arrangement.}
+	\label{fig:cad-gear-train}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{image/Drawing 8.png}
+	\caption{Additional CAD view of the gear assembly.}
+	\label{fig:cad-additional-view}
+\end{figure}
 
 \subsubsection{Starting Point: Reverse-Engineering the SMORES-EP Reference}
 
@@ -411,6 +451,16 @@ or cannot be assembled; too loose and backlash appears at the shaft interface,
 degrading positional accuracy and introducing shock loading on direction
 reversal.
 
+The gears and plain-bearing surfaces will be printed in nylon. Nylon was
+selected because it provides good strength for the expected mechanical loads
+while also offering relatively low friction and wear, which is useful for the
+plain-bearing interfaces in the module. The final shaft-to-bore fit is not yet
+treated as fixed: a test shaft and bore will be printed first, measured, and
+assembled to determine whether the nominal \SI{0.1}{\milli\metre} allowance
+provides the required balance between free movement and acceptable backlash.
+The bore dimension will be adjusted if the first test shows that the printed
+nylon shrinks, distorts, or grips the shaft more than expected.
+
 The spur gear carries a bolt-hole pattern on its web for attachment to the wheel
 hub and to adjacent structural parts. Placing the holes in the web rather than
 near the rim keeps them clear of the tooth root region, where bending stress is
@@ -501,6 +551,20 @@ The outer mechanical design is based on the SMORES-EP modular robot developed by
 \subsection{Outer Wheels}
 
 Two independently driven outer wheels were designed based on the differential-drive arrangement of SMORES-EP. Each wheel has a diameter of \(100\) mm and includes a groove for an NBR N70 O-ring with a cross-section of approximately \(1.5\) mm, which is used as the rubber tire. Space for the EP-magnet docking mechanism is also provided in the wheel. Mounting posts were added to provide a mounting location for the PCB that will generate the electrical pulse for switching the EP-magnet coil.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{image/inside_wheel.png}
+	\caption{Interior view of the wheel and drivetrain assembly.}
+	\label{fig:cad-inside-wheel}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{image/outside_wheel.png}
+	\caption{Exterior view of the wheel and module assembly.}
+	\label{fig:cad-outside-wheel}
+\end{figure}
 
 \subsection{Pan Face}
 
@@ -917,6 +981,13 @@ EP-Face and IR & IR 50\,mA, pulse capacitor recharge &
 % design changes, risks, and outstanding actions.
 The magnetic docking system is based on the Electro-Permanent Magnet EPM connector developed for SMORES-EP \cite{ep_face}. The original SMORES-EP module has a characteristic length of approximately \(80\) mm, and its EP-Face uses four EP magnets arranged in a ring on the connecting face. Each EP magnet consists of an AlNiCo 5 cylindrical magnet and an NdFeB magnet placed side by side, two low-carbon steel pole pieces, and a copper coil wound around the magnetic assembly. The original EP-Face uses magnet cylinders \(4.76\) mm in diameter and \(9.53\) mm in length, with the four-magnet arrangement fitting within a \(42\) mm diameter circular region. The magnets protrude approximately \(0.5\) mm from the connecting face. The copper coil uses 30 AWG wire with 200 turns \cite{ep_face}. For our \(100\) mm prototype, this arrangement and its associated dimensions serve as the design reference and are being adapted to fit our larger face and mechanical structure.
 
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{image/inside_rectangular_magnet_housing.png}
+	\caption{Interior view of the rectangular magnet housing.}
+	\label{fig:cad-magnet-housing}
+\end{figure}
+
 The operating principle relies on the contrasting magnetic properties of \textbf{AlNiCo 5} and \textbf{NdFeB}. AlNiCo 5 has relatively low coercivity, meaning its magnetization direction can be reversed by an external magnetic field. NdFeB, in contrast, has high coercivity and retains its magnetization under the same field pulse. This difference allows the two magnets to work together as a switchable permanent-magnet system.
 
 A short electrical pulse is sent through the \textbf{copper coil}, generating a magnetic field around the magnet assembly. This pulse reverses the magnetization direction of the AlNiCo 5 while the NdFeB remains magnetized in its original direction. When the two magnetic fields are aligned, they reinforce each other and the resulting magnetic flux is guided through the \textbf{steel pole pieces} toward the connecting face. This produces the \textbf{ON state}, generating an attractive force with a mating EP connector.
@@ -933,6 +1004,120 @@ The original EP-Face uses AlNiCo 5, NdFeB, ASTM 1018 low-carbon steel pole piece
 \end{itemize}
 
 The EP-magnet dimensions, coil winding parameters, and driving circuit will be finalized through fabrication and testing in Phase B.
+
+\section{Shaft Tolerance Analysis: Plain Bearing ($\varnothing$\SI{55}{mm})}
+\label{sec:shaft-tolerance}
+
+The plain bearing (OD\,=\,\SI{55}{mm}, ID\,=\,\SI{50}{mm}) acts as the shaft.
+Every printed nylon component has a bore that fits around the bearing outer
+diameter.  Four joints use this interface, classified in
+Table~\ref{tab:shaft-joints}.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{image/shaft_component.png}
+	\caption{Shaft and bearing component arrangement.}
+	\label{fig:shaft-component}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Joint classification for the $\varnothing$\SI{55}{mm} bearing interface.}
+\label{tab:shaft-joints}
+\begin{tabular}{@{}cllll@{}}
+\toprule
+\textbf{Joint} & \textbf{Component} & \textbf{Motion} & \textbf{Fit} & \textbf{ISO Class} \\
+\midrule
+J1 & Wheel + 1\textsuperscript{st} Spur Gear & Dynamic & Clearance & F7/h6 \\
+J2 & 2\textsuperscript{nd} Spur Gear (Pan/Tilt) & Dynamic & Clearance & F7/h6 \\
+J3 & Upper Tilt Joint & Dynamic & Clearance & F7/h6 \\
+J4 & Lower Tilt Joint & \textbf{Static} & \textbf{Interference} & P7/h6 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{ISO\,286 Tolerance Results}
+
+For $\varnothing$\SI{55}{mm} (size range $50 < d \leq 80$\,mm), the tolerance
+unit is $i = \SI{1.856}{\micro\meter}$, giving IT6\,=\,\SI{19}{\micro\meter}
+and IT7\,=\,\SI{30}{\micro\meter}.  The bearing OD is modelled as h6
+($55.000$--$54.981$\,mm).  Table~\ref{tab:shaft-iso} summarises the
+theoretical fit limits.
+
+\begin{table}[H]
+\centering
+\caption{ISO\,286 theoretical fit limits.}
+\label{tab:shaft-iso}
+\begin{tabular}{@{}llcccc@{}}
+\toprule
+\textbf{Type} & \textbf{Bore Class} & $D_{\min}$ (mm) & $D_{\max}$ (mm) & \textbf{Fit Min} (mm) & \textbf{Fit Max} (mm) \\
+\midrule
+Dynamic & F7 & 55.030 & 55.060 & $+0.030$ CL & $+0.079$ CL \\
+Static  & P7 & 54.938 & 54.968 & $+0.013$ IF & $+0.062$ IF \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{3D-Printing Compensation}
+
+FDM-printed holes in nylon are systematically undersized ($\approx \SI{-0.10}{}$
+to $\SI{-0.30}{mm}$ diametrally) due to inward filament flow, thermal
+contraction (1--2\,\%), and surface roughness.  The CAD bore is therefore
+oversized to compensate: $D_{\text{CAD}} = D_{\text{target}} +
+|\Delta_{\text{hole}}|$.  Dynamic bores receive $+\SI{0.20}{mm}$ compensation;
+static bores receive $+\SI{0.10}{mm}$ (smaller, because shrinkage helps create
+the desired interference).
+
+\subsection{Recommended Bore Sizes}
+
+Table~\ref{tab:shaft-quickref} gives the recommended starting CAD bore for each
+part.  These values will be validated through the print-and-test procedure
+described below.
+
+\begin{table}[H]
+\centering
+\caption{Recommended CAD bore sizes for $\varnothing$\SI{55}{mm} bearing.}
+\label{tab:shaft-quickref}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}llcc@{}}
+\toprule
+\textbf{Part} & \textbf{Joint} & \textbf{CAD Bore (mm)} & \textbf{Expected Fit} \\
+\midrule
+Wheel (Item\,2) & J1 Dynamic & $\varnothing 55.30$ & $\approx 0.10$--$0.20$ CL \\
+1\textsuperscript{st} Spur Gear (Item\,3) & J1 Dynamic & $\varnothing 55.30$ & $\approx 0.10$--$0.20$ CL \\
+2\textsuperscript{nd} Spur Gear (Item\,3) & J2 Dynamic & $\varnothing 55.30$ & $\approx 0.10$--$0.20$ CL \\
+Upper Tilt Joint (Item\,6) & J3 Dynamic & $\varnothing 55.30$ & $\approx 0.10$--$0.20$ CL \\
+Lower Tilt Joint (Item\,5) & J4 \textbf{Static} & $\varnothing 54.90$ & $\approx 0.05$--$0.15$ IF \\
+\bottomrule
+\multicolumn{4}{@{}l}{%
+  \footnotesize CL\,=\,Clearance \quad IF\,=\,Interference
+  \quad Bearing OD\,$=$\,$\varnothing 55.00$\,mm}
+\end{tabular}
+\end{table}
+
+\subsection{Print-and-Test Procedure}
+
+Test rings (OD\,=\,70\,mm, height\,=\,10\,mm) will be printed in nylon at five
+CAD bore sizes for each fit type:
+
+\begin{itemize}[nosep]
+  \item \textbf{Dynamic} (J1--J3): $\varnothing 55.10$, $55.20$,
+        $\mathbf{55.30}$ (recommended), $55.40$, $55.50$\,mm.
+        Pass criterion: bearing slides in by hand, part spins freely, radial
+        play $\leq \SI{0.20}{mm}$.
+  \item \textbf{Static} (J4): $\varnothing 54.70$, $54.80$,
+        $\mathbf{54.90}$ (recommended), $55.00$, $55.10$\,mm.
+        Pass criterion: bearing requires firm hand pressure or light mallet tap
+        to insert, no rotation under hand torque, no cracking.
+\end{itemize}
+
+Parts are cooled to room temperature ($\SI{23 \pm 2}{\degreeCelsius}$) for
+$\geq 2$\,hours before measurement.  Each bore is measured with a digital
+caliper at three angles (\ang{0}, \ang{60}, \ang{120}) and averaged.  The
+printer offset is $\Delta = D_{\text{measured}} - D_{\text{CAD}}$ (typically
+$\SI{-0.10}{}$ to $\SI{-0.30}{mm}$).  The smallest dynamic bore that spins
+freely and the largest static bore that prevents rotation are selected for
+production prints.
 
 \section{Software Testing Plan for Phase A}
 \label{sec:software-testing}

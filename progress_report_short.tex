@@ -1,0 +1,509 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{textcomp}
+\usepackage{parskip}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{caption}
+\usepackage{enumitem}
+\usepackage{amsmath,amssymb}
+\usepackage{siunitx}
+\usepackage[hidelinks]{hyperref}
+
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\renewcommand{\arraystretch}{1.35}
+\captionsetup{font=small,labelfont=bf,skip=6pt}
+\setlist[itemize]{topsep=2pt,itemsep=2pt,parsep=0pt,leftmargin=1.5em}
+\sisetup{detect-weight=true, detect-family=true}
+
+\title{Capstone Project Progress Report}
+\author{}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+% ================================================================
+\section{Project Timeline}
+% ================================================================
+
+\begin{itemize}
+	\item \textbf{Completed:} Project concept, objectives, literature review, and
+	      phased system architecture established.
+	\item \textbf{In progress:} Phase A --- single-module locomotion, sensing,
+	      communication, and simulation baseline.
+	\item \textbf{Next:} Phase B --- EP-Face docking, task-oriented
+	      reconfiguration, and simple assembled locomotion.
+\end{itemize}
+
+% ================================================================
+\section{Project Phases}
+% ================================================================
+
+\subsection{Phase A}
+External perception and computation. Develop the mechanically homogeneous
+module, differential-drive locomotion, joint control, odometry, and
+module-to-commander communication. Validate the module and physics twin before
+physical docking is introduced.
+
+\subsection{Phase B}
+Docking and task-oriented reconfiguration. Add the electropermanent EP-Face
+connectors, infrared alignment, and connector-state feedback. Extend the
+reconfiguration pipeline with task assignment, parallel assembly sequencing,
+and selection from a library of feasible configurations.
+
+\subsection{Phase C}
+Onboard perception with external computation. Mount a monocular RGB camera and
+an $8\times8$ multi-zone ToF sensor on the leader module. Estimate obstacle
+geometry and traversability locally, while transmitting sensor data to an
+external computer for processing.
+
+\subsection{Phase D}
+Fully onboard perception and computation. Move the perception and
+configuration-selection pipeline onto a coordinator module using an embedded
+compute board. Close the perceive--select--reconfigure--traverse loop on
+hardware without external localisation or computation.
+
+% ================================================================
+\section{Module CAD Design}
+\label{sec:module-cad-design}
+% ================================================================
+
+The design is based on SMORES-EP \cite{tosun2016} (originally \SI{80}{mm}), scaled to a $100 \times 100 \times 100$\,mm envelope for additional packaging space.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{image/exploded_view.png}
+	\caption{Exploded view of the module.}
+	\label{fig:exploded-view}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{image/front.png}
+	\caption{Front view.}
+	\label{fig:cad-front}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{image/rear.png}
+	\caption{Rear view.}
+	\label{fig:cad-rear}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{image/top.png}
+	\caption{Top view.}
+	\label{fig:cad-top}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{image/tilt.png}
+	\caption{Tilted sectional view.}
+	\label{fig:cad-tilt}
+\end{figure}
+
+% ----------------------------------------------------------------
+\subsection{Gear Train Design}
+\label{sec:gear-design}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{image/GearCAD.png}
+	\caption{CAD view of the gear train and motor arrangement.}
+	\label{fig:cad-gear-train}
+\end{figure}
+
+% \begin{figure}[H]
+% 	\centering
+% 	\includegraphics[width=0.8\textwidth]{image/GearCAD.png}
+% 	\caption{Additional CAD view of the gear assembly.}
+% 	\label{fig:cad-additional-view}
+% \end{figure}
+
+\subsubsection{SMORES-EP Reference Baseline}
+
+The original SMORES-EP gear train was reverse-engineered from published data (Table~\ref{tab:smores-ref}), yielding module $m = 1.4$, pitch diameter \SI{67.2}{mm}, and stage ratio $48/9 = 5.33$.
+
+\begin{table}[H]
+	\centering
+	\caption{Reconstructed SMORES-EP reference parameters.}
+	\label{tab:smores-ref}
+	\begin{tabular}{ll}
+		\toprule
+		\textbf{Parameter} & \textbf{SMORES-EP} \\
+		\midrule
+		Module envelope & $80 \times 80 \times 80$\,mm \\
+		Spur gear       & 48 teeth \\
+		Crown gear      & Same part as spur, used at \SI{90}{\degree} \\
+		Pinion          & 9 teeth \\
+		Gearbox         & 298:1 \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+\subsubsection{New Gear Geometry}
+
+The \SI{100}{mm} envelope allows a max spur gear OD of \SI{90}{mm}. The 5.33:1 ratio was preserved (64/12 teeth) to keep the gearbox selection, SMORES-EP benchmarks, and control firmware valid. The 64/12 pair was chosen over 48/9 because 12 teeth reduces undercutting, improves contact ratio, and provides a larger pinion bore.
+
+Unlike SMORES-EP (which reuses a spur gear as a crown gear), this design uses a \textbf{true crown (face) gear} for better load distribution. The crown gear was sized to \SI{84}{mm} OD (46 teeth, $m = 1.75$) after a \SI{90}{mm} first attempt interfered with surrounding components.
+
+This creates a \textbf{module mismatch} ($m = 1.36$ spur vs.\ $m = 1.75$ crown) --- an accepted compromise since both diameters and tooth counts are fixed by packaging and ratio constraints. The crown dedendum was reduced to \SI{2.15}{mm} (from standard \SI{2.19}{mm}) to clear tip interference.
+
+\begin{table}[H]
+	\centering
+	\caption{Final gear train parameters.}
+	\label{tab:final-params}
+	\begin{tabular}{llllp{4.0cm}}
+		\toprule
+		\textbf{Component} & \textbf{Teeth} & \textbf{Module} & \textbf{OD} & \textbf{Notes} \\
+		\midrule
+		Wheel spur gear & 64 & \num{1.36} & \SI{90}{mm} &
+		\SI{5}{mm} face width, bolt holes in web \\
+		\addlinespace
+		Pinion (both) & 12 & \num{1.36} & \SI{19.04}{mm} &
+		Through-bore (pan/tilt) or blind (wheel) \\
+		\addlinespace
+		Crown gear & 46 & \num{1.75} & \SI{84}{mm} &
+		Dedendum \SI{2.15}{mm}; true face-gear \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+Common: \SI{20}{\degree} pressure angle, \SI{0.2}{mm} backlash, \SI{0.3}{mm} root fillet, \SI{0.1}{mm} bore tolerance. All gears generated via Fusion~360. Material: 3D-printed nylon.
+
+\subsubsection{Drivetrain Architecture}
+
+Four motors drive four spur gears:
+\begin{itemize}
+	\item \textbf{Outer two} --- each drives a wheel (differential-drive locomotion).
+	\item \textbf{Inner two} --- both mesh with a single crown gear:
+	      same direction $\rightarrow$ \textbf{pan};
+	      opposite directions $\rightarrow$ \textbf{tilt}.
+\end{itemize}
+
+\subsubsection{Status}
+
+All geometry is CAD-only. \textbf{No parts have been printed or tested.} Priority next steps: print first articles, verify spur/crown mesh despite module mismatch, check 12-tooth pinion undercut at print tolerances, and validate backlash and bore fit.
+
+% ----------------------------------------------------------------
+\subsection{Outer Wheels}
+
+Two independently driven wheels (\SI{100}{mm} diameter) with NBR N70 O-ring tire groove (\SI{1.5}{mm} cross-section), EP-magnet docking space, and PCB mounting posts.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{image/inside_wheel.png}
+	\caption{Interior view of the wheel and drivetrain assembly.}
+	\label{fig:cad-inside-wheel}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{image/outside_wheel.png}
+	\caption{Exterior view of the wheel and module assembly.}
+	\label{fig:cad-outside-wheel}
+\end{figure}
+
+\subsection{Pan Face}
+
+\SI{90}{mm} diameter, no O-ring groove. Includes EP-magnet docking space.
+
+\subsection{Tilt Face}
+
+Approximately $90 \times 71.6$\,mm rectangular part with EP-magnet docking space and an additional motor mount.
+
+% ================================================================
+\section{Electronics}
+\label{sec:electronics}
+% ================================================================
+
+\subsection{Phased Electronics Plan}
+
+Electronics are built incrementally across project phases:
+
+\begin{itemize}
+  \item \textbf{Phase A-1:} COTS parts --- 2S battery, 4-channel motor driver with MCU, ESP32-C3 for Wi-Fi.
+  \item \textbf{Phase A:} Custom PCBs --- power board (buck, LDO, 4$\times$ H-bridge with current sensing) and main board (STM32G474, IMU, UWB, Wi-Fi).
+  \item \textbf{Phase B:} In-wheel PCB with EP-Face circuitry and IR contact-alignment, connected via slip ring.
+  \item \textbf{Phase C:} RGB-D/ToF camera (Sipeed MaixSense A075V) + wheel encoder added; compute still external.
+  \item \textbf{Phase D:} Raspberry Pi CM5 on custom carrier PCB moves compute onboard.
+\end{itemize}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{image/Phase_A_1_Diagram.png}
+  \caption{Phase A-1 electronics block diagram.}
+  \label{fig:phase-a1}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{image/Phase_A_Diagram.png}
+  \caption{Phase A electronics block diagram.}
+  \label{fig:phase-a}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{image/Phase_B_Diagram.png}
+  \caption{Phase B electronics block diagram.}
+  \label{fig:phase-b}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{image/Phase_C_Diagram.png}
+  \caption{Phase C electronics block diagram.}
+  \label{fig:phase-c}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{image/Phase_D_Diagram.png}
+  \caption{Phase D electronics block diagram.}
+  \label{fig:phase-d}
+\end{figure}
+
+% ----------------------------------------------------------------
+\subsection{Component Selection}
+
+\begin{table}[H]
+\centering\small
+\caption{Key electronics components.}
+\label{tab:components}
+\begin{tabular}{@{}L{0.18\textwidth} L{0.15\textwidth} L{0.35\textwidth} L{0.22\textwidth}@{}}
+\toprule
+\textbf{Component} & \textbf{Phase} & \textbf{Key Specs} & \textbf{Interface / Supply} \\
+\midrule
+4$\times$ N20 gearmotor & A-1+ & 6\,V, 50\,rpm; 7\,PPR encoder & A/B quadrature; H-bridge \\
+STM32G474 & A+ & Cortex-M4F @ 170\,MHz; 12-bit ADC; FDCAN & SPI/I2C/UART/CAN; 3.3\,V \\
+ICM-42688-P & A+ & $\pm$2000\,dps / $\pm$16\,g; 32\,kHz ODR & SPI or I2C; 1.8\,V \\
+DW3000 (UWB) & A+ & IEEE 802.15.4z; $\sim$10\,cm ranging & SPI; 3.3\,V \\
+ESP32-C3 & A-1+ & Wi-Fi 4 + BLE 5; RISC-V @ 160\,MHz & UART/SPI; 3.3\,V \\
+EP-Face + IR PCB & B & Custom; EP magnet + IR alignment & Slip ring; 3.3\,V \\
+RPi CM5 & D & Cortex-A76 @ 2.4\,GHz; up to 16\,GB RAM & Custom carrier; 5\,V \\
+Sipeed MaixSense A075V & C+ & ToF 320$\times$240 @ 30\,fps; RGB 800$\times$600 & USB 2.0; 5\,V \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ----------------------------------------------------------------
+\subsection{Electronics Packaging}
+
+All components fit within the \SI{100}{mm} cube based on rough CAD placement (Figures~\ref{fig:elec-assembly}--\ref{fig:elec-exploded}).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\textwidth]{image/Elec_Assembly.png}
+  \caption{Electronics packaging --- assembled.}
+  \label{fig:elec-assembly}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\textwidth]{image/Elec_Exploded_View.png}
+  \caption{Electronics packaging --- exploded.}
+  \label{fig:elec-exploded}
+\end{figure}
+
+% ----------------------------------------------------------------
+\subsection{Wheel Encoder}
+
+Replacing the original continuous-rotation potentiometer ($\sim$5$^\circ$ resolution, contact wear) with a non-contact encoder. Three options considered:
+
+\begin{table}[H]
+\centering\small
+\caption{Wheel encoder options.}
+\label{tab:encoders}
+\begin{tabular}{@{}L{0.20\textwidth} L{0.24\textwidth} L{0.24\textwidth} L{0.24\textwidth}@{}}
+\toprule
+& \textbf{On-axis magnetic} (AS5600) & \textbf{Off-axis tape} & \textbf{Custom inductive} \\
+\midrule
+Output & Absolute, 12--14 bit & Incremental + index & Absolute \\
+EP interference & Sensitive & Sensitive & Immune \\
+Design effort & Low & Medium & High \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The inductive option best handles the EP connector's nearby field but has the highest schedule risk. Decision deferred to Phase C.
+
+% ----------------------------------------------------------------
+\subsection{Power System}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{image/Power_Diagram.png}
+  \caption{Power distribution block diagram.}
+  \label{fig:power-diagram}
+\end{figure}
+
+Power from a 2S LiPo (3000\,mAh, 22.2\,Wh) splits three ways:
+\begin{itemize}
+  \item \textbf{Motors:} 4$\times$ N20 via H-bridges, PWM capped at $\sim$70\,\% for 6\,V rating.
+  \item \textbf{EP-Face:} Dedicated buck regulator isolates pulse transients from logic rail.
+  \item \textbf{Logic/compute:} Buck to 5\,V (CM5, camera); LDO to 3.3\,V (MCU, sensors, radios).
+\end{itemize}
+
+\begin{table}[H]
+\centering\small
+\caption{Power budget summary.}
+\label{tab:power-summary}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{Configuration} & \textbf{Total from Pack} & \textbf{Est.\ Run Time} \\
+\midrule
+Phase A--B (no compute/camera) & $\sim$3.1\,W & $\sim$\textbf{5.8\,h} \\
+Phase D (full system) & $\sim$11.5\,W & $\sim$\textbf{1.5\,h} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering\small
+\caption{Maximum load per rail.}
+\label{tab:rail-max}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{Rail} & \textbf{Max Current} & \textbf{Max Power} \\
+\midrule
+Motor drive (PWM to 6\,V) & 4.0\,A (6\,V eq.) & 24\,W \\
+5\,V logic/compute & 4.0\,A & 20\,W \\
+3.3\,V (from 5\,V LDO) & 0.45\,A & 1.5\,W \\
+EP-Face + IR & TBD & TBD \\
+\midrule
+\textbf{Pack total (peak)} & $\sim$6.5\,A @ 7.4\,V & $\sim$47\,W \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ================================================================
+\section{Preparation for Phase B: EP Magnet}
+\label{sec:phase-b-magnet}
+% ================================================================
+
+The docking system uses an Electro-Permanent Magnet (EPM) connector based on SMORES-EP \cite{tosun2016}. Each EP unit pairs an AlNiCo~5 magnet (low coercivity, switchable) with an NdFeB magnet (high coercivity, fixed) between steel pole pieces, wound with a copper coil.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{image/inside_rectangular_magnet_housing.png}
+	\caption{Interior view of the rectangular magnet housing.}
+	\label{fig:cad-magnet-housing}
+\end{figure}
+
+\textbf{Operating principle:} A current pulse through the coil reverses AlNiCo~5 magnetisation while NdFeB stays fixed. Fields aligned $\rightarrow$ \textbf{ON} (attract); fields opposed $\rightarrow$ \textbf{OFF} (release). No power needed to hold either state.
+
+\textbf{Materials:} AlNiCo~5 rod, NdFeB magnet, mild steel 1018/S20C pole pieces, 30~AWG enamelled copper wire (200 turns). Original dimensions (4.76\,mm dia.\ $\times$ 9.53\,mm, four magnets in 42\,mm ring) being adapted for the \SI{100}{mm} face. Final dimensions and driving circuit to be set in Phase~B testing.
+
+% ================================================================
+\section{Shaft Tolerance Analysis ($\varnothing$\SI{55}{mm} Bearing)}
+\label{sec:shaft-tolerance}
+% ================================================================
+
+The plain bearing (OD = \SI{55}{mm}) acts as the shaft. All nylon-printed components have bores around it.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{image/shaft_component.png}
+	\caption{Shaft and bearing component arrangement.}
+	\label{fig:shaft-component}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Joint classification and ISO fits for $\varnothing$\SI{55}{mm} bearing.}
+\label{tab:shaft-joints}
+\begin{tabular}{@{}cllll@{}}
+\toprule
+\textbf{Joint} & \textbf{Component} & \textbf{Motion} & \textbf{Fit} & \textbf{ISO Class} \\
+\midrule
+J1 & Wheel + 1\textsuperscript{st} Spur Gear & Dynamic & Clearance & F7/h6 \\
+J2 & 2\textsuperscript{nd} Spur Gear (Pan/Tilt) & Dynamic & Clearance & F7/h6 \\
+J3 & Upper Tilt Joint & Dynamic & Clearance & F7/h6 \\
+J4 & Lower Tilt Joint & \textbf{Static} & \textbf{Interference} & P7/h6 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{ISO\,286 limits} (bearing h6: $55.000$--$54.981$\,mm): Dynamic F7 bore $55.030$--$55.060$\,mm (clearance $+0.030$ to $+0.079$\,mm); Static P7 bore $54.938$--$54.968$\,mm (interference $+0.013$ to $+0.062$\,mm).
+
+\textbf{FDM nylon compensation:} Printed holes shrink $\sim$0.10--0.30\,mm. Dynamic bores get $+0.20$\,mm compensation; static bores get $+0.10$\,mm (shrinkage helps create interference).
+
+\begin{table}[H]
+\centering
+\caption{Recommended CAD bore sizes.}
+\label{tab:shaft-quickref}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}llcc@{}}
+\toprule
+\textbf{Part} & \textbf{Joint} & \textbf{CAD Bore (mm)} & \textbf{Expected Fit} \\
+\midrule
+Wheel / Spur Gears / Upper Tilt & J1--J3 Dynamic & $\varnothing 55.30$ & $\approx 0.10$--$0.20$ CL \\
+Lower Tilt Joint & J4 \textbf{Static} & $\varnothing 54.90$ & $\approx 0.05$--$0.15$ IF \\
+\bottomrule
+\multicolumn{4}{@{}l}{\footnotesize CL = Clearance \quad IF = Interference \quad Bearing OD = $\varnothing 55.00$\,mm}
+\end{tabular}
+\end{table}
+
+\textbf{Test plan:} Print nylon test rings at five bore sizes per fit type (dynamic: 55.10--55.50\,mm; static: 54.70--55.10\,mm). Cool $\geq$2\,h, measure with caliper at 3 angles. Pick smallest dynamic bore that spins freely; largest static bore that prevents rotation.
+
+% ================================================================
+\section{Software Testing Plan (Phase A)}
+\label{sec:software-testing}
+% ================================================================
+
+\subsection{Objectives}
+
+Verify the integrated software pipeline: AprilTag detection and robot ID via external camera $\rightarrow$ real-time pose estimation $\rightarrow$ PID motor control $\rightarrow$ path planning and execution for MSRR configurations.
+
+\subsection{Setup}
+
+MSRR robot in a controlled indoor environment with an external camera, AprilTags for ID and pose reference, and a computing system running perception, localisation, planning, and control.
+
+\subsection{Goal Configurations}
+
+Snake, Car, DoubleDriver, L-shape.
+
+\subsection{Evaluation Metrics}
+
+\begin{itemize}
+\item \textbf{Detection rate} --- \% frames with correct AprilTag ID.
+\item \textbf{Position / orientation error} --- estimated vs.\ reference pose.
+\item \textbf{Tracking error} --- desired vs.\ actual position and heading during path following.
+\item \textbf{Control response} --- PID overshoot and steady-state error.
+\item \textbf{Processing rate} --- perception + control update frequency.
+\end{itemize}
+
+\subsection{Acceptance Criteria}
+
+Reliable tag detection, acceptable localisation and tracking error for real-time control, stable PID behaviour without excessive oscillation, and continuous operation without critical failures. Specific numerical thresholds to be defined based on system requirements.
+
+\begin{thebibliography}{9}
+
+\bibitem{tosun2016}
+Tosun, T., Davey, J., Liu, C., \& Yim, M. (2016). Design and characterization
+of the EP-Face connector. In \textit{IEEE/RSJ International Conference on
+Intelligent Robots and Systems (IROS)} (pp.\ 45--51).
+
+\bibitem{liu2023}
+Liu, C., Lin, Q., Kim, H., \& Yim, M. (2023). SMORES-EP, a modular robot with
+parallel self-assembly. \textit{Autonomous Robots}, 47(2), 211--228.
+\url{https://doi.org/10.1007/s10514-022-10078-1}
+(Preprint \textit{arXiv:2104.00800}, cited in some sections as Liu et al.,
+2021.)
+
+\end{thebibliography}
+
+\end{document}

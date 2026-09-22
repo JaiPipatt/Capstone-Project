@@ -1,0 +1,1191 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{textcomp}
+\usepackage{parskip}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{caption}
+\usepackage{enumitem}
+\usepackage{amsmath,amssymb}
+\usepackage{siunitx}
+\usepackage[hidelinks]{hyperref}
+
+% Table and caption conventions shared with Proposal.tex
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\renewcommand{\arraystretch}{1.35}
+\captionsetup{font=small,labelfont=bf,skip=6pt}
+\setlist[itemize]{topsep=2pt,itemsep=2pt,parsep=0pt,leftmargin=1.5em}
+\sisetup{detect-weight=true, detect-family=true}
+
+\title{Capstone Project Progress Report}
+\author{}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+% Keep each main topic in its own section so contributors can edit and
+% commit one part of the report without changing the rest of the document.
+
+\section{Project Timeline}
+\label{sec:project-timeline}
+
+% Add dated milestones, completed work, and upcoming deadlines here.
+\begin{itemize}
+	\item \textbf{Completed:} % Add completed milestones.
+	\item \textbf{In progress:} % Add current work.
+	\item \textbf{Next:} % Add the next milestone and its target date.
+\end{itemize}
+
+\section{Project Phases}
+\label{sec:project-phases}
+
+% Describe the purpose, status, and deliverables of each project phase.
+\subsection{Phase A}
+
+% Add the current status and key deliverables for Phase A.
+
+\subsection{Phase B}
+% Add the current status and key deliverables for Phase B.
+
+\subsection{Phase C}
+% Add the current status and key deliverables for Phase C.
+
+\subsection{Phase D}
+% Add the current status and key deliverables for Phase D.
+
+\section{Module CAD Design}
+\label{sec:module-cad-design}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{image/exploded_view.png}
+	\caption{Exploded view of the module CAD design.}
+	\label{fig:exploded-view}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{image/front.png}
+	\caption{Front view of the module CAD design.}
+	\label{fig:cad-front}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{image/rear.png}
+	\caption{Rear view of the module CAD design.}
+	\label{fig:cad-rear}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{image/top.png}
+	\caption{Top view of the module CAD design.}
+	\label{fig:cad-top}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{image/tilt.png}
+	\caption{Tilted sectional view of the module CAD design.}
+	\label{fig:cad-tilt}
+\end{figure}
+
+\subsection{Design Decisions: Wheel Gear, Pan/Tilt Crown Gear, and Pinions}
+\label{sec:gear-design}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{image/GearCAD.png}
+	\caption{CAD view of the gear train and motor arrangement.}
+	\label{fig:cad-gear-train}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{image/Drawing 8.png}
+	\caption{Additional CAD view of the gear assembly.}
+	\label{fig:cad-additional-view}
+\end{figure}
+
+\subsubsection{Starting Point: Reverse-Engineering the SMORES-EP Reference}
+
+SMORES-EP is not open-source, so no CAD or drawing set was available. The gear
+train therefore had to be reconstructed from published dimensions and
+photographs and then re-derived from first principles.
+
+The known reference parameters are listed in Table~\ref{tab:smores-ref}.
+
+\begin{table}[htbp]
+	\centering
+	\caption{Reconstructed SMORES-EP reference parameters.}
+	\label{tab:smores-ref}
+	\begin{tabular}{ll}
+		\toprule
+		\textbf{Parameter} & \textbf{SMORES-EP} \\
+		\midrule
+		Module envelope & $80 \times 80 \times 80$\,mm \\
+		Spur gear       & 48 teeth \\
+		Crown gear      & Same part as the spur gear, used at \SI{90}{\degree} \\
+		Pinion          & 9 teeth \\
+		Gearbox         & 298:1 \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+Assuming the \SI{80}{\milli\metre} cube is the full envelope (wheels included),
+the largest gear that can physically fit is approximately \SI{70}{\milli\metre}
+in outside diameter. Using the outside-diameter relation
+\begin{equation}
+	D_o = m(z + 2),
+\end{equation}
+\begin{equation}
+	m = \frac{70}{48 + 2} = 1.4 .
+\end{equation}
+
+This gives a consistent, self-checking picture of the original: module
+\num{1.4}, pitch diameter \SI{67.2}{\milli\metre}, and a stage ratio of
+$48/9 = 5.33$. This reconstructed module is the baseline against which all
+scaling decisions below are made.
+
+\subsubsection{Envelope Change and Its Consequences}
+
+The new module is $100 \times 100 \times 100$\,mm rather than
+\SI{80}{\milli\metre}. This was driven by internal packaging (motors,
+gearboxes, electronics, and the pan/tilt joint) rather than by the gears
+themselves, but it directly sets the available gear space.
+
+Allowing for wall thickness, bearing seats, and clearance to the housing, the
+largest practical spur gear outside diameter is \SI{90}{\milli\metre}.
+Everything downstream follows from that number.
+
+\subsubsection{Wheel Spur Gear and Pinion}
+
+\paragraph{Tooth counts --- why the ratio was held constant.}
+The decision made first, before any dimension was fixed, was to preserve the
+original \num{5.33}:1 stage ratio:
+\begin{itemize}
+	\item Spur gear: \textbf{64 teeth}
+	\item Pinion: \textbf{12 teeth}
+	\item Ratio: $64/12 = 5.33$ --- identical to $48/9$
+\end{itemize}
+
+The ratio was prioritised over any other parameter for three reasons:
+\begin{enumerate}
+	\item \textbf{The gearbox selection stays valid.} The 298:1 gearbox
+	      reduction combines with the external stage to give the same total
+	      reduction as the reference design. Output speed and stall torque at
+	      the wheel therefore remain comparable, so motor and gearbox sizing
+	      carried over from SMORES-EP remains a defensible starting point
+	      instead of an unverified guess.
+	\item \textbf{Published SMORES-EP performance data remains a usable
+	      benchmark.} Locomotion speed, climbing ability, and joint torque
+	      figures reported for the original can be treated as an approximate
+	      expectation for this design. If the ratio had been changed, every
+	      performance claim would have had to be re-derived from scratch with
+	      no reference to check against.
+	\item \textbf{Control and firmware behaviour is preserved.} Encoder counts
+	      per wheel revolution, velocity limits, and any feed-forward torque
+	      terms scale with the total reduction. Holding it constant removes a
+	      whole class of retuning work.
+\end{enumerate}
+
+\paragraph{Why 64/12 rather than 48/9 scaled directly.}
+Multiple tooth-count pairs give \num{5.33}:1. The pair 64/12 was chosen because
+increasing the pinion from 9 to 12 teeth materially improves the pinion, which
+is always the weakest and most heavily loaded element in the stage:
+\begin{itemize}
+	\item \textbf{Reduced undercutting.} At a \SI{20}{\degree} pressure angle
+	      the theoretical minimum tooth count before undercut is
+	      $z_{\min} = 2/\sin^{2}\SI{20}{\degree} \approx 17$. A 9-tooth pinion
+	      is far below this and suffers severe undercut at the tooth root,
+	      removing material exactly where bending stress is highest. A 12-tooth
+	      pinion is still below the theoretical limit, but the root section is
+	      considerably healthier.
+	\item \textbf{Higher contact ratio.} More teeth on the pinion increases the
+	      length of the line of action relative to the base pitch, so more teeth
+	      share the load at any instant. This reduces peak tooth stress and
+	      smooths torque transmission.
+	\item \textbf{Better load sharing per cycle.} A 12-tooth pinion completes
+	      fewer revolutions per gear revolution than a 9-tooth pinion, so each
+	      pinion tooth accumulates fewer loading cycles over the robot's life
+	      --- a direct fatigue-life benefit for the most stressed part.
+	\item \textbf{Larger pinion bore.} A 12-tooth pinion at this module has
+	      enough body to carry the motor shaft bore and the wall thickness
+	      around it without the bore breaking into the tooth roots.
+\end{itemize}
+
+\paragraph{Undercut outcome at 12 teeth.}
+Because 12 teeth sits below the \num{17}-tooth theoretical threshold, some root
+undercut is expected in the generated profile. On inspection of the generated
+geometry and on assembling the mesh in CAD, the undercut present at 12 teeth
+\textbf{does not cause interference}: the mating spur gear tooth tips clear the
+undercut region throughout the mesh cycle at the design centre distance, and no
+tip-to-root fouling is observed. The undercut is therefore accepted as a minor
+reduction in root section rather than treated as a defect requiring correction,
+and no profile shift was applied. This keeps the pinion a standard,
+directly generated part.
+
+\paragraph{Resulting geometry.}
+With 64 teeth at a \SI{90}{\milli\metre} outside diameter,
+\begin{equation}
+	m = \frac{90}{64 + 2} = 1.3636 \approx 1.36 .
+\end{equation}
+
+The resulting geometry is summarised in Table~\ref{tab:spur-geom}.
+
+\begin{table}[htbp]
+	\centering
+	\caption{Wheel spur gear and pinion geometry.}
+	\label{tab:spur-geom}
+	\begin{tabular}{ll}
+		\toprule
+		\textbf{Parameter} & \textbf{Value} \\
+		\midrule
+		Module, $m$                 & \num{1.36} \\
+		Pressure angle              & \SI{20}{\degree} (standard) \\
+		Spur gear teeth             & 64 \\
+		Spur pitch diameter         & \SI{87.04}{\milli\metre} \\
+		Spur outside diameter       & \SI{90}{\milli\metre} \\
+		Pinion teeth                & 12 \\
+		Pinion pitch diameter       & \SI{16.32}{\milli\metre} \\
+		Pinion outside diameter     & \SI{19.04}{\milli\metre} \\
+		Theoretical centre distance & \SI{51.68}{\milli\metre} \\
+		Face width                  & \SI{5}{\milli\metre} \\
+		Backlash                    & \SI{0.2}{\milli\metre} \\
+		Root fillet                 & \SI{0.3}{\milli\metre} \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+A \SI{20}{\degree} pressure angle was used throughout. It is the industry
+standard, it gives thicker tooth roots and better load capacity than
+\SI{14.5}{\degree}, it tolerates small centre-distance errors well (important
+for a printed or lightly-toleranced housing), and it is the default assumption
+of every standard gear generator and cutting tool, which keeps the design
+manufacturable by more than one process.
+
+The gears were generated using the \textbf{Fusion~360 spur gear extension},
+entering pressure angle, module, tooth count, backlash, root fillet, and face
+width directly. Using a parametric generator rather than hand-sketched profiles
+guarantees a true involute flank and makes it cheap to regenerate the part when
+an upstream parameter changes --- which, as the following subsection shows,
+happened repeatedly.
+
+The \SI{0.2}{\milli\metre} backlash and \SI{0.3}{\milli\metre} root fillet are
+deliberate manufacturing allowances rather than theoretical values. Backlash
+absorbs centre-distance error, shaft deflection, bearing play, and thermal
+expansion, preventing tooth binding; the root fillet reduces the stress
+concentration at the tooth root, which is the standard bending-failure
+location.
+
+\subsubsection{Pan/Tilt Crown Gear}
+
+\paragraph{Departure from the SMORES-EP approach.}
+SMORES-EP used a single gear part in two roles: as a conventional spur gear,
+and as a de facto crown gear meshing at \SI{90}{\degree}. This is convenient for
+manufacturing --- one part number, one tool --- but it is a compromise. A spur
+profile engaged at \SI{90}{\degree} does not have conjugate contact with its
+mate; contact degenerates toward a point or a short line near the tooth tip,
+which concentrates stress, increases wear, and produces a mesh that is
+sensitive to axial position.
+
+This design instead uses a \textbf{true crown (face) gear}, with teeth formed on
+the face of the disc and oriented vertically so that they mesh with the mating
+spur gear. This gives line contact across the tooth face and a substantially
+better load distribution for the same envelope.
+
+\paragraph{Iteration history.}
+The crown gear was the most constrained part in the assembly, because its
+diameter had to coexist with the motors, the gearboxes, the two wheel gear
+trains, and the structural frame --- all inside the \SI{100}{\milli\metre} cube.
+The iterations are given in Table~\ref{tab:crown-iter}.
+
+\begin{table}[htbp]
+	\centering
+	\caption{Crown gear sizing iterations.}
+	\label{tab:crown-iter}
+	\begin{tabular}{lllp{5.2cm}}
+		\toprule
+		\textbf{Iteration} & \textbf{Diameter} & \textbf{Teeth / Module} & \textbf{Outcome} \\
+		\midrule
+		1     & \SI{90}{\milli\metre} & 48 / \num{1.8}  & Interference with surrounding assembly --- rejected \\
+		Final & \SI{84}{\milli\metre} & 46 / \num{1.75} & Fits with clearance \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+The first attempt simply mirrored the spur gear's \SI{90}{\milli\metre}
+diameter. On assembly it fouled adjacent components, so the diameter had to be
+reduced. The final geometry is consistent with the same outside-diameter
+relation:
+\begin{equation}
+	D_o = 1.75 \times (46 + 2) = \SI{84}{\milli\metre}.
+\end{equation}
+
+\paragraph{Module mismatch: an accepted, envelope-driven compromise.}
+Standard gear practice requires that two meshing gears share the same module
+and the same pressure angle, since the module fixes the circular pitch and
+therefore whether the teeth index correctly against one another. That condition
+could not be satisfied here. Two constraints fixed the geometry before the
+module could be chosen freely:
+
+\begin{enumerate}
+	\item \textbf{Both diameters are fixed by packaging.} The spur gear outside
+	      diameter is capped at \SI{90}{\milli\metre} by the
+	      \SI{100}{\milli\metre} envelope, and the crown gear outside diameter
+	      is capped at \SI{84}{\milli\metre} by interference with the motors,
+	      gearboxes, and frame --- as established in the iteration above. Neither
+	      diameter is a free variable.
+	\item \textbf{The tooth counts are fixed by the ratios being preserved.} The
+	      spur gear must have 64 teeth to hold the \num{5.33}:1 wheel stage
+	      ratio, and the crown gear must stay near 46--48 teeth to hold the
+	      near-1:1 spur-to-crown relationship of the original design.
+\end{enumerate}
+
+With both $D_o$ and $z$ fixed on each part, $m = D_o/(z+2)$ is fully determined,
+and the two values simply are not equal: \num{1.36} for the spur gear against
+\num{1.75} for the crown gear. Forcing a common module would have required
+either abandoning the preserved gear ratios --- discarding the benchmark value
+of the SMORES-EP reference data and the validity of the motor and gearbox
+selection --- or enlarging a gear beyond the envelope it has to fit in.
+
+The design therefore treats matched modules as the parameter to sacrifice,
+because it is the one whose relaxation is recoverable at assembly (through
+tooth-depth and backlash adjustment) rather than structural. Concretely, the
+crown tooth depth was tuned during iteration to obtain a working mesh at the
+assembled centre distance, and the dedendum modification described below is
+part of that adjustment. This is a documented deviation from standard practice
+rather than an oversight, and it is one of the primary items to be validated
+once physical parts exist.
+
+\paragraph{Why tooth count was held near 1:1 with the spur gear.}
+The original design has an effective 1:1 tooth-count relationship between spur
+and crown (48 and 48). Rather than abandoning this when the diameter had to
+shrink, the design keeps the counts as close as the envelope permits:
+\textbf{46 teeth against the original's 48}, a \SI{4}{\percent} deviation.
+
+Keeping the tooth counts nearly equal, and therefore the tooth size nearly
+equal, matters for several reasons:
+\begin{itemize}
+	\item \textbf{The pan/tilt joint ratio stays near unity.} With a near-1:1
+	      mesh, output speed and torque at the joint are close to what the
+	      driving stage delivers. The joint's angular velocity and holding
+	      torque are therefore predictable from the motor and gearbox
+	      specification without an extra reduction factor to characterise, and
+	      the SMORES-EP joint performance data stays usable as a benchmark.
+	\item \textbf{Tooth size --- not just ratio --- sets load capacity.} Tooth
+	      bending strength scales roughly with the square of the module for a
+	      given face width and material (Lewis bending equation). A 46-tooth
+	      crown at $m = 1.75$ has \emph{larger} teeth than the 64-tooth spur at
+	      $m = 1.36$, so the crown teeth are individually stronger. This is
+	      desirable: the crown gear carries the full pan/tilt reaction load,
+	      including any static holding torque when the joint is supporting the
+	      robot's own weight or resisting an external load, and it is the harder
+	      part to replace.
+	\item \textbf{Mesh symmetry between the two driving gears.} Because two
+	      identical spur gears drive the single crown from opposite sides,
+	      keeping the crown's tooth size and count close to symmetric ensures
+	      both meshes see comparable loading and wear, rather than one side
+	      dominating.
+	\item \textbf{No hidden speed asymmetry between pan and tilt.} Pan and tilt
+	      are produced by the same two inputs in common mode or differential
+	      mode. A near-1:1 crown keeps the effective ratio for both modes
+	      similar, so the two motions have comparable speed and torque
+	      characteristics and can share a single control tuning.
+\end{itemize}
+
+\paragraph{Dedendum modification.}
+Standard practice sets the dedendum to $1.25\,m$, which for $m = 1.75$ gives
+\SI{2.1875}{\milli\metre}. The design uses a slightly reduced
+\SI{2.15}{\milli\metre}.
+
+This small reduction (\SI{0.0375}{\milli\metre}, about \SI{1.7}{\percent}) trims
+the root depth just enough to clear the mating tooth tip within the assembled
+centre distance without carving further into the root section. Because tooth
+bending strength is governed by the root thickness, a shallower dedendum
+marginally \emph{increases} the root section and therefore does not weaken the
+tooth --- the trade-off is a small reduction in tip clearance, which is
+acceptable given the \SI{0.2}{\milli\metre} backlash already designed in. It is
+a compromise between manufacturing feasibility and the clearance required to
+avoid tip-to-root interference.
+
+\subsubsection{Pinion Mounting and Tolerances}
+
+The two pinion variants differ only in how they attach to the motor shaft,
+which is dictated by their position in the assembly
+(Table~\ref{tab:pinion-mount}).
+
+\begin{table}[htbp]
+	\centering
+	\caption{Pinion bore variants.}
+	\label{tab:pinion-mount}
+	\begin{tabular}{llp{6.2cm}}
+		\toprule
+		\textbf{Pinion} & \textbf{Bore} & \textbf{Rationale} \\
+		\midrule
+		Pan/tilt & Through-hole &
+		The motor shaft passes fully through the pinion, allowing the shaft to be
+		supported on both sides and the pinion to sit at an arbitrary axial
+		position along it \\
+		\addlinespace
+		Wheel & Blind hole &
+		Fitted onto the end of the shaft; the closed face provides a positive
+		axial stop and a sealed, stiffer end \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+A \SI{0.1}{\milli\metre} tolerance is applied to the shaft bores. This is a
+clearance/transition allowance covering manufacturing variation in both the
+printed or machined bore and the shaft diameter. Too tight and the pinion cracks
+or cannot be assembled; too loose and backlash appears at the shaft interface,
+degrading positional accuracy and introducing shock loading on direction
+reversal.
+
+The gears and plain-bearing surfaces will be printed in nylon. Nylon was
+selected because it provides good strength for the expected mechanical loads
+while also offering relatively low friction and wear, which is useful for the
+plain-bearing interfaces in the module. The final shaft-to-bore fit is not yet
+treated as fixed: a test shaft and bore will be printed first, measured, and
+assembled to determine whether the nominal \SI{0.1}{\milli\metre} allowance
+provides the required balance between free movement and acceptable backlash.
+The bore dimension will be adjusted if the first test shows that the printed
+nylon shrinks, distorts, or grips the shaft more than expected.
+
+The spur gear carries a bolt-hole pattern on its web for attachment to the wheel
+hub and to adjacent structural parts. Placing the holes in the web rather than
+near the rim keeps them clear of the tooth root region, where bending stress is
+highest.
+
+\subsubsection{Drivetrain Architecture}
+
+The module uses \textbf{four motors driving four spur gears}:
+\begin{itemize}
+	\item \textbf{Outer two spur gears} --- one per side, each driving a wheel
+	      directly. These provide differential-drive locomotion.
+	\item \textbf{Inner two spur gears} --- both mesh with the \textbf{single
+	      crown gear} that carries the two side-mounted spur gears.
+\end{itemize}
+
+The pan/tilt degrees of freedom are produced differentially from these two
+inner inputs:
+\begin{itemize}
+	\item Inner gears rotating in the \textbf{same direction} (common mode)
+	      $\rightarrow$ \textbf{pan}
+	\item Inner gears rotating in \textbf{opposite directions} (differential
+	      mode) $\rightarrow$ \textbf{tilt}
+\end{itemize}
+
+This differential arrangement is the main structural reason the crown gear
+geometry matters so much. Both inner spur gears must mesh with the same crown
+gear simultaneously and symmetrically; any asymmetry in the two meshes appears
+as a coupling error between the pan and tilt axes, not merely as local wear. It
+also explains why crown gear diameter was the binding constraint during
+iteration --- it must remain concentric with the joint axis while two separate
+drive trains and two wheel trains are packed around it.
+
+\subsubsection{Summary of Final Parameters}
+
+\begin{table}[htbp]
+	\centering
+	\caption{Final gear train parameters.}
+	\label{tab:final-params}
+	\begin{tabular}{llllp{4.0cm}}
+		\toprule
+		\textbf{Component} & \textbf{Teeth} & \textbf{Module} & \textbf{Outside dia.} & \textbf{Notes} \\
+		\midrule
+		Wheel/drive spur gear & 64 & \num{1.36} & \SI{90}{\milli\metre} &
+		\SI{5}{\milli\metre} face width, mounting holes in web \\
+		\addlinespace
+		Pinion (both types) & 12 & \num{1.36} & \SI{19.04}{\milli\metre} &
+		Through-bore (pan/tilt) or blind bore (wheel) \\
+		\addlinespace
+		Crown gear & 46 & \num{1.75} & \SI{84}{\milli\metre} &
+		Dedendum \SI{2.15}{\milli\metre}; true face-gear teeth \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+Common to all: \SI{20}{\degree} pressure angle, \SI{0.2}{\milli\metre} backlash,
+\SI{0.3}{\milli\metre} root fillet, \SI{0.1}{\milli\metre} bore tolerance.
+
+\subsubsection{Current Status and Remaining Work}
+
+All of the geometry above exists as a CAD model only. \textbf{No part of the
+gear train has been 3D printed, manufactured, or tested in the real world at the
+time of writing.} Every clearance, interference, and mesh result reported in
+this section was obtained from the CAD assembly, not from physical hardware, and
+should be read as a design intent rather than a verified outcome.
+
+The following items are therefore outstanding and are the priority for the next
+phase:
+\begin{itemize}
+	\item Print a first article of the spur gear, both pinions, and the crown
+	      gear, and verify that the spur/crown mesh functions despite the
+	      module mismatch discussed above.
+	\item Confirm that the 12-tooth pinion's undercut remains non-interfering at
+	      real printed tolerances, where layer resolution and shrinkage are
+	      additional error sources not captured in CAD.
+	\item Check that the \SI{0.2}{\milli\metre} backlash and
+	      \SI{0.1}{\milli\metre} bore tolerance are appropriate for the chosen
+	      printing process and material; adjust and reprint if the fit is tight
+	      or loose.
+	\item Measure the achieved pan and tilt ranges and the joint holding torque
+	      against the SMORES-EP benchmark figures used to justify the ratio
+	      decisions.
+	\item Run an endurance check on the crown gear teeth, which carry the
+	      highest sustained load in the assembly.
+\end{itemize}
+
+The outer mechanical design is based on the SMORES-EP modular robot developed by the ModLab at the University of Pennsylvania \cite{smores_ep}. The original SMORES-EP module is approximately \(80\) mm in size. For our prototype, the main dimensions were adapted to \(100\) mm to provide more space for the required mechanical and electronic components.
+
+\subsection{Outer Wheels}
+
+Two independently driven outer wheels were designed based on the differential-drive arrangement of SMORES-EP. Each wheel has a diameter of \(100\) mm and includes a groove for an NBR N70 O-ring with a cross-section of approximately \(1.5\) mm, which is used as the rubber tire. Space for the EP-magnet docking mechanism is also provided in the wheel. Mounting posts were added to provide a mounting location for the PCB that will generate the electrical pulse for switching the EP-magnet coil.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{image/inside_wheel.png}
+	\caption{Interior view of the wheel and drivetrain assembly.}
+	\label{fig:cad-inside-wheel}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{image/outside_wheel.png}
+	\caption{Exterior view of the wheel and module assembly.}
+	\label{fig:cad-outside-wheel}
+\end{figure}
+
+\subsection{Pan Face}
+
+The pan face was designed based on the SMORES-EP pan mechanism. It has a diameter of \(90\) mm and does not include the O-ring groove used on the driving wheels. Space for the EP-magnet docking mechanism is included in the face.
+
+\subsection{Tilt Face}
+
+The tilt face was adapted from the SMORES-EP tilt mechanism. The outer rectangular part has dimensions of approximately \(90 \times 71.6\) mm and includes space for the EP-magnet docking mechanism. An additional motor mount was added to accommodate the motor used in our prototype.
+
+\section{Electronics: Project Plan and Current State}
+\label{sec:electronics}
+% Natttt
+
+\subsection{Electronics work plan}
+\label{sec:elec-work-plan}
+
+The electronics work follows the four project phases, split into A-1, A, B, C
+and D. Each phase's block diagram shows the subsystems built in that phase;
+dashed boxes mark the module or PDB that holds them.
+
+Phase A-1 uses COTS parts for early locomotion and mechanism testing: a 2S
+battery, a 4-channel motor driver with built-in MCU, and an ESP32-C3 for
+Wi-Fi (Figure~\ref{fig:phase-a1}).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{image/Phase_A_1_Diagram.png}
+  \caption{Phase A-1 electronics block diagram.}
+  \label{fig:phase-a1}
+\end{figure}
+
+Phase A needs basic locomotion under external command, and starts the custom
+PCB work. A custom PCB is needed because the SMORES package must fit many
+components, with onboard perception and compute as the end goal. Two boards
+(Figure~\ref{fig:phase-a}):
+
+\begin{itemize}
+  \item \textbf{Power board} --- step-down regulator, LDO, four H-bridge
+        drivers with current sensing.
+  \item \textbf{Main board} --- MCU for the H-bridges, IMU, UWB for
+        inter-module ranging, Wi-Fi.
+\end{itemize}
+
+Both boards expose external GPIO for the components added in Phases B, C
+and D.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{image/Phase_A_Diagram.png}
+  \caption{Phase A electronics block diagram.}
+  \label{fig:phase-a}
+\end{figure}
+
+Phase B needs module-to-module connection. The work is an in-wheel PCB with
+the EP-Face circuitry and the IR contact-alignment circuit. It is powered from
+the power board and talks to the main board through a slip ring, covered in
+the electrical connection section (Figure~\ref{fig:phase-b}).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{image/Phase_B_Diagram.png}
+  \caption{Phase B electronics block diagram.}
+  \label{fig:phase-b}
+\end{figure}
+
+Phase C adds onboard perception: an RGB-D/ToF camera, with the compute unit
+still wired externally. It also adds a wheel encoder, because the motor's
+built-in encoder sits before several gear stages and cannot sense wheel angle
+precisely (Figure~\ref{fig:phase-c}).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{image/Phase_C_Diagram.png}
+  \caption{Phase C electronics block diagram.}
+  \label{fig:phase-c}
+\end{figure}
+
+Phase D moves compute inside the robot: a Raspberry Pi Compute Module 5 on a
+custom carrier PCB, connected to the main board and the camera
+(Figure~\ref{fig:phase-d}).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{image/Phase_D_Diagram.png}
+  \caption{Phase D electronics block diagram.}
+  \label{fig:phase-d}
+\end{figure}
+
+\subsection{Electronics component selection}
+\label{sec:elec-components}
+
+Table~\ref{tab:components} lists the selected components, their subsystem and
+the specifications behind the choice. Values are from datasheets; the EP-Face
+and IR board is custom and its figures come from the Phase B build.
+
+\begin{table}[H]
+\centering\small
+\caption{Selected electronics components by subsystem.}
+\label{tab:components}
+\begin{tabular}{@{}L{0.16\textwidth} L{0.21\textwidth} L{0.35\textwidth}
+                    L{0.18\textwidth}@{}}
+\toprule
+\textbf{Component} & \textbf{Subsystem and phase} &
+\textbf{Key specifications} & \textbf{Interface and supply} \\
+\midrule
+4 $\times$ N20 gearmotor with encoder &
+  Joint drive for the four DoF (left, right, pan, tilt); Phase A-1 onward &
+  6\,V, 50\,rpm; magnetic quadrature encoder, 7\,PPR, on the motor shaft &
+  A/B quadrature to the MCU; driven by H-bridge \\
+STM32G474 &
+  Main-board MCU: joint control, sensor sampling, data link; Phase A onward &
+  Cortex-M4F at 170\,MHz; timer-triggered 12-bit ADCs; three FDCAN &
+  SPI, I2C, UART, CAN; 1.71--3.6\,V \\
+ICM-42688-P &
+  6-axis IMU for attitude and orientation; Phase A onward &
+  Gyro $\pm$2000\,dps, accel $\pm$16\,g; ODR to 32\,kHz &
+  SPI or I2C; 1.71--3.6\,V \\
+Qorvo (Decawave) DW3000 &
+  UWB transceiver for inter-module ranging and coarse relative localisation;
+  Phase A onward &
+  IEEE 802.15.4z; channels 5 and 9; ranging accuracy of order 10\,cm &
+  SPI; 2.4--3.6\,V \\
+ESP32-C3 &
+  Wi-Fi link; standalone controller in Phase A-1, wireless co-processor from
+  Phase A &
+  RISC-V at 160\,MHz; Wi-Fi 4 and Bluetooth 5 LE &
+  UART or SPI to the main MCU; 3.0--3.6\,V \\
+EP-Face and IR board &
+  In-wheel docking face: electropermanent magnet connector and IR
+  contact-alignment sensing; Phase B &
+  Custom PCB; EP magnet pulse-switched, holds with no power; IR
+  emitter/receiver pairs. Figures set by the Phase B design &
+  Powered from the power board; data via slip ring \\
+Raspberry Pi Compute Module 5 &
+  Onboard compute for perception and planning; Phase D &
+  Quad-core Cortex-A76 at 2.4\,GHz; 2--16\,GB RAM; PCIe and MIPI CSI &
+  Custom carrier board; 5\,V \\
+Sipeed MaixSense A075V &
+  RGB-D/ToF camera for onboard perception; Phase C onward &
+  ToF depth 320 $\times$ 240 at 30\,fps, range 0.2--2\,m; RGB 800 $\times$ 600 &
+  USB 2.0 or UART; 5\,V \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Electronics packaging: space feasibility analysis}
+\label{sec:elec-packaging}
+
+All electronics must fit inside the robot at the final stage. We made rough
+CAD models of each component (battery, power board, main board, compute unit,
+camera, wheel encoder, in-wheel board) and placed them in the robot structure.
+Everything fits within the current mechanical design, so space is not
+expected to be a problem later in the project.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.75\textwidth]{image/Elec_Assembly.png}
+  \caption{Electronics packaging CAD, assembled.}
+  \label{fig:elec-assembly}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.75\textwidth]{image/Elec_Exploded_View.png}
+  \caption{Electronics packaging CAD, exploded view.}
+  \label{fig:elec-exploded}
+\end{figure}
+
+\subsection{Additional scope not covered in the proposal: wheel encoder}
+\label{sec:wheel-encoder}
+
+The original SMORES sensed joint angle with a continuous-rotation
+potentiometer geared to the joint shaft. The wiper voltage gives the shaft
+angle directly, so position is absolute at power-up with no homing. The cost
+is coarse resolution (about 5$^\circ$), contact wear, and backlash from the
+gear stage. The project is replacing this with a non-contact encoder.
+
+Three options were considered; Table~\ref{tab:encoders} compares them.
+
+\begin{table}[H]
+\centering\small
+\caption{Wheel-rotation sensing options compared.}
+\label{tab:encoders}
+\begin{tabular}{@{}L{0.14\textwidth} L{0.26\textwidth} L{0.26\textwidth}
+                    L{0.26\textwidth}@{}}
+\toprule
+\textbf{Criterion} &
+\textbf{On-axis magnetic rotary encoder (e.g.\ AS5600, AS5048)} &
+\textbf{Off-axis magnetic tape encoder (1\,mm pole pitch)} &
+\textbf{Custom inductive encoder (PCB coil and inductance-to-digital IC)} \\
+\midrule
+Sensing principle &
+  Diametrically magnetised magnet on the shaft end, read by a Hall-effect IC;
+  angle from $\operatorname{atan2}(\sin,\cos)$ &
+  Magnetised tape ring bonded to the wheel rim, read off-axis by a
+  magnetoresistive or Hall read head at a fixed radial gap &
+  PCB transmit and receive coils excite eddy currents in a conductive rotor
+  target; phase and amplitude of the return signal encode angle \\
+Output &
+  Absolute over one turn &
+  Incremental; an index or reference mark is needed to recover absolute
+  position &
+  Absolute over one turn, depending on coil layout \\
+Resolution &
+  12--14 bit; below 0.1$^\circ$ with interpolation &
+  Set by pole pitch and interpolation; medium to high &
+  Set by coil geometry; comparable to magnetic encoders with interpolation \\
+Mounting &
+  Requires a free shaft end centred on the sensor IC &
+  Anywhere on the rim; the shaft end stays free &
+  Flat PCB facing the rotor target with a controlled sub-millimetre air gap \\
+Immunity to magnetic fields &
+  Sensitive to stray fields from the motors and the EP connector; needs
+  shielding or standoff distance &
+  Same exposure as on-axis, plus sensitivity to tape bonding and alignment
+  error &
+  Immune; unaffected by the motors or the EP connector \\
+Design effort and cost &
+  Low; off-the-shelf IC with mature firmware &
+  Medium; tape must be applied and aligned precisely, and a dedicated
+  read-head IC is needed &
+  High; custom coil design, rotor target machining and calibration, with no
+  drop-in part \\
+Fit for this project &
+  Simplest and lowest risk, but the SMORES layout already uses the wheel shaft
+  end for gearing and mounting, so a clear axial spot must be reserved &
+  Frees the shaft end, but adds a homing step at power-up and a wear and
+  bonding risk on the tape &
+  Best fit to the EP connector's nearby field, but the highest design time and
+  schedule risk within the capstone timeline \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The EP connector's field is close to the wheel sensor, so the two magnetic
+options carry an interference risk the inductive option does not. Weighing
+that against the extra design effort is the open decision for Phase C.
+
+\subsection{Current focus: robot locomotion}
+\label{sec:locomotion}
+
+\subsubsection{Power system}
+\label{sec:power-system}
+
+The budget is built in three steps: the current each component draws
+(Table~\ref{tab:loads}), the average load over a mission once duty cycles are
+applied (Table~\ref{tab:mission}), and the power drawn from the pack after
+regulator losses, which gives the run time (Table~\ref{tab:pack}).
+
+\noindent\textbf{Component loads.} Table~\ref{tab:loads} gives the rail,
+typical current and maximum current for each component. Typical is normal
+duty; maximum is the worst case the power IC must survive. Rows marked
+\textsuperscript{*} are estimates to be measured in Phase A-1.
+
+\begin{table}[H]
+\centering\small
+\caption{Component current by rail.}
+\label{tab:loads}
+\begin{tabular}{@{}L{0.19\textwidth} L{0.13\textwidth} L{0.13\textwidth}
+                    L{0.13\textwidth} L{0.30\textwidth}@{}}
+\toprule
+\textbf{Component} & \textbf{Rail} & \textbf{Typical current} &
+\textbf{Maximum current} & \textbf{Condition} \\
+\midrule
+4 $\times$ N20 gearmotor (6\,V, 50\,rpm) &
+  Pack, PWM-limited to 6\,V &
+  0.07\,A each; 0.28\,A for four &
+  1.0\,A each; 4.0\,A for four &
+  Typical is no-load; maximum is all four stalled, at 6\,V equivalent \\
+STM32G474 & 3.3\,V & 30\,mA & 60\,mA &
+  170\,MHz; maximum with all peripherals active \\
+ICM-42688-P & 1.8\,V (3.3\,V I/O) & 0.9\,mA & 1.2\,mA &
+  Six-axis low-noise mode \\
+DW3000\textsuperscript{*} & 3.3\,V & 45\,mA & 50\,mA &
+  Listening; transmit peak. Idle about 10\,mA, deep sleep below 1\,$\mu$A \\
+ESP32-C3 & 3.3\,V & 90\,mA & 335\,mA &
+  Wi-Fi active; maximum is 802.11b transmit. Modem sleep 20\,mA \\
+EP-Face and IR board\textsuperscript{*} & --- & --- &
+  To be calculated from the EP design &
+  Steady draw is IR only; the EP magnet holds with no current. The pulse
+  comes from a local capacitor, so the rail only sees recharge current \\
+Raspberry Pi Compute Module 5\textsuperscript{*} & 5\,V & 1.2\,A & 3.0\,A &
+  Idle about 0.6\,A; maximum is full CPU load, no USB peripherals \\
+Sipeed MaixSense A075V\textsuperscript{*} & 5\,V & 0.4\,A & 0.5\,A &
+  ToF illuminator active at 30\,fps \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent\textbf{Mission average.} Table~\ref{tab:mission} applies a duty
+cycle to each component over a representative mission: mostly driving,
+intermittent ranging, occasional docking, perception always on.
+
+\begin{table}[H]
+\centering\small
+\caption{Estimated average load over a representative mission.}
+\label{tab:mission}
+\begin{tabular}{@{}L{0.20\textwidth} L{0.12\textwidth} L{0.17\textwidth}
+                    L{0.13\textwidth} L{0.13\textwidth} L{0.11\textwidth}@{}}
+\toprule
+\textbf{Component} & \textbf{Rail} & \textbf{Active current} &
+\textbf{Duty cycle} & \textbf{Average current at rail} &
+\textbf{Average power} \\
+\midrule
+2 $\times$ N20 wheel motors & Pack, PWM to 6\,V &
+  0.25\,A each (loaded, est.) & 60\,\% (driving) & 0.30\,A & 1.80\,W \\
+2 $\times$ N20 pan and tilt motors & Pack, PWM to 6\,V &
+  0.25\,A each (loaded, est.) & 15\,\% (reconfiguring) & 0.075\,A & 0.45\,W \\
+STM32G474 & 3.3\,V & 30\,mA & 100\,\% & 30\,mA & 0.10\,W \\
+ICM-42688-P & 1.8\,V & 0.9\,mA & 100\,\% & 0.9\,mA & $<$0.01\,W \\
+DW3000 & 3.3\,V & 45\,mA listening; 10\,mA idle &
+  25\,\% ranging, 75\,\% idle & 19\,mA & 0.06\,W \\
+ESP32-C3 & 3.3\,V & 90\,mA active; 20\,mA modem sleep &
+  60\,\% active, 40\,\% sleep & 62\,mA & 0.20\,W \\
+EP-Face and IR board & 3.3\,V & 35\,mA & 20\,\% docking approach &
+  7\,mA & 0.02\,W \\
+Raspberry Pi Compute Module 5 & 5\,V & 1.2\,A & 100\,\% & 1.2\,A & 6.00\,W \\
+Sipeed MaixSense A075V & 5\,V & 0.4\,A & 80\,\% & 0.32\,A & 1.60\,W \\
+\midrule
+\textbf{Total at the rails} & & & & & \textbf{10.2\,W} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering\small
+\caption{Power drawn from the pack by rail, including converter efficiency.}
+\label{tab:pack}
+\begin{tabular}{@{}L{0.30\textwidth} L{0.14\textwidth} L{0.32\textwidth}
+                    L{0.16\textwidth}@{}}
+\toprule
+\textbf{Rail} & \textbf{Load at rail} & \textbf{Conversion from pack} &
+\textbf{Power from pack} \\
+\midrule
+Motors (pack, PWM to 6\,V) & 2.25\,W & H-bridge, 95\,\% & 2.4\,W \\
+5\,V (compute, camera) & 7.60\,W & Buck, 90\,\% & 8.4\,W \\
+3.3\,V and 1.8\,V (MCU, sensors, radios) & 0.38\,W &
+  LDO from 5\,V, 66\,\%, then buck, 90\,\% & 0.65\,W \\
+\midrule
+\textbf{Total from pack} & & & \textbf{11.5\,W} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent\textbf{Battery run time.} The pack is two 505080 cells in series,
+3000\,mAh, 22.2\,Wh, of which 17.8\,Wh is usable to cutoff. 11.5\,W from the
+pack is 1.55\,A at 7.4\,V, about 0.5\,C. Run time is about \textbf{1.5\,h}
+for the full Phase D module; the Phase A and B configuration, without compute
+and camera (73\,\% of the draw), runs about \textbf{5.8\,h}.
+
+\subsubsection{Power board components}
+\label{sec:power-board}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{image/Power_Diagram.png}
+  \caption{Power distribution block diagram.}
+  \label{fig:power-diagram}
+\end{figure}
+
+Power splits into three paths from the 2S pack:
+
+\begin{itemize}
+  \item \textbf{Motors.} The four N20s run from the pack through the
+        H-bridges. PWM duty is capped at about 70\,\% (6\,V over 8.4\,V at
+        full charge) to hold the motors at their 6\,V rating, and the H-bridge
+        current sensing trips on stall. The on-time current at stall scales to
+        about 1.4\,A, so the H-bridges are rated for the pack voltage and
+        1.5\,A per channel.
+  \item \textbf{EP-Face and IR.} A dedicated step-down regulator feeds the
+        in-wheel board and its pulse capacitor. The pulse itself comes from
+        the capacitor; the separate regulator keeps the recharge current and
+        pulse transients off the logic rail so the MCU and compute unit do not
+        brown out during docking.
+  \item \textbf{Logic and compute.} A second step-down regulator provides
+        5\,V to the main board, encoder circuit, compute unit and camera;
+        3.3\,V for the MCU, sensors and radios comes from an LDO on the main
+        board. This rail carries about 1.6\,A typical and 4\,A peak
+        (Table~\ref{tab:loads}), so the regulator is rated 5\,V / 5\,A, which
+        also meets the Compute Module 5 supply requirement.
+\end{itemize}
+
+\begin{table}[H]
+\centering\small
+\caption{Maximum load per rail.}
+\label{tab:rail-max}
+\begin{tabular}{@{}L{0.22\textwidth} L{0.30\textwidth} L{0.26\textwidth}
+                    L{0.14\textwidth}@{}}
+\toprule
+\textbf{Rail} & \textbf{Loads} & \textbf{Maximum current} &
+\textbf{Maximum power} \\
+\midrule
+Motor drive (pack, PWM to 6\,V) & 4 $\times$ N20 &
+  4.0\,A at 6\,V equivalent; 1.4\,A per channel on-time at 8.4\,V & 24\,W \\
+5\,V logic and compute &
+  CM5 3.0\,A, camera 0.5\,A, 3.3\,V LDO input 0.45\,A & 4.0\,A & 20\,W \\
+3.3\,V (from 5\,V) &
+  STM32 60\,mA, IMU 1\,mA, DW3000 50\,mA, ESP32-C3 335\,mA &
+  0.45\,A (ESP32 transmit burst) & 1.5\,W \\
+EP-Face and IR & IR 50\,mA, pulse capacitor recharge &
+  0.05\,A steady + recharge, TBD & TBD \\
+\midrule
+\textbf{Pack total} & all rails at peak &
+  $\approx$6.5\,A at 7.4\,V, $\approx$7.3\,A at 6.6\,V & $\approx$47\,W \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Preparation for Phase B: Magnet}
+\label{sec:phase-b-magnet}
+% Prae
+
+% Record the preparation required for the magnet stage, including parts,
+% design changes, risks, and outstanding actions.
+The magnetic docking system is based on the Electro-Permanent Magnet EPM connector developed for SMORES-EP \cite{ep_face}. The original SMORES-EP module has a characteristic length of approximately \(80\) mm, and its EP-Face uses four EP magnets arranged in a ring on the connecting face. Each EP magnet consists of an AlNiCo 5 cylindrical magnet and an NdFeB magnet placed side by side, two low-carbon steel pole pieces, and a copper coil wound around the magnetic assembly. The original EP-Face uses magnet cylinders \(4.76\) mm in diameter and \(9.53\) mm in length, with the four-magnet arrangement fitting within a \(42\) mm diameter circular region. The magnets protrude approximately \(0.5\) mm from the connecting face. The copper coil uses 30 AWG wire with 200 turns \cite{ep_face}. For our \(100\) mm prototype, this arrangement and its associated dimensions serve as the design reference and are being adapted to fit our larger face and mechanical structure.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{image/inside_rectangular_magnet_housing.png}
+	\caption{Interior view of the rectangular magnet housing.}
+	\label{fig:cad-magnet-housing}
+\end{figure}
+
+The operating principle relies on the contrasting magnetic properties of \textbf{AlNiCo 5} and \textbf{NdFeB}. AlNiCo 5 has relatively low coercivity, meaning its magnetization direction can be reversed by an external magnetic field. NdFeB, in contrast, has high coercivity and retains its magnetization under the same field pulse. This difference allows the two magnets to work together as a switchable permanent-magnet system.
+
+A short electrical pulse is sent through the \textbf{copper coil}, generating a magnetic field around the magnet assembly. This pulse reverses the magnetization direction of the AlNiCo 5 while the NdFeB remains magnetized in its original direction. When the two magnetic fields are aligned, they reinforce each other and the resulting magnetic flux is guided through the \textbf{steel pole pieces} toward the connecting face. This produces the \textbf{ON state}, generating an attractive force with a mating EP connector.
+
+When a pulse is applied in the opposite direction, the AlNiCo 5 magnetization reverses while the NdFeB remains unchanged. The two magnetic fields then oppose each other, reducing the magnetic flux reaching the connecting face. This produces the \textbf{OFF state}, allowing the modules to separate. Since the magnetic state remains after the pulse, continuous power is not required to maintain the ON or OFF state.
+
+The original EP-Face uses AlNiCo 5, NdFeB, ASTM 1018 low-carbon steel pole pieces, and a copper coil with 30 AWG wire and 200 turns. For our prototype, the selected materials are:
+
+\begin{itemize}
+\item AlNiCo 5 rod magnet
+\item NdFeB magnet
+\item Mild steel 1018 / S20C
+\item 30 AWG enamelled copper wire
+\end{itemize}
+
+The EP-magnet dimensions, coil winding parameters, and driving circuit will be finalized through fabrication and testing in Phase B.
+
+\section{Shaft Tolerance Analysis: Plain Bearing ($\varnothing$\SI{55}{mm})}
+\label{sec:shaft-tolerance}
+
+The plain bearing (OD\,=\,\SI{55}{mm}, ID\,=\,\SI{50}{mm}) acts as the shaft.
+Every printed nylon component has a bore that fits around the bearing outer
+diameter.  Four joints use this interface, classified in
+Table~\ref{tab:shaft-joints}.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{image/shaft_component.png}
+	\caption{Shaft and bearing component arrangement.}
+	\label{fig:shaft-component}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Joint classification for the $\varnothing$\SI{55}{mm} bearing interface.}
+\label{tab:shaft-joints}
+\begin{tabular}{@{}cllll@{}}
+\toprule
+\textbf{Joint} & \textbf{Component} & \textbf{Motion} & \textbf{Fit} & \textbf{ISO Class} \\
+\midrule
+J1 & Wheel + 1\textsuperscript{st} Spur Gear & Dynamic & Clearance & F7/h6 \\
+J2 & 2\textsuperscript{nd} Spur Gear (Pan/Tilt) & Dynamic & Clearance & F7/h6 \\
+J3 & Upper Tilt Joint & Dynamic & Clearance & F7/h6 \\
+J4 & Lower Tilt Joint & \textbf{Static} & \textbf{Interference} & P7/h6 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{ISO\,286 Tolerance Results}
+
+For $\varnothing$\SI{55}{mm} (size range $50 < d \leq 80$\,mm), the tolerance
+unit is $i = \SI{1.856}{\micro\meter}$, giving IT6\,=\,\SI{19}{\micro\meter}
+and IT7\,=\,\SI{30}{\micro\meter}.  The bearing OD is modelled as h6
+($55.000$--$54.981$\,mm).  Table~\ref{tab:shaft-iso} summarises the
+theoretical fit limits.
+
+\begin{table}[H]
+\centering
+\caption{ISO\,286 theoretical fit limits.}
+\label{tab:shaft-iso}
+\begin{tabular}{@{}llcccc@{}}
+\toprule
+\textbf{Type} & \textbf{Bore Class} & $D_{\min}$ (mm) & $D_{\max}$ (mm) & \textbf{Fit Min} (mm) & \textbf{Fit Max} (mm) \\
+\midrule
+Dynamic & F7 & 55.030 & 55.060 & $+0.030$ CL & $+0.079$ CL \\
+Static  & P7 & 54.938 & 54.968 & $+0.013$ IF & $+0.062$ IF \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{3D-Printing Compensation}
+
+FDM-printed holes in nylon are systematically undersized ($\approx \SI{-0.10}{}$
+to $\SI{-0.30}{mm}$ diametrally) due to inward filament flow, thermal
+contraction (1--2\,\%), and surface roughness.  The CAD bore is therefore
+oversized to compensate: $D_{\text{CAD}} = D_{\text{target}} +
+|\Delta_{\text{hole}}|$.  Dynamic bores receive $+\SI{0.20}{mm}$ compensation;
+static bores receive $+\SI{0.10}{mm}$ (smaller, because shrinkage helps create
+the desired interference).
+
+\subsection{Recommended Bore Sizes}
+
+Table~\ref{tab:shaft-quickref} gives the recommended starting CAD bore for each
+part.  These values will be validated through the print-and-test procedure
+described below.
+
+\begin{table}[H]
+\centering
+\caption{Recommended CAD bore sizes for $\varnothing$\SI{55}{mm} bearing.}
+\label{tab:shaft-quickref}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}llcc@{}}
+\toprule
+\textbf{Part} & \textbf{Joint} & \textbf{CAD Bore (mm)} & \textbf{Expected Fit} \\
+\midrule
+Wheel (Item\,2) & J1 Dynamic & $\varnothing 55.30$ & $\approx 0.10$--$0.20$ CL \\
+1\textsuperscript{st} Spur Gear (Item\,3) & J1 Dynamic & $\varnothing 55.30$ & $\approx 0.10$--$0.20$ CL \\
+2\textsuperscript{nd} Spur Gear (Item\,3) & J2 Dynamic & $\varnothing 55.30$ & $\approx 0.10$--$0.20$ CL \\
+Upper Tilt Joint (Item\,6) & J3 Dynamic & $\varnothing 55.30$ & $\approx 0.10$--$0.20$ CL \\
+Lower Tilt Joint (Item\,5) & J4 \textbf{Static} & $\varnothing 54.90$ & $\approx 0.05$--$0.15$ IF \\
+\bottomrule
+\multicolumn{4}{@{}l}{%
+  \footnotesize CL\,=\,Clearance \quad IF\,=\,Interference
+  \quad Bearing OD\,$=$\,$\varnothing 55.00$\,mm}
+\end{tabular}
+\end{table}
+
+\subsection{Print-and-Test Procedure}
+
+Test rings (OD\,=\,70\,mm, height\,=\,10\,mm) will be printed in nylon at five
+CAD bore sizes for each fit type:
+
+\begin{itemize}[nosep]
+  \item \textbf{Dynamic} (J1--J3): $\varnothing 55.10$, $55.20$,
+        $\mathbf{55.30}$ (recommended), $55.40$, $55.50$\,mm.
+        Pass criterion: bearing slides in by hand, part spins freely, radial
+        play $\leq \SI{0.20}{mm}$.
+  \item \textbf{Static} (J4): $\varnothing 54.70$, $54.80$,
+        $\mathbf{54.90}$ (recommended), $55.00$, $55.10$\,mm.
+        Pass criterion: bearing requires firm hand pressure or light mallet tap
+        to insert, no rotation under hand torque, no cracking.
+\end{itemize}
+
+Parts are cooled to room temperature ($\SI{23 \pm 2}{\degreeCelsius}$) for
+$\geq 2$\,hours before measurement.  Each bore is measured with a digital
+caliper at three angles (\ang{0}, \ang{60}, \ang{120}) and averaged.  The
+printer offset is $\Delta = D_{\text{measured}} - D_{\text{CAD}}$ (typically
+$\SI{-0.10}{}$ to $\SI{-0.30}{mm}$).  The smallest dynamic bore that spins
+freely and the largest static bore that prevents rotation are selected for
+production prints.
+
+\section{Software Testing Plan for Phase A}
+\label{sec:software-testing}
+This section describes the testing plan for evaluating the software system during Phase A. The objective is to verify that the software system can reliably detect and identify the robot ID from AprilTags using an external camera and image processing techniques. The detected information will be used to correct the robot's position and orientation in real time, enabling effective navigation within the environment. In addition, the software system will control the robot's actuators and sensors to ensure that the robot performs its intended functions accurately and efficiently using PID control. The system will also be tested for its ability to plan and execute paths for the MSRR configuration of the robot.
+
+	\subsection{Testing Objectives}
+	The main objectives of the software testing are:
+		\begin{itemize}
+		\item Verify that the software system can accurately detect and identify the robot ID from AprilTags using an external camera and image processing techniques.
+		\item Verify that the software system can use the detected AprilTag information to estimate and correct the robot's position and orientation in real time.
+		\item Verify that the software system can control the robot's actuators and sensors accurately and efficiently using PID control.
+		\item Verify that the software system can reliably plan and execute paths for the MSRR configuration of the robot.
+		\item Evaluate the overall integration between perception, localization, control, and path planning components.
+		\end{itemize}
+
+	\subsection{Testing Setup}
+	The software will be tested using the MSRR robot in a controlled indoor environment. An external camera will be positioned to provide a view of the robot and the AprilTags placed within the testing area. The camera image will be processed by the perception system to detect the AprilTags and obtain the corresponding robot ID and pose information.
+	The detected pose information will be transmitted to the robot control system and used to estimate the robot's position and orientation. The robot will then use this information for localization, path planning, and motion control. The actuators will be controlled using PID controllers to achieve the desired wheel velocities and robot motion.
+	The testing setup will include:
+		\begin{itemize}
+		\item MSRR robot equipped with the required actuators and onboard sensors.
+		\item External camera for AprilTag detection and robot localization.
+		\item AprilTags with unique IDs for identifying the robot and reference locations.
+		\item Computing system for image processing, localization, path planning, and control.
+		\item Controlled testing area with predefined waypoints and paths.
+		\end{itemize}
+
+	\subsection{Goal Configurations}
+	The software testing plan will evaluate the following robot configurations:
+
+	\begin{table}[htbp]
+		\centering
+		\caption{Goal configurations for Phase A testing}
+		\label{tab:goal-configurations}
+		\begin{tabular}{|l|}
+		\hline
+		\textbf{Configuration} \\ \hline
+		Snake \\ \hline
+		Car \\ \hline
+		DoubleDriver \\ \hline
+		L-shape \\ \hline
+		\end{tabular}
+	\end{table}
+
+	\subsection{Testing Procedure}
+	The testing procedure will be divided into several stages. First, the external camera will capture images of the testing environment and the perception system will detect the AprilTags. The detected tag ID and pose will then be compared with the known tag information to verify the accuracy of the detection and localization.
+	Next, the estimated robot position and orientation will be provided to the control system. The robot will be commanded to move to predefined target positions and orientations. The difference between the desired and measured states will be used to evaluate the performance of the localization and PID controllers.
+	Finally, predefined paths will be provided to the path planning system. The robot will be required to generate and execute the planned paths while maintaining the required position and orientation. The complete software pipeline will be tested to verify the interaction between perception, localization, path planning, and motion control.
+
+	\subsection{Evaluation Metrics}
+	The performance of the software system will be evaluated using the following metrics:
+		\begin{itemize}
+		\item \textbf{AprilTag Detection Rate:} The percentage of test frames in which the correct AprilTag is successfully detected and identified.
+		\item \textbf{Position Error:} The difference between the robot's estimated position and its known or reference position, measured in meters.
+		\item \textbf{Orientation Error:} The difference between the estimated robot orientation and the reference orientation, measured in degrees.
+		\item \textbf{Position Tracking Error:} The difference between the desired robot position and the actual robot position while following a planned path.
+		\item \textbf{Orientation Tracking Error:} The difference between the desired and actual robot orientation during motion.
+		\item \textbf{Path Execution Error:} The deviation of the robot from the planned path during navigation.
+		\item \textbf{Control Response:} The ability of the PID controllers to reach and maintain the desired actuator commands with minimal overshoot and steady-state error.
+		\item \textbf{Processing Rate:} The frequency at which the perception and control system can process sensor information and update the robot's state and control commands.
+		\end{itemize}
+
+	\subsection{Acceptance Criteria}
+	The software system will be considered to satisfy the Phase A requirements if it can reliably detect the correct AprilTag ID, estimate the robot's position and orientation with an acceptable error, and provide sufficiently frequent updates for real-time control. The robot must also be able to follow predefined paths while maintaining acceptable position and orientation errors.
+	The PID controllers must allow the robot to reach the desired motion commands with stable behavior and without excessive oscillation. The complete software system must also operate continuously without critical failures during the testing period.
+	Specific numerical thresholds for detection accuracy, localization error, tracking error, and processing rate will be defined based on the requirements of the MSRR system and the physical limitations of the robot.
+
+	\subsection{Expected Results}
+	The expected outcome of Phase A testing is a software system that can reliably integrate external-camera perception, AprilTag-based robot identification and localization, path planning, and PID-based motion control. The system is expected to provide sufficiently accurate and stable position and orientation estimates for real-time robot navigation.
+	The robot is expected to successfully follow predefined paths and reach target positions while maintaining acceptable tracking errors. Successful completion of these tests will demonstrate that the software components are sufficiently integrated and reliable to support the subsequent development and testing phases of the MSRR system.
+\end{document}

@@ -7,11 +7,15 @@
 \usepackage{textcomp}
 \usepackage{parskip}
 \usepackage{graphicx}
+\usepackage{setspace}
 \usepackage{float}
+\usepackage[section]{placeins}
 \usepackage{booktabs}
 \usepackage{array}
 \usepackage{longtable}
 \usepackage{caption}
+\usepackage{subcaption}
+\usepackage{pgfgantt}
 \usepackage{enumitem}
 \usepackage{amsmath,amssymb}
 \usepackage{siunitx}
@@ -23,13 +27,81 @@
 \setlist[itemize]{topsep=2pt,itemsep=2pt,parsep=0pt,leftmargin=1.5em}
 \sisetup{detect-weight=true, detect-family=true}
 
-\title{Capstone Project Progress Report}
-\author{}
-\date{\today}
+% Gantt chart styles (Section~\ref{sec:gantt})
+\definecolor{ganttpast}{HTML}{8FC98F}
+\definecolor{ganttnow}{HTML}{F5A25D}
+\definecolor{ganttnext}{HTML}{DADADA}
+\ganttset{
+	gantt style/.style={
+		time slot format=isodate, x unit=0.045cm, y unit title=0.45cm,
+		y unit chart=0.335cm, hgrid={*1{black!8}}, vgrid={*6{draw=none}, *1{black!12}},
+		title/.append style={draw=black!40, fill=black!6},
+		title label font=\scriptsize, bar label font=\scriptsize,
+		milestone label font=\scriptsize, group label font=\scriptsize\bfseries,
+		bar height=0.55, bar/.append style={draw=black!50},
+		group/.append style={fill=black!65, draw=none}, group height=0.25,
+		group right shift=0, group left shift=0, group top shift=0.4,
+		milestone left shift=-2, milestone right shift=2,
+		milestone/.append style={draw=black!60},
+		vrule/.append style={draw=red!70!black, dashed, thick},
+		vrule label font=\scriptsize\bfseries\color{red!70!black},
+	},
+	gpast/.style={bar/.append style={fill=ganttpast}, milestone/.append style={fill=ganttpast}},
+	gnow/.style={bar/.append style={fill=ganttnow}, milestone/.append style={fill=ganttnow},
+		bar label font=\scriptsize\bfseries, milestone label font=\scriptsize\bfseries},
+	gnext/.style={bar/.append style={fill=ganttnext}, milestone/.append style={fill=ganttnext}},
+}
+\DeclareRobustCommand{\ganttkey}[1]{\tikz[baseline=-0.6ex]\fill[#1, draw=black!50] (0,-0.12) rectangle (0.35,0.12);}
 
 \begin{document}
 
-\maketitle
+%---------------------------------------------------------------- title page --
+% Cover from Proposal.tex (ISE format), retitled for the progress report.
+\begin{titlepage}
+\centering
+\setstretch{1.0}
+\vspace*{0cm}
+
+{\Large\bfseries Capstone Design Project I\par}
+\vspace{0.3cm}
+{\large Progress Report\par}
+
+\vspace{0.6cm}
+\includegraphics[width=3.2cm]{image/chula_eng_logo.png}\par
+\vspace{0.6cm}
+
+{\Large\bfseries A Modular Self-Reconfigurable Robot (MSRR)\\[0.35em]
+for Search and Space Exploration\par}
+
+\vspace{0.7cm}
+{Submitted to the\par}
+{Project Committee appointed by the\par}
+{International School of Engineering (ISE)\par}
+{Faculty of Engineering, Chulalongkorn University\par}
+
+\vspace{0.6cm}
+{\bfseries Project Advisors\par}
+\vspace{0.35cm}
+{Asst.\ Prof.\ Paulo Fernando Rocha Garcia, Ph.D.\par}
+{Asst.\ Prof.\ Surat Kwanmuang, Ph.D.\par}
+
+\vspace{0.6cm}
+{\bfseries Submitted By\par}
+\vspace{0.45cm}
+\begin{tabular}{@{}l@{\hspace{2em}}l@{}}
+Kittivut Pipattanachaiyapong  & 6638019121 \\
+Krin Kaweewongsonthorn        & 6638027121 \\
+Pakapol Kijsupanont           & 6638172421 \\
+Phattharamon Sukvivatn        & 6638178221 \\
+\end{tabular}
+
+\vfill
+{\footnotesize 1/2026: 2147498 Capstone Design Project I\par}
+{\footnotesize Robotics and Artificial Intelligence Engineering (International
+Program)\par}
+{\footnotesize International School of Engineering (ISE), Faculty of Engineering,\par}
+{\footnotesize Chulalongkorn University\par}
+\end{titlepage}
 
 % ================================================================
 \section{Project Timeline}
@@ -72,6 +144,109 @@ configuration-selection pipeline onto a coordinator module using an embedded
 compute board. Close the perceive--select--reconfigure--traverse loop on
 hardware without external localisation or computation.
 
+\clearpage
+% ================================================================
+\section{Gantt Chart}
+\label{sec:gantt}
+% ================================================================
+
+Task schedule from the team Notion timeline (as of 25~Sep~2026), grouped by phase.
+
+\begin{figure}[H]
+\centering\scriptsize
+\begin{ganttchart}[gantt style]{2026-08-17}{2027-01-17}
+\gantttitlecalendar{year, month=shortname} \\
+\ganttgroup{Phase A --- Locomotion, sensing and communication}{2026-08-28}{2027-01-09} \\
+\ganttbar[gnow]{(Phase\_A\_1) Planning/ Trade Study}{2026-08-28}{2026-09-30} \\
+\ganttmilestone[gpast]{MILESTONE - Proposal submission}{2026-08-28} \\
+\ganttbar[gpast]{Module design Mechanic Draft 1 (CAD)}{2026-08-28}{2026-09-17} \\
+\ganttbar[gnow]{Module design Mechanic Draft 1 (FAB) Draft\_1}{2026-09-18}{2026-10-12} \\
+\ganttbar[gnow]{(sim) export URDF to gazebo, controller and locomotion}{2026-09-25}{2026-10-08} \\
+\ganttmilestone[gnow]{MILESTONE - First progress report}{2026-09-25} \\
+\ganttbar[gnext]{(Phase\_A\_1) Part Ordering/Shipping}{2026-10-01}{2026-10-15} \\
+\ganttbar[gnext]{Control board and firmware}{2026-10-01}{2026-10-10} \\
+\ganttbar[gnext]{Power, Main Board PCB Designing}{2026-10-01}{2026-10-15} \\
+\ganttbar[gnext]{Gear and Shaft Print Testing and Redesign}{2026-10-05}{2026-10-25} \\
+\ganttbar[gnext]{(sim) Implement Reconfiguration planning}{2026-10-09}{2026-11-03} \\
+\ganttbar[gnext]{(sim) Navigation and avoidance with known coordinate}{2026-10-09}{2026-10-21} \\
+\ganttbar[gnext]{Basic Locomotion Testing}{2026-10-13}{2026-10-20} \\
+\ganttbar[gnext]{(Phase\_A\_1) Testing}{2026-10-16}{2026-10-20} \\
+\ganttbar[gnext]{Power, Main Board PCB FAB + Part Ordering}{2026-10-16}{2026-10-29} \\
+\ganttbar[gnext]{(real) Localization and navigation from camera}{2026-10-23}{2026-11-03} \\
+\ganttmilestone[gnext]{MILESTONE - Second progress report}{2026-10-23} \\
+\ganttbar[gnext]{Power, Main Board Testing}{2026-10-30}{2026-11-12} \\
+\ganttbar[gnext]{Radio link and protocol}{2026-10-30}{2026-11-12} \\
+\ganttbar[gnext]{UWB \& Radio link wifi testing (Dev board)}{2026-10-30}{2026-11-12} \\
+\ganttbar[gnext]{low level control + Sensing IMU Encoder (Dev board)}{2026-10-30}{2026-11-12} \\
+\ganttbar[gnext]{(real) Implement Reconfiguration planning}{2026-11-04}{2026-11-18} \\
+\ganttbar[gnext]{Connector FAB (EP-Face) (1)}{2026-11-15}{2026-11-30} \\
+\ganttbar[gnext]{Connector design (EP-Face)}{2026-12-11}{2027-01-09} \\
+\ganttgroup{Phase B --- Docking and task-oriented reconfiguration}{2026-09-22}{2027-01-03} \\
+\ganttbar[gnow]{EP Research and Face Design}{2026-09-22}{2026-09-30} \\
+\ganttbar[gnext]{EP Face Part Ordering}{2026-10-01}{2026-10-14} \\
+\ganttbar[gnext]{IR Face Design}{2026-10-01}{2026-10-09} \\
+\ganttbar[gnext]{IR Face Part Ordering}{2026-10-10}{2026-10-23} \\
+\ganttbar[gnext]{EP Face 1st Test}{2026-10-15}{2026-10-28} \\
+\ganttbar[gnext]{IR 1st test}{2026-10-24}{2026-11-06} \\
+\ganttbar[gnext]{In-Wheel (EP and IR) Board Designing}{2026-10-29}{2026-11-11} \\
+\ganttbar[gnext]{(sim) urdf add contact face}{2026-11-05}{2026-11-18} \\
+\ganttbar[gnext]{Contract face testing}{2026-11-13}{2026-11-26} \\
+\ganttbar[gnext]{In-Wheel (EP and IR) Board FAB + Part Ordering}{2026-11-13}{2026-11-26} \\
+\ganttmilestone[gnext]{MILESTONE - Draft final report}{2026-11-18} \\
+\ganttbar[gnext]{(sim) precision docking with self alignment}{2026-11-20}{2026-12-03} \\
+\ganttbar[gnext]{MILESTONE - Final presentation}{2026-11-22}{2026-12-03} \\
+\ganttbar[gnext]{In-Wheel (EP and IR) Board Testing}{2026-11-27}{2026-12-10} \\
+\ganttbar[gnext]{Locomotion with contact face testing}{2026-11-27}{2026-12-10} \\
+\ganttbar[gnext]{(real) Reconfiguration planning with precision docking}{2026-12-04}{2026-12-17} \\
+\ganttmilestone[gnext]{MILESTONE - Final report (Project I)}{2026-12-10} \\
+\ganttbar[gnext]{W5 Assembled gaits, PPO training}{2026-12-11}{2027-01-03} \\
+\ganttbar[gnext]{W6 IR alignment and docking}{2026-12-11}{2026-12-27} \\
+\ganttbar[gnext]{W7 EP-Face build and characterisation}{2026-12-11}{2027-01-03} \\
+\ganttbar[gnext]{W8 Configuration library}{2026-12-11}{2026-12-27}
+\ganttvrule{Today (25 Sep)}{2026-09-25}
+\end{ganttchart}
+\caption{Project I schedule (Phases A--B). \ganttkey{ganttpast}~Completed \quad \ganttkey{ganttnow}~In progress \quad \ganttkey{ganttnext}~Upcoming; dashed line marks the report date.}
+\label{fig:gantt-ab}
+\end{figure}
+
+\begin{figure}[H]
+\centering\scriptsize
+\begin{ganttchart}[gantt style]{2026-12-07}{2027-04-30}
+\gantttitlecalendar{year, month=shortname} \\
+\ganttgroup{Phase C --- Onboard perception, external computation}{2026-12-13}{2027-03-05} \\
+\ganttbar[gnext]{(sim) Environment classification}{2026-12-13}{2027-01-18} \\
+\ganttbar[gnext]{(sim) onboard perception obstacle avoidance and navigation}{2026-12-13}{2026-12-31} \\
+\ganttbar[gnext]{Onboard perception testing}{2026-12-24}{2027-01-06} \\
+\ganttbar[gnext]{(Real) Onboard Perception nav and configuration planning}{2027-01-01}{2027-01-18} \\
+\ganttbar[gnext]{Inductive Encoder Designing}{2027-01-01}{2027-01-20} \\
+\ganttbar[gnext]{Locomotion, Planning with internal Perception (IR and UWB)}{2027-01-03}{2027-01-31} \\
+\ganttbar[gnext]{W9 Camera and ToF integration}{2027-01-04}{2027-02-12} \\
+\ganttbar[gnext]{W5 Policy training on held-out params}{2027-01-11}{2027-02-26} \\
+\ganttbar[gnext]{W8 Obstacle state to configuration}{2027-01-18}{2027-03-05} \\
+\ganttbar[gnext]{(sim) Configuration lookup table}{2027-01-19}{2027-02-01} \\
+\ganttbar[gnext]{Inductive Encoder FAB + Part Ordering}{2027-01-21}{2027-02-10} \\
+\ganttbar[gnext]{W9 Terrain and traversability pipeline}{2027-01-25}{2027-03-05} \\
+\ganttbar[gnext]{(Real) environment adaptation}{2027-02-02}{2027-02-28} \\
+\ganttbar[gnext]{Inductive Encoder Testing}{2027-02-11}{2027-02-28} \\
+\ganttbar[gnext]{MILESTONE - Phase C evaluation}{2027-03-01}{2027-03-05} \\
+\ganttgroup{Phase D --- Fully onboard perception and computation}{2027-01-21}{2027-04-30} \\
+\ganttbar[gnext]{PCB for CM5 Designing}{2027-01-21}{2027-02-04} \\
+\ganttbar[gnext]{PCB for CM5 Designing FAB + Part Ordering}{2027-02-05}{2027-02-18} \\
+\ganttbar[gnext]{W10 Compute module bring-up}{2027-02-15}{2027-03-19} \\
+\ganttbar[gnext]{CM5 with RGBD and TOF Testing}{2027-02-19}{2027-03-04} \\
+\ganttbar[gnext]{Onboard Odometry with no camera testing}{2027-02-22}{2027-03-11} \\
+\ganttbar[gnext]{W4 Onboard odometry, drop VICON}{2027-02-22}{2027-04-02} \\
+\ganttbar[gnext]{(sim) local interaction to reorganize (concept)}{2027-03-01}{2027-04-09} \\
+\ganttbar[gnext]{Full testing internal computation}{2027-03-01}{2027-04-02} \\
+\ganttbar[gnext]{Internal Computation}{2027-03-01}{2027-03-14} \\
+\ganttbar[gnext]{W10 Quantised inference on module}{2027-03-08}{2027-04-09} \\
+\ganttbar[gnext]{MILESTONE - Loop closed on hardware}{2027-04-05}{2027-04-09} \\
+\ganttbar[gnext]{MILESTONE - Final evaluation (Project II)}{2027-04-26}{2027-04-30}
+\end{ganttchart}
+\caption{Project II schedule (Phases C--D). All tasks upcoming (\ganttkey{ganttnext}).}
+\label{fig:gantt-cd}
+\end{figure}
+
 % ================================================================
 \section{Module CAD Design}
 \label{sec:module-cad-design}
@@ -79,46 +254,51 @@ hardware without external localisation or computation.
 
 The design is based on SMORES-EP \cite{tosun2016} (originally \SI{80}{mm}), scaled to a $100 \times 100 \times 100$\,mm envelope for additional packaging space.
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 	\centering
 	\includegraphics[width=0.6\textwidth]{image/exploded_view.png}
 	\caption{Exploded view of the module.}
 	\label{fig:exploded-view}
 \end{figure}
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 	\centering
-	\includegraphics[width=0.6\textwidth]{image/front.png}
-	\caption{Front view.}
-	\label{fig:cad-front}
-\end{figure}
-
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=0.6\textwidth]{image/rear.png}
-	\caption{Rear view.}
-	\label{fig:cad-rear}
-\end{figure}
-
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=0.6\textwidth]{image/top.png}
-	\caption{Top view.}
-	\label{fig:cad-top}
-\end{figure}
-
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=0.6\textwidth]{image/tilt.png}
-	\caption{Tilted sectional view.}
-	\label{fig:cad-tilt}
+	\begin{subfigure}[b]{0.40\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{image/front.png}
+		\caption{Front view.}
+		\label{fig:cad-front}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.40\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{image/rear.png}
+		\caption{Rear view.}
+		\label{fig:cad-rear}
+	\end{subfigure}
+	\par\vspace{6pt}
+	\begin{subfigure}[b]{0.40\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{image/top.png}
+		\caption{Top view.}
+		\label{fig:cad-top}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.40\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{image/tilt.png}
+		\caption{Tilted sectional view.}
+		\label{fig:cad-tilt}
+	\end{subfigure}
+	\caption{Module CAD views.}
+	\label{fig:cad-views}
 \end{figure}
 
 % ----------------------------------------------------------------
 \subsection{Gear Train Design}
 \label{sec:gear-design}
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 	\centering
 	\includegraphics[width=0.6\textwidth]{image/GearCAD.png}
 	\caption{CAD view of the gear train and motor arrangement.}
@@ -202,18 +382,23 @@ All geometry is CAD-only. \textbf{No parts have been printed or tested.} Priorit
 
 Two independently driven wheels (\SI{100}{mm} diameter) with NBR N70 O-ring tire groove (\SI{1.5}{mm} cross-section), EP-magnet docking space, and PCB mounting posts.
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 	\centering
-	\includegraphics[width=0.6\textwidth]{image/inside_wheel.png}
-	\caption{Interior view of the wheel and drivetrain assembly.}
-	\label{fig:cad-inside-wheel}
-\end{figure}
-
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=0.6\textwidth]{image/outside_wheel.png}
-	\caption{Exterior view of the wheel and module assembly.}
-	\label{fig:cad-outside-wheel}
+	\begin{subfigure}[b]{0.45\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{image/inside_wheel.png}
+		\caption{Interior view (wheel and drivetrain).}
+		\label{fig:cad-inside-wheel}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.45\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{image/outside_wheel.png}
+		\caption{Exterior view (wheel and module).}
+		\label{fig:cad-outside-wheel}
+	\end{subfigure}
+	\caption{Outer wheel CAD.}
+	\label{fig:cad-wheels}
 \end{figure}
 
 \subsection{Pan Face}
@@ -224,6 +409,7 @@ Two independently driven wheels (\SI{100}{mm} diameter) with NBR N70 O-ring tire
 
 Approximately $90 \times 71.6$\,mm rectangular part with EP-magnet docking space and an additional motor mount.
 
+\clearpage
 % ================================================================
 \section{Electronics}
 \label{sec:electronics}
@@ -241,39 +427,49 @@ Electronics are built incrementally across project phases:
   \item \textbf{Phase D:} Raspberry Pi CM5 on custom carrier PCB moves compute onboard.
 \end{itemize}
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
   \centering
-  \includegraphics[width=0.6\textwidth]{image/Phase_A_1_Diagram.png}
+  \includegraphics[width=0.78\textwidth]{image/Phase_A_1_Diagram.png}
   \caption{Phase A-1 electronics block diagram.}
   \label{fig:phase-a1}
 \end{figure}
 
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.6\textwidth]{image/Phase_A_Diagram.png}
-  \caption{Phase A electronics block diagram.}
-  \label{fig:phase-a}
+\begin{figure}[!htbp]
+	\centering
+	\begin{subfigure}[b]{\textwidth}
+		\centering
+		\includegraphics[width=0.78\textwidth]{image/Phase_A_Diagram.png}
+		\caption{Phase A.}
+		\label{fig:phase-a}
+	\end{subfigure}
+	\par\vspace{8pt}
+	\begin{subfigure}[b]{\textwidth}
+		\centering
+		\includegraphics[width=0.78\textwidth]{image/Phase_B_Diagram.png}
+		\caption{Phase B.}
+		\label{fig:phase-b}
+	\end{subfigure}
+	\caption{Electronics block diagrams, Phases A--B.}
+	\label{fig:phase-diagrams-ab}
 \end{figure}
 
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.6\textwidth]{image/Phase_B_Diagram.png}
-  \caption{Phase B electronics block diagram.}
-  \label{fig:phase-b}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.6\textwidth]{image/Phase_C_Diagram.png}
-  \caption{Phase C electronics block diagram.}
-  \label{fig:phase-c}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.6\textwidth]{image/Phase_D_Diagram.png}
-  \caption{Phase D electronics block diagram.}
-  \label{fig:phase-d}
+\begin{figure}[!htbp]
+	\centering
+	\begin{subfigure}[b]{\textwidth}
+		\centering
+		\includegraphics[width=0.78\textwidth]{image/Phase_C_Diagram.png}
+		\caption{Phase C.}
+		\label{fig:phase-c}
+	\end{subfigure}
+	\par\vspace{8pt}
+	\begin{subfigure}[b]{\textwidth}
+		\centering
+		\includegraphics[width=0.78\textwidth]{image/Phase_D_Diagram.png}
+		\caption{Phase D.}
+		\label{fig:phase-d}
+	\end{subfigure}
+	\caption{Electronics block diagrams, Phases C--D.}
+	\label{fig:phase-diagrams-cd}
 \end{figure}
 
 % ----------------------------------------------------------------
@@ -302,20 +498,25 @@ Sipeed MaixSense A075V & C+ & ToF 320$\times$240 @ 30\,fps; RGB 800$\times$600 &
 % ----------------------------------------------------------------
 \subsection{Electronics Packaging}
 
-All components fit within the \SI{100}{mm} cube based on rough CAD placement (Figures~\ref{fig:elec-assembly}--\ref{fig:elec-exploded}).
+All components fit within the \SI{100}{mm} cube based on rough CAD placement (Figure~\ref{fig:elec-packaging}).
 
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.6\textwidth]{image/Elec_Assembly.png}
-  \caption{Electronics packaging --- assembled.}
-  \label{fig:elec-assembly}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.6\textwidth]{image/Elec_Exploded_View.png}
-  \caption{Electronics packaging --- exploded.}
-  \label{fig:elec-exploded}
+\begin{figure}[!htbp]
+	\centering
+	\begin{subfigure}[b]{0.45\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{image/Elec_Assembly.png}
+		\caption{Assembled.}
+		\label{fig:elec-assembly}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.45\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{image/Elec_Exploded_View.png}
+		\caption{Exploded.}
+		\label{fig:elec-exploded}
+	\end{subfigure}
+	\caption{Electronics packaging.}
+	\label{fig:elec-packaging}
 \end{figure}
 
 % ----------------------------------------------------------------
@@ -343,7 +544,7 @@ The inductive option best handles the EP connector's nearby field but has the hi
 % ----------------------------------------------------------------
 \subsection{Power System}
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
   \centering
   \includegraphics[width=0.6\textwidth]{image/Power_Diagram.png}
   \caption{Power distribution block diagram.}
@@ -389,6 +590,7 @@ EP-Face + IR & TBD & TBD \\
 \end{tabular}
 \end{table}
 
+\clearpage
 % ================================================================
 \section{Shaft Tolerance Analysis ($\varnothing$\SI{55}{mm} Bearing)}
 \label{sec:shaft-tolerance}
@@ -396,7 +598,7 @@ EP-Face + IR & TBD & TBD \\
 
 The plain bearing (OD = \SI{55}{mm}) acts as the shaft. All nylon-printed components have bores around it.
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 	\centering
 	\includegraphics[width=0.6\textwidth]{image/shaft_component.png}
 	\caption{Shaft and bearing component arrangement.}
@@ -441,6 +643,7 @@ Lower Tilt Joint & J4 \textbf{Static} & $\varnothing 54.90$ & $\approx 0.05$--$0
 
 \textbf{Test plan:} Print nylon test rings at five bore sizes per fit type (dynamic: 55.10--55.50\,mm; static: 54.70--55.10\,mm). Cool $\geq$2\,h, measure with caliper at 3 angles. Pick smallest dynamic bore that spins freely; largest static bore that prevents rotation.
 
+\clearpage
 % ================================================================
 \section{Software Testing Plan (Phase A)}
 \label{sec:software-testing}
@@ -471,13 +674,14 @@ Snake, Car, DoubleDriver, L-shape.
 
 Reliable tag detection, acceptable localisation and tracking error for real-time control, stable PID behaviour without excessive oscillation, and continuous operation without critical failures. Specific numerical thresholds to be defined based on system requirements.
 
+\clearpage
 % ================================================================
 \section{Preparation for Phase B: EP Magnet}
 \label{sec:phase-b-magnet}
 
 The docking system uses an Electro-Permanent Magnet (EPM) connector based on SMORES-EP \cite{tosun2016}. Each EP unit pairs an AlNiCo~5 magnet (low coercivity, switchable) with an NdFeB magnet (high coercivity, fixed) between steel pole pieces, wound with a copper coil.
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 	\centering
 	\includegraphics[width=0.6\textwidth]{image/inside_rectangular_magnet_housing.png}
 	\caption{Interior view of the rectangular magnet housing.}
@@ -490,6 +694,7 @@ The docking system uses an Electro-Permanent Magnet (EPM) connector based on SMO
 
 % 
 
+\renewcommand{\refname}{Additional References}
 \begin{thebibliography}{9}
 
 \bibitem{tosun2016}

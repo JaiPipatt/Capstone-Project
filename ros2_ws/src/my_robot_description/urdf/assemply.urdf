@@ -8,8 +8,9 @@
   <!-- Links -->
   <link name="base_link">
     <inertial>
+      <origin xyz="-0.007407 1.490116e-08 0.052843" rpy="0 0 0" />
       <mass value="0.188891" />
-      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1" />
+      <inertia ixx="0.031482" ixy="0" ixz="0" iyy="0.031482" iyz="0" izz="0.031482" />
     </inertial>
     <visual>
       <origin xyz="-0.007407 1.490116e-08 0.052843" rpy="0 0 0" />
@@ -17,6 +18,12 @@
         <mesh filename="package://my_robot_description/meshes/base_link_visual.obj" />
       </geometry>
     </visual>
+    <collision>
+      <origin xyz="-0.007407 1.490116e-08 0.052841" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/base_link_collision.stl" />
+      </geometry>
+    </collision>
   </link>
   <link name="left_wheel">
     <inertial>
@@ -30,6 +37,12 @@
         <mesh filename="package://my_robot_description/meshes/left_wheel_visual.obj" />
       </geometry>
     </visual>
+    <collision>
+      <origin xyz="-0.00425 1.459215e-10 -7.450581e-09" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/left_wheel_collision.stl" />
+      </geometry>
+    </collision>
   </link>
   <link name="pan_face">
     <inertial>
@@ -43,6 +56,12 @@
         <mesh filename="package://my_robot_description/meshes/pan_face_visual.obj" />
       </geometry>
     </visual>
+    <collision>
+      <origin xyz="0 1.978139e-09 0.007875" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/pan_face_collision.stl" />
+      </geometry>
+    </collision>
   </link>
   <link name="right_wheel">
     <inertial>
@@ -56,6 +75,12 @@
         <mesh filename="package://my_robot_description/meshes/right_wheel_visual.obj" />
       </geometry>
     </visual>
+    <collision>
+      <origin xyz="-7.820886e-09 3.897749e-10 0.00075" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/right_wheel_collision.stl" />
+      </geometry>
+    </collision>
   </link>
   <link name="tilt_body">
     <inertial>
@@ -69,6 +94,12 @@
         <mesh filename="package://my_robot_description/meshes/tilt_body_visual.obj" />
       </geometry>
     </visual>
+    <collision>
+      <origin xyz="-0.006816 1.862645e-09 7.639155e-05" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://my_robot_description/meshes/tilt_body_collision.stl" />
+      </geometry>
+    </collision>
   </link>
   <!-- Joints -->
   <joint name="left_wheel_joint" type="continuous">
@@ -99,4 +130,54 @@
     <axis xyz="0 -1 0" />
     <limit effort="10" velocity="1" lower="-3.141593" upper="3.141593" />
   </joint>
+
+  <!-- Disable collisions between this robot's own links. External collisions remain enabled. -->
+  <gazebo reference="base_link">
+    <selfCollide>false</selfCollide>
+  </gazebo>
+  <gazebo reference="left_wheel">
+    <selfCollide>false</selfCollide>
+  </gazebo>
+  <gazebo reference="pan_face">
+    <selfCollide>false</selfCollide>
+  </gazebo>
+  <gazebo reference="right_wheel">
+    <selfCollide>false</selfCollide>
+  </gazebo>
+  <gazebo reference="tilt_body">
+    <selfCollide>false</selfCollide>
+  </gazebo>
+  
+  <!-- ROS 2 Control -->
+  <ros2_control name="GazeboSimSystem" type="system">
+    <hardware>
+      <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+    </hardware>
+    <joint name="left_wheel_joint">
+      <command_interface name="velocity" />
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+    </joint>
+    <joint name="pan_face_joint">
+      <command_interface name="position" />
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+    </joint>
+    <joint name="right_wheel_joint">
+      <command_interface name="velocity" />
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+    </joint>
+    <joint name="tilt_body_joint">
+      <command_interface name="position" />
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+    </joint>
+  </ros2_control>
+  <!-- Gazebo Extensions -->
+  <gazebo>
+    <plugin name="gazebo_ros2_control" filename="gz_ros2_control::GazeboSimROS2ControlPlugin">
+      <parameters>$(find robot_description)/config/controllers.yaml</parameters>
+    </plugin>
+  </gazebo>
 </robot>

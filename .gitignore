@@ -15,3 +15,12 @@
 *.vrb
 *.gz
 *.mdtstex_modules/
+
+# ROS 2
+**/build/
+**/install/
+**/log/
+
+# Python
+__pycache__/
+*.py[cod]

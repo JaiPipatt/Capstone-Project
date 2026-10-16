@@ -1,0 +1,30 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 100  # Hz
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    wheel_velocity_controller:
+      type: forward_command_controller/ForwardCommandController
+
+    head_position_controller:
+      type: forward_command_controller/ForwardCommandController
+
+# Command: std_msgs/Float64MultiArray on /wheel_velocity_controller/commands
+#   data: [left, right] in rad/s, positive = forward
+wheel_velocity_controller:
+  ros__parameters:
+    joints:
+      - left_wheel_joint
+      - right_wheel_joint
+    interface_name: velocity
+
+# Command: std_msgs/Float64MultiArray on /head_position_controller/commands
+#   data: [tilt, pan] in rad
+head_position_controller:
+  ros__parameters:
+    joints:
+      - tilt_body_joint
+      - pan_face_joint
+    interface_name: position

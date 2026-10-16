@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!--
-  my_robot: two-wheeled base with a tilt body and a pan face.
+  my_robot - two-wheeled base with a tilt body and a pan face.
 
   Build the plain URDF with:
     xacro my_robot.urdf.xacro > my_robot.urdf

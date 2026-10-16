@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- Gazebo-only settings -->
+<!-- Gazebo (Fortress) settings -->
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <!-- Disable collisions between this robot's own links. External collisions remain enabled. -->
@@ -10,13 +10,23 @@
   </xacro:macro>
 
   <xacro:no_self_collide link="base_link" />
-  <xacro:no_self_collide link="left_wheel" />
-  <xacro:no_self_collide link="right_wheel" />
   <xacro:no_self_collide link="tilt_body" />
   <xacro:no_self_collide link="pan_face" />
 
+  <!-- Wheels: grippy rubber-like contact so they roll instead of slide -->
+  <xacro:macro name="wheel_contact" params="link">
+    <gazebo reference="${link}">
+      <selfCollide>false</selfCollide>
+      <mu1>1.0</mu1>
+      <mu2>1.0</mu2>
+    </gazebo>
+  </xacro:macro>
+
+  <xacro:wheel_contact link="left_wheel" />
+  <xacro:wheel_contact link="right_wheel" />
+
   <gazebo>
-    <plugin name="gazebo_ros2_control" filename="gz_ros2_control::GazeboSimROS2ControlPlugin">
+    <plugin filename="libgz_ros2_control-system.so" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
       <parameters>$(find my_robot_description)/config/controllers.yaml</parameters>
     </plugin>
   </gazebo>

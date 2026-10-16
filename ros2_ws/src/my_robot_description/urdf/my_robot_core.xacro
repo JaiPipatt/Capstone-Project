@@ -74,7 +74,7 @@
   <xacro:wheel side="right" y="${right_wheel_y}"
     mesh_xyz="0 0.00075 0" mesh_rpy="${-half_pi} ${-half_pi} 0" />
 
-  <!-- Tilt body: pitches about the wheel axle -->
+  <!-- Tilt body, pitches about the wheel axle -->
   <link name="tilt_body">
     <xacro:tilt_body_inertial />
     <xacro:link_meshes name="tilt_body"
@@ -90,7 +90,7 @@
     <limit effort="${effort_limit}" velocity="${velocity_limit}" lower="${-pi}" upper="${pi}" />
   </joint>
 
-  <!-- Pan face: spins about the forward axis at the front of the tilt body -->
+  <!-- Pan face, spins about the forward axis at the front of the tilt body -->
   <link name="pan_face">
     <xacro:pan_face_inertial />
     <xacro:link_meshes name="pan_face"

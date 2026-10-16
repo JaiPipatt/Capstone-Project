@@ -9,14 +9,14 @@ def generate_launch_description():
 
     pkg_path = FindPackageShare('my_robot_description')
 
-    urdf_file = PathJoinSubstitution([
+    xacro_file = PathJoinSubstitution([
         pkg_path,
         'urdf',
-        'assemply.urdf'
+        'my_robot.urdf.xacro'
     ])
 
     robot_description = ParameterValue(
-        Command(['cat ', urdf_file]),
+        Command(['xacro ', xacro_file]),
         value_type=str
     )
 

@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!-- ros2_control: wheels take velocity commands, tilt and pan take position commands -->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="control_joint" params="name command">
+    <joint name="${name}">
+      <command_interface name="${command}" />
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+    </joint>
+  </xacro:macro>
+
+  <ros2_control name="GazeboSimSystem" type="system">
+    <hardware>
+      <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+    </hardware>
+    <xacro:control_joint name="left_wheel_joint" command="velocity" />
+    <xacro:control_joint name="right_wheel_joint" command="velocity" />
+    <xacro:control_joint name="tilt_body_joint" command="position" />
+    <xacro:control_joint name="pan_face_joint" command="position" />
+  </ros2_control>
+
+</robot>

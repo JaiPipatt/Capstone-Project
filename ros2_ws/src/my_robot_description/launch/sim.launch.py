@@ -37,10 +37,13 @@ def generate_launch_description():
         'gz_sim.launch.py'
     ])
 
+    # Camera placed close to the robot (default view is 6 m away)
+    gui_config = PathJoinSubstitution([pkg_path, 'config', 'gui.config'])
+
     # -r: start playing immediately, -s: server only (no window)
     gazebo_gui = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(gz_sim_launch),
-        launch_arguments={'gz_args': '-r empty.sdf'}.items(),
+        launch_arguments={'gz_args': ['-r empty.sdf --gui-config ', gui_config]}.items(),
         condition=IfCondition(LaunchConfiguration('gui'))
     )
     gazebo_headless = IncludeLaunchDescription(

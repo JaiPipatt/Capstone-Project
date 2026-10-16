@@ -22,6 +22,12 @@
   <xacro:property name="effort_limit" value="10" />
   <xacro:property name="velocity_limit" value="1" />
 
+  <!-- Colors (the .obj meshes have no .mtl files, so they would render white) -->
+  <material name="body_gray"><color rgba="0.35 0.35 0.38 1" /></material>
+  <material name="wheel_black"><color rgba="0.08 0.08 0.08 1" /></material>
+  <material name="tilt_orange"><color rgba="0.95 0.50 0.10 1" /></material>
+  <material name="face_blue"><color rgba="0.20 0.50 0.90 1" /></material>
+
   <!-- Mesh orientations from the CAD export -->
   <xacro:property name="half_pi" value="${pi / 2}" />
 
@@ -29,12 +35,13 @@
     Visual + collision for a link whose meshes are named meshes/<name>_visual.obj
     and meshes/<name>_collision.stl. collision_xyz defaults to xyz.
   -->
-  <xacro:macro name="link_meshes" params="name xyz rpy collision_xyz:=''">
+  <xacro:macro name="link_meshes" params="name xyz rpy material collision_xyz:=''">
     <visual>
       <origin xyz="${xyz}" rpy="${rpy}" />
       <geometry>
         <mesh filename="package://my_robot_description/meshes/${name}_visual.obj" />
       </geometry>
+      <material name="${material}" />
     </visual>
     <collision>
       <origin xyz="${collision_xyz or xyz}" rpy="${rpy}" />
@@ -48,7 +55,8 @@
   <xacro:macro name="wheel" params="side y mesh_xyz mesh_rpy">
     <link name="${side}_wheel">
       <xacro:call macro="${side}_wheel_inertial" />
-      <xacro:link_meshes name="${side}_wheel" xyz="${mesh_xyz}" rpy="${mesh_rpy}" />
+      <xacro:link_meshes name="${side}_wheel" xyz="${mesh_xyz}" rpy="${mesh_rpy}"
+        material="wheel_black" />
     </link>
 
     <joint name="${side}_wheel_joint" type="continuous">
@@ -63,7 +71,7 @@
   <!-- Base -->
   <link name="base_link">
     <xacro:base_link_inertial />
-    <xacro:link_meshes name="base_link"
+    <xacro:link_meshes name="base_link" material="body_gray"
       xyz="-0.007407 0 0.052843" rpy="0 0 0"
       collision_xyz="-0.007407 0 0.052841" />
   </link>
@@ -77,7 +85,7 @@
   <!-- Tilt body, pitches about the wheel axle -->
   <link name="tilt_body">
     <xacro:tilt_body_inertial />
-    <xacro:link_meshes name="tilt_body"
+    <xacro:link_meshes name="tilt_body" material="tilt_orange"
       xyz="0.006875 0 0" rpy="0 ${pi} 0"
       collision_xyz="0.006816 0 -0.000076" />
   </link>
@@ -93,7 +101,7 @@
   <!-- Pan face, spins about the forward axis at the front of the tilt body -->
   <link name="pan_face">
     <xacro:pan_face_inertial />
-    <xacro:link_meshes name="pan_face"
+    <xacro:link_meshes name="pan_face" material="face_blue"
       xyz="-0.007875 0 0" rpy="${half_pi} 0 ${-half_pi}" />
   </link>
 

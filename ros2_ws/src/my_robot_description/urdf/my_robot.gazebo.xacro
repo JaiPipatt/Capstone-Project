@@ -26,8 +26,24 @@
   <xacro:wheel_contact link="right_wheel" />
 
   <gazebo>
+    <!-- One controller_manager per module, inside the module's namespace -->
     <plugin filename="libgz_ros2_control-system.so" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
       <parameters>$(find my_robot_description)/config/controllers.yaml</parameters>
+      <ros>
+        <namespace>/${namespace}</namespace>
+      </ros>
+    </plugin>
+
+    <!--
+      Ground-truth pose ("known exact location") straight from the physics engine,
+      published as Gazebo odometry and as TF world -> <prefix>base_link.
+      The launch file bridges both to ROS.
+    -->
+    <plugin filename="ignition-gazebo-odometry-publisher-system" name="ignition::gazebo::systems::OdometryPublisher">
+      <odom_frame>world</odom_frame>
+      <robot_base_frame>${frame_prefix}base_link</robot_base_frame>
+      <dimensions>3</dimensions>
+      <odom_publish_frequency>50</odom_publish_frequency>
     </plugin>
   </gazebo>
 

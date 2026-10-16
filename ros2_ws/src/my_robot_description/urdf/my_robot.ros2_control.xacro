@@ -1,5 +1,33 @@
 <?xml version="1.0"?>
-<!-- ros2_control: wheels take velocity commands, tilt and pan take position commands -->
+<!--
+  ros2_control: wheels take velocity commands, tilt and pan take position commands.
+
+  Actuators: 4x N20 6V gearmotors with quadrature encoders (7 PPR on motor
+  shaft = 28 counts/rev in x4 mode, times the gearbox ratio), each driving a
+  9T pinion. Gear train: 9T pinion -> 48T spur (x4), 46T crown gear.
+  Joint limits (effort/velocity) are placeholders; set them from the motor specs.
+
+    - left/right wheel: one motor each (velocity).
+        9T pinion -> 48T spur gear, N = 48/9 = 5.333
+    - tilt + pan: TWO motors coupled through a differential, NOT one motor per joint.
+        motor A -> 9T pinion -> 48T spur A -+
+                                            +-> 46T crown gear on the pan_face axis
+        motor B -> 9T pinion -> 48T spur B -+
+        spurs turn together  -> they lift the crown -> tilt only
+        spurs turn opposite  -> the crown spins     -> pan only
+
+  The model exposes tilt_body_joint / pan_face_joint directly. Converting
+  joint commands to the two motors is left to the hardware side:
+    N_tilt = 48 / 9 = 5.333                      (motor -> tilt)
+    N_pan  = (48 / 9) * (46 / 48) = 46 / 9 = 5.111 (motor -> pan; spur teeth cancel)
+    motor_a = N_tilt * tilt + N_pan * pan
+    motor_b = N_tilt * tilt - N_pan * pan
+    tilt = (motor_a + motor_b) / (2 N_tilt)
+    pan  = (motor_a - motor_b) / (2 N_pan)
+  Signs depend on how the motors are mounted.
+  ros2_control's transmission_interface/DifferentialTransmission implements this.
+-->
+
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <xacro:macro name="control_joint" params="name command">

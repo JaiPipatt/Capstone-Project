@@ -1,0 +1,11 @@
+algo_node:
+  ros__parameters:
+    num_modules: 3
+    pose_topic: ground_truth/odom   # change to the AprilTag topic later
+    rate: 10.0                      # Hz
+    max_linear: 0.049               # m/s (50 RPM motor / 5.333 wheel gear * 0.05 m)
+    max_angular: 1.0                # rad/s
+    goal_tolerance: 0.01            # m
+    # [x1, y1, x2, y2, x3, y3] in metres, world frame.
+    # Sim spawns module_1..3 at y = -0.3, 0, 0.3 (x = 0).
+    goals: [0.3, -0.3,  0.3, 0.0,  0.3, 0.3]

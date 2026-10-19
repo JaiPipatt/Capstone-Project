@@ -24,3 +24,6 @@
 # Python
 __pycache__/
 *.py[cod]
+
+# Editor settings (any folder)
+.vscode/

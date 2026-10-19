@@ -409,6 +409,91 @@ Two independently driven wheels (\SI{100}{mm} diameter) with NBR N70 O-ring tire
 
 Approximately $90 \times 71.6$\,mm rectangular part with EP-magnet docking space and an additional motor mount.
 
+\subsection{Simulation Model}
+\label{sec:sim-model}
+
+The module CAD is exported from Blender (LinkForge) to URDF and refactored into xacro, then simulated in Gazebo Fortress with \texttt{ros2\_control} on ROS~2 Humble. The model serves as a digital twin for testing control algorithms before hardware is available.
+
+\subsubsection{Kinematic Model}
+
+The model has five links (base, two wheels, tilt body, pan face) and four actuated joints (Table~\ref{tab:sim-joints}). The exporter placed the CAD orientation of each part in the joint frames, giving rotated and inconsistent TF frames. All link frames were therefore re-aligned with the base following REP-103 ($x$ forward, $y$ left, $z$ up), and each mesh's CAD rotation was moved into its visual and collision origin. A forward-kinematics comparison at random joint configurations confirmed every mesh pose was unchanged (maximum difference \SI{1e-6}{m}). Self-collision between the module's own links is disabled.
+
+\begin{table}[H]
+	\centering
+	\caption{Simulated joints and control interfaces.}
+	\label{tab:sim-joints}
+	\small
+	\begin{tabular}{lllll}
+		\toprule
+		\textbf{Joint} & \textbf{Type} & \textbf{Axis} & \textbf{Command} & \textbf{Controller} \\
+		\midrule
+		\texttt{left\_wheel\_joint}  & continuous & $+y$ & velocity & \texttt{diff\_drive\_controller} \\
+		\texttt{right\_wheel\_joint} & continuous & $+y$ & velocity & \texttt{diff\_drive\_controller} \\
+		\texttt{tilt\_body\_joint}   & revolute, $\pm\SI{180}{\degree}$ & $-y$ & position & \texttt{head\_position\_controller} \\
+		\texttt{pan\_face\_joint}    & continuous & $-x$ & position & \texttt{head\_position\_controller} \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+The pan/tilt differential is not modelled mechanically. The simulation exposes pan and tilt directly as joints, and the mixing to the two inner motors is left to the firmware:
+\begin{equation}
+	\theta_A = N_t\,\theta_{\text{tilt}} + N_p\,\theta_{\text{pan}}, \qquad
+	\theta_B = N_t\,\theta_{\text{tilt}} - N_p\,\theta_{\text{pan}},
+\end{equation}
+where $\theta_A, \theta_B$ are the inner motor angles and $N_t, N_p$ the motor-to-joint reductions of the gear train. As a consequence, the simulation does not reproduce the shared speed and torque limit when pan and tilt move together. For the first milestone, tilt and pan are held at \SI{0}{rad}.
+
+\subsubsection{Inertial Parameters}
+
+The exporter's inertial values were placeholders. Every link had $I_{xx} = I_{yy} = I_{zz} = m/6$, which is the inertia of a solid \SI{1}{m} cube ($I = m(a^2 + a^2)/12$ with $a = \SI{1}{m}$), regardless of shape. For parts about \SI{0.1}{m} across this overestimates inertia by roughly $100\times$, and the centres of mass were the mesh offsets rather than true centroids.
+
+The values were therefore recomputed from the CAD meshes, assuming a uniform solid of 3D-printed nylon PA12, $\rho = \SI{1010}{kg/m^3}$. Each closed triangle mesh is decomposed into tetrahedra formed by every face $(\mathbf{a}_k, \mathbf{b}_k, \mathbf{c}_k)$ and the origin \cite{mirtich1996}:
+\begin{gather}
+	V_k = \tfrac{1}{6}\,\mathbf{a}_k \cdot (\mathbf{b}_k \times \mathbf{c}_k), \qquad
+	m = \rho \sum_k V_k, \qquad
+	\mathbf{c} = \frac{1}{\sum_k V_k} \sum_k V_k\,\frac{\mathbf{a}_k + \mathbf{b}_k + \mathbf{c}_k}{4}, \\
+	C = \rho \sum_k \frac{V_k}{20} \left[ \mathbf{a}_k\mathbf{a}_k^{T} + \mathbf{b}_k\mathbf{b}_k^{T} + \mathbf{c}_k\mathbf{c}_k^{T} + \mathbf{s}_k\mathbf{s}_k^{T} \right],
+	\qquad \mathbf{s}_k = \mathbf{a}_k + \mathbf{b}_k + \mathbf{c}_k, \\
+	I_{cm} = \operatorname{tr}(C)\,\mathbf{E}_3 - C - m\left[ (\mathbf{c}^{T}\mathbf{c})\,\mathbf{E}_3 - \mathbf{c}\mathbf{c}^{T} \right], \qquad
+	I_{\text{link}} = R\,I_{cm}\,R^{T},
+\end{gather}
+where the signed volumes $V_k$ cancel outside the solid, $C$ is the second-moment matrix, $\mathbf{E}_3$ is the $3 \times 3$ identity, the bracketed term is the parallel-axis shift to the centre of mass, and $R$ rotates the result into the link frame. The method is exact for a polyhedron. Implemented in \texttt{compute\_inertia.py}, it reproduced the analytic solution of an $80 \times 50 \times 30$\,mm box with \SI{0.000}{\percent} error and of a 256-facet cylinder ($r = \SI{35}{mm}$, $h = \SI{12}{mm}$) within \SI{0.02}{\percent}, the residual being faceting. Results are listed in Table~\ref{tab:sim-inertia}; the wheels give $I_{yy} \approx 2 I_{xx}$, as expected for a disc spinning about $y$.
+
+\begin{table}[H]
+	\centering
+	\caption{Computed mass properties (solid nylon PA12, inertia about the centre of mass).}
+	\label{tab:sim-inertia}
+	\begin{tabular}{lrrrrr}
+		\toprule
+		\textbf{Link} & \textbf{Volume (cm$^3$)} & \textbf{Mass (g)} &
+		\textbf{$I_{xx}$ (kg\,m$^2$)} & \textbf{$I_{yy}$ (kg\,m$^2$)} & \textbf{$I_{zz}$ (kg\,m$^2$)} \\
+		\midrule
+		Base        & 139.95 & 141.3 & \num{2.51e-4} & \num{2.05e-4} & \num{2.57e-4} \\
+		Left wheel  &  51.15 &  51.7 & \num{3.55e-5} & \num{7.00e-5} & \num{3.55e-5} \\
+		Right wheel &  51.15 &  51.7 & \num{3.57e-5} & \num{7.00e-5} & \num{3.53e-5} \\
+		Tilt body   &  28.39 &  28.7 & \num{3.46e-5} & \num{2.82e-5} & \num{3.33e-5} \\
+		Pan face    &  37.11 &  37.5 & \num{4.36e-5} & \num{2.21e-5} & \num{2.22e-5} \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+The main remaining uncertainty is in the inputs, not the method: material density, partial infill if the parts are printed by FDM, and components absent from the mesh (motors, battery, PCBs), which make the base too light. Measured part masses will replace the density estimate once parts are printed; the script accepts them directly and rescales the inertia.
+
+\subsubsection{Multi-Module Simulation}
+
+$N$ identical modules are spawned (default three), each in its own namespace (\texttt{module\_1}, \ldots) with its own controller manager, controllers and TF frame prefix, so modules can be commanded independently. The wheels use a differential-drive controller (wheel separation \SI{96.65}{mm}, radius \SI{50}{mm}, both measured from the meshes) driven by velocity commands $(v, \omega)$.
+
+The first milestone localises modules with AprilTags. To test algorithms before the vision pipeline exists, each module's exact pose is taken from the physics engine and published as \texttt{/module\_i/ground\_truth/odom}. A separate package, \texttt{msrr\_control}, reads these poses and commands all modules from one node. It is limited to the real top speed of \SI{0.049}{m/s} (\SI{50}{rpm} motor output through the \num{5.33}:1 wheel gear). The AprilTag estimate will later replace the ground-truth topic without changing the algorithm code. A go-to-goal test with three modules reached all goals within \SI{1}{cm}.
+
+\subsubsection{Status and Limitations}
+
+\begin{itemize}
+	\item Joint effort and velocity limits are placeholders, pending actuator characterisation.
+	\item The pan/tilt motor coupling and gear backlash are not simulated.
+	\item Docking is not modelled; Phase~B will use Gazebo's detachable joints to emulate the EP-Face connection.
+	\item Each module is supported only by its wheels and settles with a \SIrange{4}{6}{\degree} lean; contact with the ground will be checked against the printed module.
+\end{itemize}
+
+
 \clearpage
 % ================================================================
 \section{Electronics}

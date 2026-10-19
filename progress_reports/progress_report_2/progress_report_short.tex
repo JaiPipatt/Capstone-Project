@@ -301,20 +301,16 @@ The design is based on SMORES-EP \cite{tosun2016} (originally \SI{80}{mm}), scal
 \begin{figure}[!htbp]
 	\centering
 	\includegraphics[width=0.6\textwidth]{../image/GearCAD.png}
-	\caption{CAD view of the gear train and motor arrangement.}
+	\caption{CAD view of the gear train and motor arrangement (48T spur gears, 9T pinions, 46T crown gear).}
 	\label{fig:cad-gear-train}
 \end{figure}
 
-% \begin{figure}[H]
-% 	\centering
-% 	\includegraphics[width=0.6\textwidth]{../image/GearCAD.png}
-% 	\caption{Additional CAD view of the gear assembly.}
-% 	\label{fig:cad-additional-view}
-% \end{figure}
-
 \subsubsection{SMORES-EP Reference Baseline}
 
-The original SMORES-EP gear train was reverse-engineered from published data (Table~\ref{tab:smores-ref}), yielding module $m = 1.4$, pitch diameter \SI{67.2}{mm}, and stage ratio $48/9 = 5.33$.
+The original SMORES-EP gear train was reverse-engineered from published data
+(Table~\ref{tab:smores-ref}). This gives module $m = 1.4$, a spur pitch
+diameter of $1.4 \times 48 = \SI{67.2}{mm}$ (OD $= 1.4 \times 50 = \SI{70}{mm}$),
+and a stage ratio of $48/9 \approx 5.33$.
 
 \begin{table}[H]
 	\centering
@@ -325,57 +321,133 @@ The original SMORES-EP gear train was reverse-engineered from published data (Ta
 		\textbf{Parameter} & \textbf{SMORES-EP} \\
 		\midrule
 		Module envelope & $80 \times 80 \times 80$\,mm \\
-		Spur gear       & 48 teeth \\
-		Crown gear      & Same part as spur, used at \SI{90}{\degree} \\
+		Module $m$      & \num{1.4} \\
+		Spur gear       & 48 teeth (PD \SI{67.2}{mm}, OD \SI{70}{mm}) \\
 		Pinion          & 9 teeth \\
+		Stage ratio     & $48/9 \approx 5.33{:}1$ \\
+		Crown gear      & Same part as spur, used at \SI{90}{\degree} \\
 		Gearbox         & 298:1 \\
 		\bottomrule
 	\end{tabular}
 \end{table}
 
-\subsubsection{New Gear Geometry}
+\subsubsection{Spur Gear and Pinion}
 
-The \SI{100}{mm} envelope allows a max spur gear OD of \SI{90}{mm}. The 5.33:1 ratio was preserved (64/12 teeth) to keep the gearbox selection, SMORES-EP benchmarks, and control firmware valid. The 64/12 pair was chosen over 48/9 because 12 teeth reduces undercutting, improves contact ratio, and provides a larger pinion bore.
+After wall thickness, bearing seats, and running clearance, the \SI{100}{mm}
+envelope allows a maximum spur gear OD of \SI{90}{mm}. The final design keeps the
+SMORES-EP tooth counts (48T spur, 9T pinion) and scales the module from
+$m = 1.4$ to $m = 1.8$, so the spur OD is $m(z+2) = 1.8 \times 50 = \SI{90}{mm}$
+and fills the available diameter exactly. The resulting spur--pinion centre
+distance is $m(z_1+z_2)/2 = 1.8 \times 57 / 2 = \SI{51.3}{mm}$.
 
-Unlike SMORES-EP (which reuses a spur gear as a crown gear), this design uses a \textbf{true crown (face) gear} for better load distribution. The crown gear was sized to \SI{84}{mm} OD (46 teeth, $m = 1.75$) after a \SI{90}{mm} first attempt interfered with surrounding components.
+Reasons for this choice:
+\begin{itemize}
+	\item \textbf{Ratio preserved.} The $48/9 \approx 5.33{:}1$ stage ratio is
+	      unchanged, so the gearbox selection, the SMORES-EP performance
+	      benchmarks, and the control/firmware tuning all remain valid.
+	\item \textbf{Direct comparability.} Using the same tooth counts as SMORES-EP
+	      means the gear train differs from the reference only in scale.
+	\item \textbf{Larger, stronger teeth.} At $m = 1.8$ the tooth thickness on the
+	      pitch circle is $\pi m/2 \approx \SI{2.83}{mm}$, compared with
+	      \SI{2.14}{mm} for $m = 1.36$. This makes the teeth stronger in FDM nylon
+	      and less sensitive to print tolerances.
+	\item \textbf{Adequate pinion size.} The 9T pinion has an OD of
+	      $1.8 \times 11 = \SI{19.8}{mm}$, about the same as the 12T alternative
+	      (\SI{19.04}{mm}), so there is still enough material around the
+	      motor-shaft bore.
+\end{itemize}
 
-This creates a \textbf{module mismatch} ($m = 1.36$ spur vs.\ $m = 1.75$ crown) --- an accepted compromise since both diameters and tooth counts are fixed by packaging and ratio constraints. The crown dedendum was reduced to \SI{2.15}{mm} (from standard \SI{2.19}{mm}) to clear tip interference.
+\textbf{Design change from the previous draft.} An earlier draft proposed a
+64T/12T pair at $m = 1.36$ (same 5.33:1 ratio) to reduce pinion undercut and
+raise the contact ratio. This was replaced by the 48T/9T, $m = 1.8$ pair, which
+meshed and turned smoothly in print testing.
+
+\textbf{Pinion undercut.} A 9-tooth pinion at a \SI{20}{\degree} pressure angle is
+well below the theoretical minimum tooth count for no undercut
+($z_{\min} = 2/\sin^2\alpha \approx 17$), so some root undercut is unavoidable.
+SMORES-EP has the same undercut. It was accepted because the printed pair meshes
+and runs smoothly.
+
+\textbf{Motor-shaft D-bore.} The pinions mount on the N20 gearmotor D-shaft.
+The bore was first modelled with a \SI{0.1}{mm} tolerance. To allow for
+shrinkage of printed nylon holes, the D-bore tolerance has since been made
+slightly larger. The revised bore has not yet been print tested.
+
+\subsubsection{Pan/Tilt Crown Gear}
+
+SMORES-EP reuses a spur gear as a crown gear at \SI{90}{\degree}. This design
+instead uses a \textbf{true crown (face) gear} to improve load distribution
+across the mesh. A first attempt at \SI{90}{mm} OD interfered with surrounding
+components (motors, gearboxes, and structural frame), so the crown gear was
+reduced to \SI{84}{mm} OD with 46 teeth and $m = 1.75$ (pitch diameter
+\SI{80.5}{mm}).
+
+\textbf{Tooth proportions.} The crown addendum is the standard
+$h_a = m = \SI{1.75}{mm}$. The dedendum does \emph{not} use the standard
+$h_f = 1.25m = \SI{2.1875}{mm}$; it is set to \SI{2.15}{mm} instead. With the
+\SI{1.8}{mm} addendum of the mating spur gear, this leaves a root clearance of
+\SI{0.35}{mm}.
+
+\textbf{Module mismatch.} The spur gears ($m = 1.8$) and the crown gear
+($m = 1.75$) have different modules. This is an accepted compromise, because the
+spur diameter, crown diameter, and tooth counts are all fixed by packaging and
+ratio constraints. The mismatch is small (about 2.8\,\%). The circular pitch is
+$\pi m = \SI{5.65}{mm}$ for the spur gear and \SI{5.50}{mm} for the crown gear,
+a difference of about \SI{0.16}{mm} per tooth, which is the same order as the
+\SI{0.2}{mm} backlash allowance. Print testing confirmed that the spur--crown
+mesh turns smoothly despite the mismatch.
+
+\subsubsection{Final Gear Parameters}
 
 \begin{table}[H]
-	\centering
+	\centering\small
 	\caption{Final gear train parameters.}
 	\label{tab:final-params}
-	\begin{tabular}{llllp{4.0cm}}
+	\begin{tabular}{lllllp{4.2cm}}
 		\toprule
-		\textbf{Component} & \textbf{Teeth} & \textbf{Module} & \textbf{OD} & \textbf{Notes} \\
+		\textbf{Component} & \textbf{Teeth} & \textbf{Module} & \textbf{PD} & \textbf{OD} & \textbf{Notes} \\
 		\midrule
-		Wheel spur gear & 64 & \num{1.36} & \SI{90}{mm} &
+		Spur gear ($\times$4) & 48 & \num{1.8} & \SI{86.4}{mm} & \SI{90}{mm} &
 		\SI{5}{mm} face width, bolt holes in web \\
 		\addlinespace
-		Pinion (both) & 12 & \num{1.36} & \SI{19.04}{mm} &
-		Through-bore (pan/tilt) or blind (wheel) \\
+		Pinion ($\times$4) & 9 & \num{1.8} & \SI{16.2}{mm} & \SI{19.8}{mm} &
+		D-bore tolerance slightly enlarged (not yet print tested); through-bore
+		(pan/tilt) or blind (wheel) \\
 		\addlinespace
-		Crown gear & 46 & \num{1.75} & \SI{84}{mm} &
-		Dedendum \SI{2.15}{mm}; true face-gear \\
+		Crown gear & 46 & \num{1.75} & \SI{80.5}{mm} & \SI{84}{mm} &
+		True face gear; $h_a = \SI{1.75}{mm}$, $h_f = \SI{2.15}{mm}$ \\
 		\bottomrule
 	\end{tabular}
 \end{table}
 
-Common: \SI{20}{\degree} pressure angle, \SI{0.2}{mm} backlash, \SI{0.3}{mm} root fillet, \SI{0.1}{mm} bore tolerance. All gears generated via Fusion~360. Material: 3D-printed nylon.
+Common to all gears: \SI{20}{\degree} pressure angle, \SI{0.2}{mm} backlash, and
+\SI{0.3}{mm} root fillet. The backlash and fillet are deliberate manufacturing
+allowances. The spur--pinion centre distance is \SI{51.3}{mm}. All gears were
+generated with the Fusion~360 spur gear tool and 3D-printed in nylon.
 
 \subsubsection{Drivetrain Architecture}
 
-Four motors drive four spur gears:
+Four motors each drive a 9T pinion meshing with a 48T spur gear:
 \begin{itemize}
-	\item \textbf{Outer two} --- each drives a wheel (differential-drive locomotion).
-	\item \textbf{Inner two} --- both mesh with a single crown gear:
-	      same direction $\rightarrow$ \textbf{pan};
-	      opposite directions $\rightarrow$ \textbf{tilt}.
+	\item \textbf{Outer two:} each drives a wheel (differential-drive locomotion).
+	\item \textbf{Inner two:} both mesh with a single crown gear, which works as a
+	      differential:
+	      \begin{itemize}
+	      	\item Both spur gears turning the \emph{same} direction about their
+	      	      shared axis $\rightarrow$ the crown gear does not spin; the whole
+	      	      crown assembly rotates about the shared axis (\textbf{tilt}).
+	      	\item Spur gears turning in \emph{opposite} directions $\rightarrow$
+	      	      the crown gear spins about its own axis (\textbf{pan}).
+	      \end{itemize}
 \end{itemize}
+The crown gear must mesh symmetrically with both inner spur gears. Any
+asymmetry would couple the pan and tilt motions.
 
 \subsubsection{Status}
 
-All geometry is CAD-only. \textbf{No parts have been printed or tested.} Priority next steps: print first articles, verify spur/crown mesh despite module mismatch, check 12-tooth pinion undercut at print tolerances, and validate backlash and bore fit.
+All gears (48T spur, 9T pinion, and 46T crown) have been printed and tested.
+Both the spur--pinion and spur--crown meshes turn smoothly. The remaining step
+is to print test the revised pinion D-bore on the motor shaft.
 
 % ----------------------------------------------------------------
 \subsection{Outer Wheels}
@@ -674,6 +746,75 @@ Snake, Car, DoubleDriver, L-shape.
 
 Reliable tag detection, acceptable localisation and tracking error for real-time control, stable PID behaviour without excessive oscillation, and continuous operation without critical failures. Specific numerical thresholds to be defined based on system requirements.
 
+\subsection{Navigation and Avoidance Plan}
+\label{sec:nav-plan}
+
+This plan covers the \textbf{simulation stage} only.
+
+Reconfiguration planning follows the parallel self-assembly method of Liu et al.\ \cite{liu2023}, which was developed for SMORES-EP, the platform on which our module is based. The method consists of three stages: assigning each physical module to a position in the target configuration, determining the order in which modules connect, and driving each module into place to dock. Coordinated motion of multiple modules without collisions is handled by the prioritised route planner of Binder et al.\ \cite{binder2019,binder2017}.
+
+\subsubsection{Planning Stages}
+
+A target configuration is represented as a tree in which each edge specifies the two connecting faces: T (top, the pan face), B (bottom), or L/R (the left and right wheel faces) \cite{liu2017}. The planar pose of each module is denoted $[x, y, \theta]$.
+
+\begin{enumerate}[topsep=2pt,itemsep=2pt,parsep=0pt,leftmargin=1.5em]
+\item \textbf{Task assignment.} A root module is selected at the centre of the target configuration, and the pose of every target position is expressed relative to it. Likewise, the physical module closest to the centroid of the group is selected as the physical root, and all physical poses are expressed relative to it. The cost of assigning a module to a target position is the distance between their relative positions, and the Hungarian algorithm \cite{kuhn1955,munkres1957} finds the assignment with the minimum total distance. The output is a goal pose for every module.
+\item \textbf{Assembly sequence.} The configuration is assembled outward from the root, one tree layer at a time. Each module in a layer connects to a module that is already in place, so all modules in the same layer can move in parallel. Each connection is written $(m, c, \tilde{m}, \tilde{c}')$, meaning module $m$ connects its face $c$ to face $\tilde{c}'$ of module $\tilde{m}$. When several modules connect directly to the root, L/R connections are performed before T/B connections.
+\item \textbf{Docking.} Each module navigates to the vicinity of its parent, aligns with the target face, and approaches it (Sections~\ref{sec:nav-avoid} and~\ref{sec:nav-dock}).
+\end{enumerate}
+
+\subsubsection{Navigation and Collision Avoidance}
+\label{sec:nav-avoid}
+
+The workspace is discretised into a \SI{10}{cm} grid \cite{liu2023}, and routes are planned over its cells. Each module is modelled as a differential-drive robot, with forward velocity $v$ and angular velocity $\omega$ produced by the two wheels:
+\begin{equation}
+\begin{bmatrix} \dot{x} \\ \dot{y} \\ \dot{\theta} \end{bmatrix} =
+\begin{bmatrix} \cos\theta & 0 \\ \sin\theta & 0 \\ 0 & 1 \end{bmatrix}
+\begin{bmatrix} v \\ \omega \end{bmatrix}.
+\end{equation}
+
+Each module first navigates to a waypoint one grid cell away from its docking pose.
+
+\begin{itemize}
+\item \textbf{Prioritised planning.} Modules are assigned a priority order and planned sequentially. Each route is found with a time-aware A* search, in which a cell occupied by a previously planned module at a given time is treated as blocked. Waiting in place is permitted, and cell reservations overlap slightly in time so that two modules exchanging cells are detected as a collision.
+\item \textbf{Conflict resolution.} When a route is blocked, the planner applies five strategies in order: backtracking and waiting, yielding into a side branch at a crossing, yielding from the start cell, vacating the goal cell for a higher-priority module, and pushing the waiting position further along the route.
+\item \textbf{Rescheduling.} If no route is found, the maximum speed of the module causing the most conflicts is reduced. If this is insufficient, the priorities of the two most conflicting modules are swapped and planning is repeated.
+\item \textbf{Execution.} Each route segment carries a precondition of the form ``module $x$ has passed step $n$''. Each module tracks its route with a PID controller and publishes its current step, allowing the other modules to check their preconditions.
+\end{itemize}
+
+\subsubsection{Alignment and Approach}
+\label{sec:nav-dock}
+
+On reaching its waypoint, the module aligns with the target face. Let $(x', y', \theta')$ denote the module's pose error relative to its docking pose. For L/R connections, the controller drives $x'$ and $\theta'$ to zero; for T/B connections, it drives $y'$ and $\theta'$ to zero. The module then moves straight forward until it contacts its parent. As the simulation does not model the EP magnets, a dock is considered successful when the modules are in contact and the residual error is within a set tolerance. On the physical system, L/R connections require a helper module to lift the moving module \cite{liu2023}; this connection type may therefore be excluded to reduce project complexity.
+
+\subsubsection{Test Procedure}
+
+\textbf{Setup.} Gazebo Fortress spawns $N$ modules in a row, each with its own differential-drive controller. Ground-truth poses from the simulator replace AprilTag localisation, and the linear speed is limited to \SI{0.049}{m/s} to match the physical motors.
+
+\textbf{Tests.} Tests are performed in increasing order of complexity: the planner in isolation (verifying that the assignment is optimal against an exhaustive search and that the assembly sequence is correct); single-module navigation to a goal; two-module conflict scenarios (head-on, crossing paths, an occupied goal, and a narrow passage); alignment and approach; and finally assembly of the goal configurations listed above.
+
+\textbf{Metrics.} Success rate, number of collisions (centre distance below one module width), planning time, total completion time, path-tracking error, and final alignment error.
+
+\textbf{Initial test case.} The first planner test uses three modules connected side by side ($v_3$--$v_2$--$v_1$, joined L to R), starting from the default simulation spawn positions. The expected output is shown in Table~\ref{tab:nav-n1}: the middle module becomes the root, and both outer modules connect to it in parallel. As this configuration uses only L/R connections, it would be affected if that connection type is excluded.
+
+\begin{table}[!htbp]
+\centering
+\caption{Expected planner output for three modules side by side, starting at $y = -0.3, 0, 0.3$\,m.}
+\label{tab:nav-n1}
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Target position} & \textbf{Assigned module} & \textbf{Goal pose $(x, y, \theta)$} \\
+\midrule
+$v_2$ (root) & module\_2 (root) & $(0,\ 0,\ 0^\circ)$ \\
+$v_1$ & module\_3 & $(0,\ +0.1,\ 0^\circ)$ \\
+$v_3$ & module\_1 & $(0,\ -0.1,\ 0^\circ)$ \\
+\midrule
+\multicolumn{3}{@{}l}{Parallel connections: (module\_3, R, module\_2, L), (module\_1, L, module\_2, R)} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \clearpage
 % ================================================================
 \section{Preparation for Phase B: EP Magnet}
@@ -702,6 +843,34 @@ Tosun, T., Davey, J., Liu, C., \& Yim, M. (2016). Design and characterization
 of the EP-Face connector. In \textit{IEEE/RSJ International Conference on
 Intelligent Robots and Systems (IROS)} (pp.\ 45--51).
 
-\end{thebibliography}
+\bibitem{liu2023}
+Liu, C., Lin, Q., Kim, H., \& Yim, M. (2023). SMORES-EP, a modular robot with
+parallel self-assembly. \textit{Autonomous Robots}, 47, 211--228.
+doi:10.1007/s10514-022-10078-1.
+
+\bibitem{liu2017}
+Liu, C., \& Yim, M. (2019). Configuration recognition with distributed
+information for modular robots. In \textit{Robotics Research (ISRR 2017)},
+Springer Proceedings in Advanced Robotics, vol.\ 10 (pp.\ 967--983).
+
+\bibitem{binder2019}
+Binder, B., Beck, F., K\"onig, F., \& Bader, M. (2019). Multi robot route
+planning (MRRP): Extended spatial-temporal prioritized planning. In
+\textit{IEEE/RSJ International Conference on Intelligent Robots and Systems
+(IROS)} (pp.\ 4133--4139).
+
+\bibitem{binder2017}
+Binder, B. (2017). \textit{Spatio-temporal prioritized planning}. Master's
+thesis, TU Wien.
+
+\bibitem{kuhn1955}
+Kuhn, H.\ W. (1955). The Hungarian method for the assignment problem.
+\textit{Naval Research Logistics Quarterly}, 2(1--2), 83--97.
+
+\bibitem{munkres1957}
+Munkres, J. (1957). Algorithms for the assignment and transportation problems.
+\textit{Journal of the SIAM}, 5(1), 32--38.
+
+\end{bibliography}
 
 \end{document}

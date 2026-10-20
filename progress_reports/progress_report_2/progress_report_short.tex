@@ -700,32 +700,205 @@ Design effort & Low & Medium & High \\
 The inductive option best handles the EP connector's nearby field but has the highest schedule risk. Decision deferred to Phase C.
 
 % ----------------------------------------------------------------
-\subsection{Power System}
+\subsection{Changes from Progress Report 1}
+\label{sec:elec-changes}
+
+The phased plan (A-1 to D) and its scope are unchanged. The electronics work
+plan is delayed by one week, which shifts the electronics timeline and the
+work that depends on it by the same amount.
+
+Phase A-1 was built from an STM32F411 development board, two TB6612FNG
+dual H-bridge drivers and an ESP32-C6 module, instead of the COTS 4-channel
+motor driver with a built-in MCU and the ESP32-C3 described in PR1. This gives direct control of the PWM, direction
+and encoder signals, so the wiring and firmware carry over to the Phase A main
+board.
+
+The only other hardware change is the battery. The 2S \SI{3000}{mAh} 505080 pack was
+replaced with a 3S pack of Vapcell M11 18350 Li-ion cells (\SI{1100}{mAh},
+\SI{10}{A} continuous, \SI{15}{A} burst), which can supply more current for the
+EP-Face in Phase B. The smaller capacity lowers the estimated run time
+(Section~\ref{sec:power-new}).
+
+% ----------------------------------------------------------------
+\subsection{Phase A-1 Hardware}
+\label{sec:phase-a1-hw}
+
+Phase A-1 is the bench version of the locomotion electronics. It tests the
+wiring, power path and firmware set-up that will move onto the Phase A PCBs.
+
+% Placeholder-safe figure: grey box until the image exists.
+\providecommand{\figOrBox}[2]{%
+  \IfFileExists{#2}{\includegraphics[width=#1]{#2}}%
+  {\fbox{\parbox[c][0.3\textheight][c]{\dimexpr#1-2\fboxsep-2\fboxrule\relax}{\centering\small TODO: \detokenize{#2}}}}}
+
+\subsubsection{Hardware Schematic}
+
+Figure~\ref{fig:a1-schematic} shows the Phase A-1 wiring. An STM32F411CEU6
+development board controls four N20 gearmotors through two dual-channel
+TB6612FNG H-bridge drivers (two motors each, shared standby line). Each motor
+has a PWM input and two direction inputs, and its quadrature encoder is read
+back by the MCU. M1 and M2 drive the left and right wheels; M3 and M4, the
+inner-left (IL) and inner-right (IR) motors, drive pan and tilt. An ESP32-C6 module provides the Wi-Fi link over UART,
+an ST-Link handles SWD programming, and USB gives a serial console for testing.
+
+Three buck converters run from the 3S pack through an XT30 connector. A 5\,V
+buck supplies the MCU board and the ESP32-C6; the MCU board's 3.3\,V regulator
+supplies the driver logic and the encoders. One 6\,V buck per TB6612FNG
+supplies the motors, so the N20s run at their rated voltage at full PWM duty.
+A \SI{100}{nF} capacitor across each motor suppresses brush noise, and a
+\SI{10}{k\ohm} pull-down on STBY keeps both drivers disabled until the MCU
+enables them.
 
 \begin{figure}[!htbp]
   \centering
+  \figOrBox{\textwidth}{../image/Phase_A1_Schematic.png}
+  \caption{Phase A-1 hardware schematic.}
+  \label{fig:a1-schematic}
+\end{figure}
+
+\subsubsection{Hardware Packaging}
+
+Figure~\ref{fig:a1-cad} shows the Phase A-1 hardware placed in the module.
+Three parts stack front to back inside the module shell. The three 18350 cells
+sit in a vertical column at the back. In front of them is the regulator board
+with the three buck converters. The controller board, carrying the STM32F411
+board, both TB6612FNG drivers and the ESP32-C6, sits at the front.
+
+\begin{figure}[!htbp]
+  \centering
+  \begin{subfigure}[b]{0.36\textwidth}
+    \centering
+    \figOrBox{\linewidth}{../image/Phase_A1_CAD.png}
+    \caption{Assembled.}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.6\textwidth}
+    \centering
+    \figOrBox{\linewidth}{../image/Phase_A1_CAD_Exploded.png}
+    \caption{Exploded.}
+  \end{subfigure}
+  \caption{Phase A-1 hardware packaging.}
+  \label{fig:a1-cad}
+\end{figure}
+
+\subsubsection{Power Calculation}
+
+Table~\ref{tab:a1-power} gives the Phase A-1 load on the 3S pack, using the
+PR1 load figures. Motor power passes through the 6\,V regulators (90\,\%) and
+the TB6612FNG (95\,\%); logic power through a 5\,V buck (90\,\%) and the
+board's 3.3\,V LDO (66\,\%).
+
+\begin{table}[H]
+\centering\small
+\caption{Phase A-1 power budget (3S pack, \SI{9.8}{Wh} usable).}
+\label{tab:a1-power}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Load} & \textbf{Typical} & \textbf{All motors driving} & \textbf{Peak (all stalled)} \\
+\midrule
+4$\times$ N20 via 6\,V reg.\ + TB6612 & 2.6\,W\textsuperscript{a} & 7.0\,W & 28.1\,W \\
+STM32F411 + ESP32-C6 (3.3\,V) & 0.7\,W & 0.7\,W & 2.2\,W\textsuperscript{b} \\
+\midrule
+\textbf{Total from pack} & \textbf{3.3\,W} & \textbf{7.7\,W} & \textbf{30.3\,W} \\
+Pack current (11.1\,V) & 0.30\,A & 0.69\,A & 2.7\,A (3.4\,A at 9\,V) \\
+Run time & \textbf{3.0\,h} & \textbf{1.3\,h} & -- \\
+\bottomrule
+\end{tabular}
+
+\smallskip
+{\footnotesize \textsuperscript{a}PR1 duty cycle: wheels 60\,\%, pan/tilt 15\,\%, 0.25\,A each loaded.
+\textsuperscript{b}Wi-Fi transmit burst, 335\,mA (PR1 ESP32-C3 figure).}
+\end{table}
+
+The 3.4\,A worst-case pack current is well inside the cell's \SI{10}{A}
+continuous rating. Because the drivers see 6\,V, a stalled N20 draws about
+1\,A, inside the TB6612FNG's 1.2\,A continuous rating per channel. Each 6\,V
+regulator must supply up to 2\,A with both of its motors stalled.
+% TODO (recommended): add measured motor and logic currents next to these.
+
+\subsubsection{Embedded System Setup}
+
+The STM32F411 was configured in STM32CubeMX (Figure~\ref{fig:a1-cubemx},
+Table~\ref{tab:a1-periph}). The 25\,MHz crystal is multiplied by the PLL to a
+96\,MHz system clock, which also gives the exact 48\,MHz needed for USB. One
+timer generates the PWM for all four motors at 20\,kHz, which is above
+hearing range. Each encoder has its own timer in quadrature (4$\times$) mode
+with input filtering and pull-ups. A separate timer interrupt at 1\,kHz sets
+the control-loop rate. The ESP32-C6 link uses DMA, with a circular receive
+buffer so incoming commands are not lost while the CPU is busy.
+
+\begin{figure}[!htbp]
+  \centering
+  \figOrBox{0.55\textwidth}{../image/Phase_A1_CubeMX.png}
+  \caption{STM32CubeMX pin and peripheral configuration.}
+  \label{fig:a1-cubemx}
+\end{figure}
+
+\begin{table}[H]
+\centering\small
+\caption{STM32F411 peripheral assignment.}
+\label{tab:a1-periph}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Function} & \textbf{Peripheral and pins} & \textbf{Setting} \\
+\midrule
+System clock & HSE 25\,MHz $\rightarrow$ PLL & 96\,MHz \\
+Motor PWM, M1--M4 & TIM3 CH1--4 (PA6, PA7, PB0, PB1) & 20\,kHz \\
+Motor direction & GPIO, 2 per motor (PB12--15, PA4--5, PB4--5) & -- \\
+Driver standby & GPIO PB10 (both TB6612) & -- \\
+Encoder M1 (L) & TIM1 (PA8, PA9), 16-bit & $\times$4 quadrature \\
+Encoder M2 (R) & TIM2 (PA15, PB3), 32-bit & $\times$4 quadrature \\
+Encoder M3 (IL) & TIM4 (PB6, PB7), 16-bit & $\times$4 quadrature \\
+Encoder M4 (IR) & TIM5 (PA0, PA1), 32-bit & $\times$4 quadrature \\
+Control loop tick & TIM10 interrupt & 1\,kHz \\
+ESP32-C6 link & USART2 (PA2, PA3) + DMA & 115\,200 baud \\
+PC console & USB OTG FS, CDC class & -- \\
+Debug & SWD (PA13, PA14) & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ----------------------------------------------------------------
+\subsection{New Power Calculation}
+\label{sec:power-new}
+
+\begin{figure}[!htbp]
+  \centering
+  % TODO: re-export Power_Diagram.png with "3S 18350 1100 mAh, 9.0--12.6 V".
   \includegraphics[width=0.6\textwidth]{../image/Power_Diagram.png}
   \caption{Power distribution block diagram.}
   \label{fig:power-diagram}
 \end{figure}
 
-Power from a 2S LiPo (3000\,mAh, 22.2\,Wh) splits three ways:
+The PR1 load budget is unchanged; only the pack changes. The Phase A power
+board keeps the PR1 architecture: the H-bridges run directly from the pack,
+not from the 6\,V regulator used on the Phase A-1 bench set-up. This removes
+the regulator loss and a 4\,A regulator from the board. Power from the 3S
+pack splits three ways:
 \begin{itemize}
-  \item \textbf{Motors:} 4$\times$ N20 via H-bridges, PWM capped at $\sim$70\,\% for 6\,V rating.
-  \item \textbf{EP-Face:} Dedicated buck regulator isolates pulse transients from logic rail.
-  \item \textbf{Logic/compute:} Buck to 5\,V (CM5, camera); LDO to 3.3\,V (MCU, sensors, radios).
+  \item \textbf{Motors:} 4$\times$ N20 via H-bridges, PWM capped at
+        $\sim$48\,\% ($6/12.6$\,V at full charge) for the 6\,V rating.
+  \item \textbf{EP-Face:} Dedicated buck regulator isolates pulse transients
+        from the logic rail.
+  \item \textbf{Logic/compute:} Buck to 5\,V (CM5, camera); LDO to 3.3\,V
+        (MCU, sensors, radios).
 \end{itemize}
 
 \begin{table}[H]
 \centering\small
-\caption{Power budget summary.}
-\label{tab:power-summary}
+\caption{Battery comparison, PR1 vs.\ PR2 (80\,\% of energy usable).}
+\label{tab:battery-change}
 \begin{tabular}{@{}lcc@{}}
 \toprule
-\textbf{Configuration} & \textbf{Total from Pack} & \textbf{Est.\ Run Time} \\
+ & \textbf{PR1: 2S 505080} & \textbf{PR2: 3S Vapcell M11} \\
 \midrule
-Phase A--B (no compute/camera) & $\sim$3.1\,W & $\sim$\textbf{5.8\,h} \\
-Phase D (full system) & $\sim$11.5\,W & $\sim$\textbf{1.5\,h} \\
+Voltage (nominal / full / cutoff) & 7.4 / 8.4 / 6.6\,V & 11.1 / 12.6 / 9.0\,V \\
+Capacity / energy (usable) & 3000\,mAh / 22.2\,Wh (17.8) & 1100\,mAh / 12.2\,Wh (9.8) \\
+Run time, Phase A--B ($\sim$3.1\,W) & 5.8\,h & \textbf{3.2\,h} \\
+Run time, Phase D ($\sim$11.5\,W) & 1.5\,h & \textbf{0.85\,h} \\
+Peak current ($\sim$47\,W) & 7.1\,A (2.4\,C) & 5.2\,A (4.7\,C, cell rated 10\,A) \\
+Motor PWM cap for 6\,V & $\sim$70\,\% & $\sim$48\,\% \\
+H-bridge on-time stall current & 1.4\,A/ch & 2.1\,A/ch \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -738,15 +911,33 @@ Phase D (full system) & $\sim$11.5\,W & $\sim$\textbf{1.5\,h} \\
 \toprule
 \textbf{Rail} & \textbf{Max Current} & \textbf{Max Power} \\
 \midrule
-Motor drive (PWM to 6\,V) & 4.0\,A (6\,V eq.) & 24\,W \\
+Motor drive (PWM to 6\,V) & 4.0\,A (6\,V eq.); 2.1\,A/ch at 12.6\,V & 24\,W \\
 5\,V logic/compute & 4.0\,A & 20\,W \\
 3.3\,V (from 5\,V LDO) & 0.45\,A & 1.5\,W \\
 EP-Face + IR & TBD & TBD \\
 \midrule
-\textbf{Pack total (peak)} & $\sim$6.5\,A @ 7.4\,V & $\sim$47\,W \\
+\textbf{Pack total (peak)} & $\sim$4.2\,A @ 11.1\,V; $\sim$5.2\,A @ 9.0\,V & $\sim$47\,W \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+Run time roughly halves, which is acceptable for lab testing in Phases A--C.
+The higher pack voltage sets new ratings for the power board: H-bridges for at
+least 2.1\,A per channel and a supply above 12.6\,V with margin, and buck
+regulators with a 9--12.6\,V input range.
+
+% ----------------------------------------------------------------
+\subsection{Next Steps}
+\label{sec:elec-next}
+
+The tested Phase A-1 wiring and CubeMX configuration are carried over to
+design the Phase A main board and power board PCBs, with:
+\begin{itemize}
+  \item H-bridges and buck regulators rated for the 3S pack
+        (Section~\ref{sec:power-new}).
+  \item The Phase A-1 pin map (Table~\ref{tab:a1-periph}) as the starting
+        point for the main-board pin-out.
+\end{itemize}
 
 \clearpage
 % ================================================================

@@ -151,28 +151,28 @@ hardware without external localisation or computation.
 \label{sec:gantt}
 % ================================================================
 
-Task schedule from the team Notion timeline (as of 25~Sep~2026), grouped by phase.
+Task schedule from the team Notion timeline (as of 20~Oct~2026), grouped by phase.
 
 \begin{figure}[H]
 \centering\scriptsize
 \begin{ganttchart}[gantt style]{2026-08-17}{2027-01-17}
 \gantttitlecalendar{year, month=shortname} \\
 \ganttgroup{Phase A --- Locomotion, sensing and communication}{2026-08-28}{2027-01-09} \\
-\ganttbar[gnow]{(Phase\_A\_1) Planning/ Trade Study}{2026-08-28}{2026-09-30} \\
+\ganttbar[gpast]{(Phase\_A\_1) Planning/ Trade Study}{2026-08-28}{2026-09-30} \\
 \ganttmilestone[gpast]{MILESTONE - Proposal submission}{2026-08-28} \\
 \ganttbar[gpast]{Module design Mechanic Draft 1 (CAD)}{2026-08-28}{2026-09-17} \\
-\ganttbar[gnow]{Module design Mechanic Draft 1 (FAB) Draft\_1}{2026-09-18}{2026-10-12} \\
-\ganttbar[gnow]{(sim) export URDF to gazebo, controller and locomotion}{2026-09-25}{2026-10-08} \\
-\ganttmilestone[gnow]{MILESTONE - First progress report}{2026-09-25} \\
-\ganttbar[gnext]{(Phase\_A\_1) Part Ordering/Shipping}{2026-10-01}{2026-10-15} \\
-\ganttbar[gnext]{Control board and firmware}{2026-10-01}{2026-10-10} \\
-\ganttbar[gnext]{Power, Main Board PCB Designing}{2026-10-01}{2026-10-15} \\
-\ganttbar[gnext]{Gear and Shaft Print Testing and Redesign}{2026-10-05}{2026-10-25} \\
+\ganttbar[gpast]{Module design Mechanic Draft 1 (FAB) Draft\_1}{2026-09-18}{2026-10-12} \\
+\ganttbar[gpast]{(sim) export URDF to gazebo, controller and locomotion}{2026-09-25}{2026-10-08} \\
+\ganttmilestone[gpast]{MILESTONE - First progress report}{2026-09-25} \\
+\ganttbar[gpast]{(Phase\_A\_1) Part Ordering/Shipping}{2026-10-01}{2026-10-15} \\
+\ganttbar[gnow]{Control board and firmware}{2026-10-01}{2026-10-10} \\
+\ganttbar[gnow]{Power, Main Board PCB Designing}{2026-10-01}{2026-10-15} \\
+\ganttbar[gpast]{Gear and Shaft Print Testing and Redesign}{2026-10-05}{2026-10-25} \\
 \ganttbar[gnext]{(sim) Implement Reconfiguration planning}{2026-10-09}{2026-11-03} \\
-\ganttbar[gnext]{(sim) Navigation and avoidance with known coordinate}{2026-10-09}{2026-10-21} \\
-\ganttbar[gnext]{Basic Locomotion Testing}{2026-10-13}{2026-10-20} \\
+\ganttbar[gnow]{(sim) Navigation and avoidance with known coordinate}{2026-10-09}{2026-10-21} \\
+\ganttbar[gnow]{Basic Locomotion Testing}{2026-10-13}{2026-10-20} \\
 \ganttbar[gnext]{(Phase\_A\_1) Testing}{2026-10-16}{2026-10-20} \\
-\ganttbar[gnext]{Power, Main Board PCB FAB + Part Ordering}{2026-10-16}{2026-10-29} \\
+\ganttbar[gpast]{Power, Main Board PCB FAB + Part Ordering}{2026-10-16}{2026-10-29} \\
 \ganttbar[gnext]{(real) Localization and navigation from camera}{2026-10-23}{2026-11-03} \\
 \ganttmilestone[gnext]{MILESTONE - Second progress report}{2026-10-23} \\
 \ganttbar[gnext]{Power, Main Board Testing}{2026-10-30}{2026-11-12} \\
@@ -183,8 +183,8 @@ Task schedule from the team Notion timeline (as of 25~Sep~2026), grouped by phas
 \ganttbar[gnext]{Connector FAB (EP-Face) (1)}{2026-11-15}{2026-11-30} \\
 \ganttbar[gnext]{Connector design (EP-Face)}{2026-12-11}{2027-01-09} \\
 \ganttgroup{Phase B --- Docking and task-oriented reconfiguration}{2026-09-22}{2027-01-03} \\
-\ganttbar[gnow]{EP Research and Face Design}{2026-09-22}{2026-09-30} \\
-\ganttbar[gnext]{EP Face Part Ordering}{2026-10-01}{2026-10-14} \\
+\ganttbar[gpast]{EP Research and Face Design}{2026-09-22}{2026-09-30} \\
+\ganttbar[gnow]{EP Face Part Ordering}{2026-10-01}{2026-10-14} \\
 \ganttbar[gnext]{IR Face Design}{2026-10-01}{2026-10-09} \\
 \ganttbar[gnext]{IR Face Part Ordering}{2026-10-10}{2026-10-23} \\
 \ganttbar[gnext]{EP Face 1st Test}{2026-10-15}{2026-10-28} \\
@@ -204,7 +204,7 @@ Task schedule from the team Notion timeline (as of 25~Sep~2026), grouped by phas
 \ganttbar[gnext]{W6 IR alignment and docking}{2026-12-11}{2026-12-27} \\
 \ganttbar[gnext]{W7 EP-Face build and characterisation}{2026-12-11}{2027-01-03} \\
 \ganttbar[gnext]{W8 Configuration library}{2026-12-11}{2026-12-27}
-\ganttvrule{Today (25 Sep)}{2026-09-25}
+\ganttvrule{Today (20 Oct)}{2026-10-20}
 \end{ganttchart}
 \caption{Project I schedule (Phases A--B). \ganttkey{ganttpast}~Completed \quad \ganttkey{ganttnow}~In progress \quad \ganttkey{ganttnext}~Upcoming; dashed line marks the report date.}
 \label{fig:gantt-ab}
@@ -1318,6 +1318,6 @@ Kuhn, H.\ W. (1955). The Hungarian method for the assignment problem.
 Munkres, J. (1957). Algorithms for the assignment and transportation problems.
 \textit{Journal of the SIAM}, 5(1), 32--38.
 
-\end{bibliography}
+\end{thebibliography}
 
 \end{document}

@@ -20,6 +20,7 @@
 \usepackage{amsmath,amssymb}
 \usepackage{siunitx}
 \usepackage[hidelinks]{hyperref}
+\usetikzlibrary{positioning, arrows.meta, fit, backgrounds}
 
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
 \renewcommand{\arraystretch}{1.35}
@@ -361,7 +362,7 @@ This creates a \textbf{module mismatch} ($m = 1.36$ spur vs.\ $m = 1.75$ crown) 
 	\end{tabular}
 \end{table}
 
-Common: \SI{20}{\degree} pressure angle, \SI{0.2}{mm} backlash, \SI{0.3}{mm} root fillet, \SI{0.1}{mm} bore tolerance. All gears generated via Fusion~360. Material: 3D-printed nylon.
+Common: \SI{20}{\degree} pressure angle, \SI{0.2}{mm} backlash, \SI{0.3}{mm} root fillet, \SI{0.1}{mm} bore tolerance. All gears generated via Fusion~360. Material: 3D-printed PETG.
 
 \subsubsection{Drivetrain Architecture}
 
@@ -681,7 +682,7 @@ EP-Face + IR & TBD & TBD \\
 \label{sec:shaft-tolerance}
 % ================================================================
 
-The plain bearing (OD = \SI{55}{mm}) acts as the shaft. All nylon-printed components have bores around it.
+The plain bearing (OD = \SI{55}{mm}) acts as the shaft. All PETG-printed components have bores around it.
 
 \begin{figure}[!htbp]
 	\centering
@@ -708,25 +709,123 @@ J4 & Lower Tilt Joint & \textbf{Static} & \textbf{Interference} & P7/h6 \\
 
 \textbf{ISO\,286 limits} (bearing h6: $55.000$--$54.981$\,mm): Dynamic F7 bore $55.030$--$55.060$\,mm (clearance $+0.030$ to $+0.079$\,mm); Static P7 bore $54.938$--$54.968$\,mm (interference $+0.013$ to $+0.062$\,mm).
 
-\textbf{FDM nylon compensation:} Printed holes shrink $\sim$0.10--0.30\,mm. Dynamic bores get $+0.20$\,mm compensation; static bores get $+0.10$\,mm (shrinkage helps create interference).
+\textbf{FDM print compensation:} Printed holes come out undersized, so the ISO limits cannot be used directly as CAD dimensions. The analysis above was used as the starting point for a printed-fit test. PETG was chosen over nylon because it prints easily and the mechanical design is not a focus of this project.
+
+\textbf{Test result:} A CAD bore of $\varnothing 55.00 + 0.15 = \varnothing$\SI{55.15}{mm} was tested on the printed PETG parts and works. This single offset is adopted for \textbf{all} components on the shaft (wheel, spur gears, upper and lower tilt joints), replacing the separate dynamic and static bore sizes originally proposed (Table~\ref{tab:shaft-final}).
 
 \begin{table}[H]
 \centering
-\caption{Recommended CAD bore sizes.}
-\label{tab:shaft-quickref}
-\renewcommand{\arraystretch}{1.3}
-\begin{tabular}{@{}llcc@{}}
+\caption{Final CAD bore size (tested).}
+\label{tab:shaft-final}
+\begin{tabular}{@{}llc@{}}
 \toprule
-\textbf{Part} & \textbf{Joint} & \textbf{CAD Bore (mm)} & \textbf{Expected Fit} \\
+\textbf{Part} & \textbf{Joint} & \textbf{CAD Bore (mm)} \\
 \midrule
-Wheel / Spur Gears / Upper Tilt & J1--J3 Dynamic & $\varnothing 55.30$ & $\approx 0.10$--$0.20$ CL \\
-Lower Tilt Joint & J4 \textbf{Static} & $\varnothing 54.90$ & $\approx 0.05$--$0.15$ IF \\
+Wheel / Spur Gears / Upper Tilt & J1--J3 & $\varnothing 55.15$ \\
+Lower Tilt Joint & J4 & $\varnothing 55.15$ \\
 \bottomrule
-\multicolumn{4}{@{}l}{\footnotesize CL = Clearance \quad IF = Interference \quad Bearing OD = $\varnothing 55.00$\,mm}
+\multicolumn{3}{@{}l}{\footnotesize Bearing OD = $\varnothing 55.00$\,mm; offset $+0.15$\,mm on all bores.}
 \end{tabular}
 \end{table}
 
-\textbf{Test plan:} Print nylon test rings at five bore sizes per fit type (dynamic: 55.10--55.50\,mm; static: 54.90--55.30\,mm). Cool $\geq$2\,h, measure with caliper at 3 angles. Pick smallest dynamic bore that spins freely; largest static bore that prevents rotation.
+\clearpage
+% ================================================================
+\section{Teleoperation Architecture}
+\label{sec:teleop-architecture}
+% ================================================================
+
+Figure~\ref{fig:teleop-architecture} shows the teleoperation stack. Controllers, topics and the robot model are shared between simulation and hardware; a launch argument selects the \texttt{ros2\_control} hardware plugin.
+
+\begin{figure}[p]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  >={Stealth[length=2mm]},
+  blk/.style   ={draw, rounded corners=2pt, align=center, inner sep=4pt, minimum height=9mm},
+  shared/.style={blk, fill=gray!12},
+  iface/.style ={blk, fill=gray!28},
+  grp/.style   ={draw, rounded corners=4pt, inner sep=7pt},
+  alt/.style   ={grp, dashed},
+  tag/.style   ={inner sep=1pt, align=left},
+]
+
+% ---------- operator and monitoring ----------
+\node[blk, text width=4.6cm] (teleop) at (3.3,0)
+  {Keyboard teleop\\ \texttt{teleop\_twist\_keyboard}};
+\node[blk, text width=4.0cm] (rviz) at (13.5,0)
+  {RViz2 / \texttt{ros2 topic echo}\\ monitoring};
+
+% ---------- shared ROS 2 layer ----------
+\node[tag, anchor=west] (sharedlbl) at (5.9,-1.75) {Shared ROS 2 layer (sim and real)};
+\node[shared, text width=4.5cm] (ddc) at (3.3,-2.9)
+  {\texttt{diff\_drive\_controller}\\ twist $\to$ wheel velocities};
+\node[shared, text width=2.4cm] (jsb) at (7.7,-2.9)
+  {\texttt{joint\_state\_}\\ \texttt{broadcaster}};
+\node[shared, text width=3.0cm] (rsp) at (13.5,-2.9)
+  {\texttt{robot\_state\_}\\ \texttt{publisher}};
+\node[iface, text width=14.2cm] (iface) at (8.1,-4.45)
+  {\texttt{ros2\_control} hardware interface\\
+   command: wheel velocity [rad/s] \quad state: wheel position [rad], velocity [rad/s]};
+
+\begin{scope}[on background layer]
+  \node[grp, fit=(sharedlbl)(ddc)(jsb)(rsp)(iface)] (shared) {};
+\end{scope}
+
+\draw[->] (teleop) -- node[right, tag, xshift=1mm] {\texttt{/cmd\_vel}} (ddc);
+\draw[->] ([xshift=20mm]ddc.north) |- (6.0,-1.0) -| node[pos=0.25, above, tag] {\texttt{/odom}} ([xshift=-8mm]rviz.south);
+\draw[->] (rsp) -- node[right, tag] {\texttt{/tf}} (rviz);
+\draw[->] (jsb) -- node[above, tag] {\texttt{/joint\_states}} (rsp);
+\draw[->] (ddc.south) -- (ddc.south |- iface.north);
+\draw[->] (jsb.south |- iface.north) -- (jsb.south);
+
+% ---------- simulation ----------
+\node[blk, text width=4.6cm] (gzplug) at (3.3,-7.0)
+  {\texttt{gz\_ros2\_control}\\ GazeboSimSystem plugin};
+\node[blk, text width=4.6cm] (gz) at (3.3,-9.0)
+  {Gazebo Harmonic\\ physics + module model\\ (same URDF)};
+\draw[<->] (gzplug) -- node[right, tag] {cmd / state} (gz);
+\node[tag, anchor=north west] (simlbl) at (0.75,-5.95) {Simulation};
+\begin{scope}[on background layer]
+  \node[alt, fit=(simlbl)(gzplug)(gz)] {};
+\end{scope}
+
+% ---------- real hardware ----------
+\node[blk, text width=5.4cm] (hwplug) at (11.6,-7.0)
+  {\texttt{mrr\_hardware} plugin (PC)\\ packs targets, unpacks state};
+\node[blk, text width=5.4cm] (esp) at (11.6,-9.2)
+  {ESP32\\ Wi-Fi $\leftrightarrow$ UART bridge};
+\node[blk, text width=5.4cm] (stm) at (11.6,-11.4)
+  {STM32F411\\ 200 ms command watchdog\\ wheel speed PID, 1 kHz};
+\node[blk, text width=2.8cm] (tb) at (9.6,-13.4)
+  {TB6612FNG\\ motor driver};
+\node[blk, text width=2.8cm] (mot) at (9.6,-15.2)
+  {Wheel motors\\ M1, M2};
+\node[blk, text width=2.8cm] (enc) at (13.8,-15.2)
+  {Encoders\\ quadrature A/B};
+
+\draw[<->] (hwplug) -- node[left, tag, xshift=-1.5mm] {Wi-Fi (UDP)}
+  node[right, tag] {$\downarrow$ targets 20--50 Hz\\ $\uparrow$ state 50 Hz} (esp);
+\draw[<->] (esp) -- node[right, tag] {UART} (stm);
+\draw[->] (stm.south -| tb) -- node[left, tag, xshift=-1mm] {PWM} (tb);
+\draw[->] (tb) -- (mot);
+\draw[->] (mot) -- node[above, tag, yshift=1mm] {shaft} (enc);
+\draw[->] (enc) -- node[right, tag] {counts} (enc |- stm.south);
+\node[tag, anchor=north west] (hwlbl) at (8.35,-5.95) {Real hardware};
+\begin{scope}[on background layer]
+  \node[alt, fit=(hwlbl)(hwplug)(esp)(stm)(tb)(mot)(enc)] {};
+\end{scope}
+
+% ---------- mode selection ----------
+\draw[->] (iface.south -| gzplug) -- node[pos=0.3, right, tag] {\texttt{use\_sim:=true}} (gzplug);
+\draw[->] (iface.south -| hwplug) -- node[pos=0.3, right, tag] {\texttt{use\_sim:=false}} (hwplug);
+
+\end{tikzpicture}%
+}
+\caption{Teleoperation architecture. The controllers, topics and robot model are shared;
+a launch argument selects the hardware plugin under the \texttt{ros2\_control} interface,
+either Gazebo through \texttt{gz\_ros2\_control} or one physical module over Wi-Fi.}
+\label{fig:teleop-architecture}
+\end{figure}
 
 \clearpage
 % ================================================================

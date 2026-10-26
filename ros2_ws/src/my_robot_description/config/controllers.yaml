@@ -1,28 +1,38 @@
-controller_manager:
+# The "/**/" prefix matches these nodes in any namespace (module_1, module_2, ...).
+/**/controller_manager:
   ros__parameters:
     update_rate: 100  # Hz
 
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
-    wheel_velocity_controller:
-      type: forward_command_controller/ForwardCommandController
+    diff_drive_controller:
+      type: diff_drive_controller/DiffDriveController
 
     head_position_controller:
       type: forward_command_controller/ForwardCommandController
 
-# Command: std_msgs/Float64MultiArray on /wheel_velocity_controller/commands
-#   data: [left, right] in rad/s, positive = forward
-wheel_velocity_controller:
+# Command: geometry_msgs/Twist on /<module>/diff_drive_controller/cmd_vel_unstamped
+#   linear.x [m/s] forward, angular.z [rad/s] counter-clockwise
+/**/diff_drive_controller:
   ros__parameters:
-    joints:
-      - left_wheel_joint
-      - right_wheel_joint
-    interface_name: velocity
+    left_wheel_names: [left_wheel_joint]
+    right_wheel_names: [right_wheel_joint]
+    wheel_separation: 0.09665  # contact-patch centers, from the meshes
+    wheel_radius: 0.05
+    use_stamped_vel: false
+    publish_rate: 50.0
+    # Frames get the namespace as prefix automatically (module_1/odom, ...).
+    # Wheel odometry TF is off: TF uses the ground-truth pose (world -> module_N/base_link).
+    enable_odom_tf: false
+    odom_frame_id: odom
+    base_frame_id: base_link
+    cmd_vel_timeout: 0.5  # s, stops the wheels if commands stop
 
-# Command: std_msgs/Float64MultiArray on /head_position_controller/commands
+# Tilt and pan are held at 0 for now.
+# Command: std_msgs/Float64MultiArray on /<module>/head_position_controller/commands
 #   data: [tilt, pan] in rad
-head_position_controller:
+/**/head_position_controller:
   ros__parameters:
     joints:
       - tilt_body_joint

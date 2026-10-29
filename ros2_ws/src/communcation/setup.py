@@ -24,7 +24,6 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'esp32Bridge = communcation.esp32Bridge:main'
         ],
     },
 )

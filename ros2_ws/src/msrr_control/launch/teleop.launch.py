@@ -3,7 +3,8 @@ Start the simulation and drive one module with the keyboard.
 
     ros2 launch msrr_control teleop.launch.py module:=module_1 num_modules:=3
 
-sim:=false skips Gazebo (e.g. to drive the real robot through esp32Bridge).
+sim:=false skips Gazebo (e.g. to drive the real robot: start the micro-ROS
+agent, see communcation/README.md, and the module ESP32s subscribe directly).
 teleop_twist_keyboard needs a TTY, so it opens in its own xterm window;
 keep that window focused while pressing keys.
 Do not run alongside algo.launch.py: both publish to the same cmd_vel topic.

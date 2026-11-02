@@ -40,15 +40,19 @@ void robot_build_stm32_cmd(const KinParams *kin, const UserCmd *u, uint32_t now_
         }
         float wl, wr;
         kin_wheels_ik(kin, v, w, &wl, &wr);
-        out->mode[0] = MODE_VELOCITY;  out->target[0] = wl;
-        out->mode[3] = MODE_VELOCITY;  out->target[3] = wr;
+        out->mode[0] = MODE_VELOCITY;  out->target[0] = wr;  /* M1_R */
+        out->mode[1] = MODE_VELOCITY;  out->target[1] = wl;  /* M2_L */
+
+
     }
 
     /* Inner gears (M3, M2): position control of the two spur gears. */
     if (u->head_seen) {
         float q3, q4;
         kin_pantilt_ik(kin, u->pan, u->tilt, &q3, &q4);
-        out->mode[2] = MODE_POSITION;  out->target[2] = q3;
-        out->mode[1] = MODE_POSITION;  out->target[1] = q4;
+        out->mode[2] = MODE_POSITION;  out->target[2] = q3;  /* M3_IR */
+        out->mode[3] = MODE_POSITION;  out->target[3] = q4;  /* M4_IL */
+
+
     }
 }

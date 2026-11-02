@@ -61,20 +61,36 @@
  *   counts = 4 * PPR * G * (48 / 9)                                          */
 #define ENC_CPR_SPUR    (ENC_DECODE_X * ENC_PPR * MOTOR_GEARBOX_RATIO * (SPUR_TEETH / PINION_TEETH))
 
-#define ENC_CPR_M1            ENC_CPR_SPUR    /* M1 left  wheel  (TIM1, 16-bit) */
-#define ENC_CPR_M2            ENC_CPR_SPUR    /* M2 inner right  (TIM2, 32-bit) */
-#define ENC_CPR_M3            ENC_CPR_SPUR    /* M3 inner left   (TIM4, 16-bit) */
-#define ENC_CPR_M4            ENC_CPR_SPUR    /* M4 right wheel  (TIM5, 32-bit) */
+#define ENC_CPR_M1  ENC_CPR_SPUR
+#define ENC_CPR_M2  ENC_CPR_SPUR
+#define ENC_CPR_M3  ENC_CPR_SPUR
+#define ENC_CPR_M4  ENC_CPR_SPUR
 
 /* +1 or -1. Flip until "positive duty" gives "positive encoder count". [TODO] */
-#define MOTOR_DIR_SIGN_M1     (-1)
-#define MOTOR_DIR_SIGN_M2     (+1) 
-#define MOTOR_DIR_SIGN_M3     (-1)
-#define MOTOR_DIR_SIGN_M4     (+1)
-#define ENC_SIGN_M1           (+1)
-#define ENC_SIGN_M2           (-1)
-#define ENC_SIGN_M3           (+1)
-#define ENC_SIGN_M4           (-1)
+// #define MOTOR_DIR_SIGN_M1     (-1)
+// #define MOTOR_DIR_SIGN_M2     (+1) 
+// #define MOTOR_DIR_SIGN_M3     (-1)
+// #define MOTOR_DIR_SIGN_M4     (+1)
+// #define ENC_SIGN_M1           (+1)
+// #define ENC_SIGN_M2           (-1)
+// #define ENC_SIGN_M3           (+1)
+// #define ENC_SIGN_M4           (-1)
+
+/* New M1_R gets old M4 values */
+#define MOTOR_DIR_SIGN_M1  (+1)   /* old MOTOR_DIR_SIGN_M4 */
+#define ENC_SIGN_M1        (-1)   /* old ENC_SIGN_M4 */
+
+/* New M2_L gets old M1 values */
+#define MOTOR_DIR_SIGN_M2  (-1)   /* old MOTOR_DIR_SIGN_M1 */
+#define ENC_SIGN_M2        (+1)   /* old ENC_SIGN_M1 */
+
+/* New M3_IR gets old M2 values */
+#define MOTOR_DIR_SIGN_M3  (+1)   /* old MOTOR_DIR_SIGN_M2 */
+#define ENC_SIGN_M3        (-1)   /* old ENC_SIGN_M2 */
+
+/* New M4_IL gets old M3 values */
+#define MOTOR_DIR_SIGN_M4  (-1)   /* old MOTOR_DIR_SIGN_M3 */
+#define ENC_SIGN_M4        (+1)   /* old ENC_SIGN_M3 */
 
 /* Low-pass on measured speed: v += alpha * (v_raw - v).
  * Smaller = smoother but slower.                                       [TUNE] */

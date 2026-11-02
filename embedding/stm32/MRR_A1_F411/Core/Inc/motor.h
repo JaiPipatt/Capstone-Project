@@ -14,10 +14,10 @@
  * only the physical role differs. Rename them in CubeMX if you regenerate.
  */
 typedef enum {
-    MOTOR_M1_L = 0,
-    MOTOR_M2_IR,
-    MOTOR_M3_IL,
-    MOTOR_M4_R,
+    MOTOR_M1_R = 0,
+    MOTOR_M2_L,
+    MOTOR_M3_IR,
+    MOTOR_M4_IL,
     MOTOR_COUNT
 } MotorId;
 

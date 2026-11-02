@@ -28,6 +28,7 @@ def spawn_modules(context):
     actions = []
     bridge_args = ['/clock@rosgraph_msgs/msg/Clock[ignition.msgs.Clock']
     bridge_remaps = []
+    prev_controllers = None
 
     for i in range(1, num_modules + 1):
         ns = f'module_{i}'
@@ -59,17 +60,25 @@ def spawn_modules(context):
         )
         actions.append(spawn)
 
-        # Controllers start only after this module exists in Gazebo
+        # All controller_managers live inside the single Gazebo process, and
+        # pluginlib's class loader is not thread-safe: loading the same
+        # controller library for several modules at once makes all but one fail
+        # with "no factory exists". So spawners run strictly one after another:
+        # module 1's after its model exists, module i's after module i-1's
+        # spawner exits (spawner itself waits for /<ns>/controller_manager).
         controllers = Node(
             package='controller_manager',
             executable='spawner',
             arguments=['-c', f'/{ns}/controller_manager',
+                       '--controller-manager-timeout', '60',
                        'joint_state_broadcaster',
                        'diff_drive_controller',
                        'head_position_controller'],
             output='screen'
         )
-        actions.append(RegisterEventHandler(OnProcessExit(target_action=spawn, on_exit=[controllers])))
+        trigger = spawn if prev_controllers is None else prev_controllers
+        actions.append(RegisterEventHandler(OnProcessExit(target_action=trigger, on_exit=[controllers])))
+        prev_controllers = controllers
 
         # Ground truth from Gazebo -> /module_i/ground_truth/odom and /tf
         bridge_args += [

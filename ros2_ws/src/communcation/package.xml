@@ -7,8 +7,7 @@
   <maintainer email="jaipipatt@todo.todo">jaipipatt</maintainer>
   <license>Apache-2.0</license>
 
-  <depend>rclpy</depend>
-  <depend>geometry_msgs</depend>
+  <!-- Real robot needs the micro-ROS agent running (snap or docker), see README.md. -->
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

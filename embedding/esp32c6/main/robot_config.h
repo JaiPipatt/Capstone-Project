@@ -45,7 +45,7 @@
 
 /* ---- Kinematic parameters -------------------------------------------- */
 /* Differential drive (outer wheels). From your report, section 4.6.3
- * (measured from the meshes): radius 50 mm, separation 96.65 mm.            */
+ * radius 50 mm; separation 99.9 mm (re-measured on the robot).             */
 #define WHEEL_RADIUS_M          0.050f
 #define TRACK_WIDTH_M           0.0999f
 

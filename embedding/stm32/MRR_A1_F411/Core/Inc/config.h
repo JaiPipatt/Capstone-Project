@@ -47,8 +47,8 @@
 
 /* Gear train (from the Capstone progress report, section 4.2.5):
  * ALL FOUR motors drive a 9T pinion that meshes with a 48T spur gear.
- *   M1, M2 (outer): 48T spur -> wheel
- *   M3, M4 (inner): 48T spur -> (the two inner spurs both mesh with the 46T crown gear;
+ *   M1, M4 (outer): 48T spur -> wheel
+ *   M2, M3 (inner): 48T spur -> (the two inner spurs both mesh with the 46T crown gear;
  *                    the crown is handled by the pan/tilt kinematics on the ESP32,
  *                    NOT by this firmware)
  * So this firmware reports every motor as the ANGLE OF ITS 48T SPUR GEAR (rad).
@@ -62,9 +62,9 @@
 #define ENC_CPR_SPUR    (ENC_DECODE_X * ENC_PPR * MOTOR_GEARBOX_RATIO * (SPUR_TEETH / PINION_TEETH))
 
 #define ENC_CPR_M1            ENC_CPR_SPUR    /* M1 left  wheel  (TIM1, 16-bit) */
-#define ENC_CPR_M2            ENC_CPR_SPUR    /* M2 right wheel  (TIM2, 32-bit) */
+#define ENC_CPR_M2            ENC_CPR_SPUR    /* M2 inner right  (TIM2, 32-bit) */
 #define ENC_CPR_M3            ENC_CPR_SPUR    /* M3 inner left   (TIM4, 16-bit) */
-#define ENC_CPR_M4            ENC_CPR_SPUR    /* M4 inner right  (TIM5, 32-bit) */
+#define ENC_CPR_M4            ENC_CPR_SPUR    /* M4 right wheel  (TIM5, 32-bit) */
 
 /* +1 or -1. Flip until "positive duty" gives "positive encoder count". [TODO] */
 #define MOTOR_DIR_SIGN_M1     (-1)

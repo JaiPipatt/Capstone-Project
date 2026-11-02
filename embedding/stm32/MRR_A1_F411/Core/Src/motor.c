@@ -30,7 +30,7 @@ static MotorHw g_m[MOTOR_COUNT] = {
         &htim3, TIM_CHANNEL_1,
         &htim1, 0U,
         MOTOR_DIR_SIGN_M1, ENC_SIGN_M1, ENC_CPR_M1, 0U, 0, 0.0f },
-    [MOTOR_M2_R] = {
+    [MOTOR_M2_IR] = {
         TB_1_B_IN1_M2_R_GPIO_Port, TB_1_B_IN1_M2_R_Pin,
         TB_1_B_IN2_M2_R_GPIO_Port, TB_1_B_IN2_M2_R_Pin,
         &htim3, TIM_CHANNEL_2,
@@ -42,7 +42,7 @@ static MotorHw g_m[MOTOR_COUNT] = {
         &htim3, TIM_CHANNEL_3,
         &htim4, 0U,
         MOTOR_DIR_SIGN_M3, ENC_SIGN_M3, ENC_CPR_M3, 0U, 0, 0.0f },
-    [MOTOR_M4_IR] = {
+    [MOTOR_M4_R] = {
         TB_2_B_IN1_M4_IR_GPIO_Port, TB_2_B_IN1_M4_IR_Pin,
         TB_2_B_IN2_M4_IR_GPIO_Port, TB_2_B_IN2_M4_IR_Pin,
         &htim3, TIM_CHANNEL_4,

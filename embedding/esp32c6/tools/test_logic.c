@@ -12,7 +12,7 @@ static int near(float a, float b) { return fabsf(a - b) < 1e-4f; }
 
 int main(void)
 {
-    KinParams kin = { 0.050f, 0.09665f, 1.0f, 48.0f / 46.0f, -0.5f, 0.5f, -0.5f, 0.5f };
+    KinParams kin = { 0.050f, 0.0999f, 1.0f, 48.0f / 46.0f, -0.5f, 0.5f, -0.5f, 0.5f };
     UserCmd u; memset(&u, 0, sizeof u);
     CmdPayload o;
 
@@ -29,7 +29,7 @@ int main(void)
 
     robot_user_set_vel(&u, 0.03f, 0.5f, 2000);
     robot_build_stm32_cmd(&kin, &u, 2010, 500, &o);
-    CHECK("turning: left slower than right", o.target[0] < o.target[3] && near(o.target[0], 0.1168f) && near(o.target[3], 1.0832f));
+    CHECK("turning: left slower than right", o.target[0] < o.target[3] && near(o.target[0], 0.1005f) && near(o.target[3], 1.0995f));
 
     robot_user_set_head(&u, 0.2f, 0.3f);
     robot_build_stm32_cmd(&kin, &u, 2020, 500, &o);

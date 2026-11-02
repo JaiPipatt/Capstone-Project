@@ -17,9 +17,7 @@
 #include <std_msgs/msg/float64_multi_array.h>
 #include <micro_ros_utilities/type_utilities.h>
 
-#ifdef CONFIG_MICRO_ROS_ESP_XRCE_DDS_MIDDLEWARE
-#include <rmw_microros/rmw_microros.h>
-#endif
+#include <rmw_microros/rmw_microros.h>   /* ping / reconnect: needs the XRCE-DDS middleware (default) */
 
 #include "kinematics.h"
 #include "protocol.h"
@@ -27,8 +25,15 @@
 #include "robot_logic.h"
 #include "stm32_link.h"
 
-#define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if ((temp_rc != RCL_RET_OK)) { printf("Failed status on line %d: %d. Aborting.\n", __LINE__, (int)temp_rc); vTaskDelete(NULL); } }
+/* Return false from the calling function on error (used while creating ROS entities). */
+#define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if ((temp_rc != RCL_RET_OK)) { printf("Failed status on line %d: %d.\n", __LINE__, (int)temp_rc); return false; } }
 #define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if ((temp_rc != RCL_RET_OK)) { printf("Failed status on line %d: %d. Continuing.\n", __LINE__, (int)temp_rc); } }
+
+/* Agent connection check (micro-ROS reconnection pattern) */
+#define AGENT_PING_PERIOD_MS    1000    /* while connected: ping the agent this often   */
+#define AGENT_PING_TIMEOUT_MS   100     /* one ping attempt                             */
+#define AGENT_PING_ATTEMPTS     3       /* lost after this many failed pings in a row   */
+#define AGENT_RETRY_PERIOD_MS   1000    /* while waiting: try to reach the agent        */
 
 /* ---------------------------------------------------------------------- */
 /*  Kinematic parameters (from robot_config.h)                             */
@@ -51,6 +56,12 @@ static rcl_subscription_t sub_cmd_vel;
 static rcl_subscription_t sub_head;
 static rcl_publisher_t    pub_head_state;
 static rcl_publisher_t    pub_vel_state;
+static rclc_support_t     support;
+static rcl_node_t         node;
+static rcl_timer_t        timer;
+static rclc_executor_t    executor;
+static rcl_allocator_t    allocator;
+static bool               s_support_ok;        /* support (session) created -> must be cleaned up */
 
 static geometry_msgs__msg__Twist              msg_cmd_vel_in;
 static std_msgs__msg__Float64MultiArray       msg_head_in;     /* needs memory for its arrays */
@@ -65,8 +76,7 @@ static uint32_t now_ms(void)
 }
 
 /* Commands -> IK -> 4 motor targets -> STM32 (resent by the link task at 50 Hz).
- * Motor order: [0]=M1_L [1]=M2_R [2]=M3_IL [3]=M4_IR  
- change motor order to be [0]=M1_L [3]=M4_R [2]=M3_IL [1]=M2_IR  */
+ * Motor order: [0]=M1_L [1]=M2_IR [2]=M3_IL [3]=M4_R */
 static void update_stm32_command(void)
 {
     CmdPayload c;
@@ -123,40 +133,102 @@ static void timer_cb(rcl_timer_t *timer, int64_t last_call_time)
 }
 
 /* ---------------------------------------------------------------------- */
-/*  micro-ROS task (structure follows the official examples)               */
+/*  micro-ROS entities: created when the agent answers, destroyed when lost */
 /* ---------------------------------------------------------------------- */
+/* Ping the agent before a session exists (needs the agent address in init options). */
+static bool agent_reachable(void)
+{
+    rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
+    if (rcl_init_options_init(&init_options, allocator) != RCL_RET_OK) return false;
+    rmw_init_options_t *rmw_options = rcl_init_options_get_rmw_init_options(&init_options);
+    bool ok = (rmw_uros_options_set_udp_address(CONFIG_MICRO_ROS_AGENT_IP,
+                                                CONFIG_MICRO_ROS_AGENT_PORT, rmw_options) == RMW_RET_OK)
+           && (rmw_uros_ping_agent_options(AGENT_PING_TIMEOUT_MS, 1, rmw_options) == RMW_RET_OK);
+    (void)rcl_init_options_fini(&init_options);
+    return ok;
+}
+
+static bool create_entities(void)
+{
+    rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
+    RCCHECK(rcl_init_options_init(&init_options, allocator));
+    rmw_init_options_t *rmw_options = rcl_init_options_get_rmw_init_options(&init_options);
+    RCCHECK(rmw_uros_options_set_udp_address(CONFIG_MICRO_ROS_AGENT_IP,
+                                             CONFIG_MICRO_ROS_AGENT_PORT, rmw_options));
+    rcl_ret_t rc = rclc_support_init_with_options(&support, 0, NULL, &init_options, &allocator);
+    (void)rcl_init_options_fini(&init_options);
+    RCCHECK(rc);
+    s_support_ok = true;
+
+    node = rcl_get_zero_initialized_node();
+    RCCHECK(rclc_node_init_default(&node, MODULE_NODE_NAME, MODULE_NAMESPACE, &support));
+
+    RCCHECK(rclc_subscription_init_default(
+        &sub_cmd_vel, &node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist), TOPIC_CMD_VEL));
+    RCCHECK(rclc_subscription_init_default(
+        &sub_head, &node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float64MultiArray), TOPIC_HEAD_CMD));
+    RCCHECK(rclc_publisher_init_default(
+        &pub_head_state, &node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Vector3), TOPIC_HEAD_STATE));
+    RCCHECK(rclc_publisher_init_default(
+        &pub_vel_state, &node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist), TOPIC_VEL_STATE));
+
+    timer = rcl_get_zero_initialized_timer();
+#if UROS_TIMER_INIT_DEFAULT2
+    RCCHECK(rclc_timer_init_default2(&timer, &support,
+                                     RCL_MS_TO_NS(STATE_PUBLISH_PERIOD_MS), timer_cb, true));
+#else
+    RCCHECK(rclc_timer_init_default(&timer, &support,
+                                    RCL_MS_TO_NS(STATE_PUBLISH_PERIOD_MS), timer_cb));
+#endif
+
+    executor = rclc_executor_get_zero_initialized_executor();
+    RCCHECK(rclc_executor_init(&executor, &support.context, 3, &allocator));
+    RCCHECK(rclc_executor_add_timer(&executor, &timer));
+    RCCHECK(rclc_executor_add_subscription(&executor, &sub_cmd_vel, &msg_cmd_vel_in,
+                                           &cmd_vel_cb, ON_NEW_DATA));
+    RCCHECK(rclc_executor_add_subscription(&executor, &sub_head, &msg_head_in,
+                                           &head_cb, ON_NEW_DATA));
+    return true;
+}
+
+/* Safe to call after a partial create_entities(): fini on a zero-initialized
+ * entity just returns an error, which we ignore. */
+static void destroy_entities(void)
+{
+    if (!s_support_ok) return;                 /* session never came up: nothing to clean */
+    s_support_ok = false;
+
+    rmw_context_t *rmw_context = rcl_context_get_rmw_context(&support.context);
+    if (rmw_context != NULL) {
+        (void)rmw_uros_set_context_entity_destroy_session_timeout(rmw_context, 0);  /* agent is gone: do not wait */
+    }
+
+    RCSOFTCHECK(rcl_publisher_fini(&pub_head_state, &node));
+    RCSOFTCHECK(rcl_publisher_fini(&pub_vel_state, &node));
+    RCSOFTCHECK(rcl_subscription_fini(&sub_cmd_vel, &node));
+    RCSOFTCHECK(rcl_subscription_fini(&sub_head, &node));
+    RCSOFTCHECK(rcl_timer_fini(&timer));
+    RCSOFTCHECK(rclc_executor_fini(&executor));
+    RCSOFTCHECK(rcl_node_fini(&node));
+    RCSOFTCHECK(rclc_support_fini(&support));
+}
+
+/* ---------------------------------------------------------------------- */
+/*  micro-ROS task: wait for agent -> connect -> run -> (lost) -> clean up  */
+/* ---------------------------------------------------------------------- */
+typedef enum { AGENT_WAITING, AGENT_AVAILABLE, AGENT_CONNECTED, AGENT_DISCONNECTED } AgentState;
+
 static void micro_ros_task(void *arg)
 {
     (void)arg;
-    rcl_allocator_t allocator = rcl_get_default_allocator();
-    rclc_support_t support;
-    rcl_init_options_t init_options;
+    allocator = rcl_get_default_allocator();
 
-    /* Keep trying until the micro-ROS agent on the PC answers. */
-    for (;;) {
-        init_options = rcl_get_zero_initialized_init_options();
-        RCCHECK(rcl_init_options_init(&init_options, allocator));
-
-#ifdef CONFIG_MICRO_ROS_ESP_XRCE_DDS_MIDDLEWARE
-        rmw_init_options_t *rmw_options = rcl_init_options_get_rmw_init_options(&init_options);
-        RCCHECK(rmw_uros_options_set_udp_address(CONFIG_MICRO_ROS_AGENT_IP,
-                                                 CONFIG_MICRO_ROS_AGENT_PORT, rmw_options));
-#endif
-        if (rclc_support_init_with_options(&support, 0, NULL, &init_options, &allocator) == RCL_RET_OK) {
-            break;
-        }
-        printf("micro-ROS agent %s:%s not reachable, retrying in 2 s... "
-               "(agent running? same Wi-Fi? UDP port open in the firewall? IP correct?)\n",
-               CONFIG_MICRO_ROS_AGENT_IP, CONFIG_MICRO_ROS_AGENT_PORT);
-        rcl_ret_t fini_rc = rcl_init_options_fini(&init_options);
-        (void)fini_rc;
-        vTaskDelay(pdMS_TO_TICKS(2000));
-    }
-
-    rcl_node_t node = rcl_get_zero_initialized_node();
-    RCCHECK(rclc_node_init_default(&node, MODULE_NODE_NAME, MODULE_NAMESPACE, &support));
-
-    /* Memory for the arrays inside Float64MultiArray (data[], layout.dim[]) */
+    /* Memory for the arrays inside Float64MultiArray (data[], layout.dim[]).
+     * Allocated once; it survives reconnections. */
     static micro_ros_utilities_memory_conf_t conf = {0};
     conf.max_string_capacity = 16;
     conf.max_ros2_type_sequence_capacity = 2;
@@ -167,42 +239,59 @@ static void micro_ros_task(void *arg)
         vTaskDelete(NULL);
     }
 
-    RCCHECK(rclc_subscription_init_default(
-        &sub_cmd_vel, &node,
-        ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist), TOPIC_CMD_VEL));
-
-    RCCHECK(rclc_subscription_init_default(
-        &sub_head, &node,
-        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float64MultiArray), TOPIC_HEAD_CMD));
-
-    RCCHECK(rclc_publisher_init_default(
-        &pub_head_state, &node,
-        ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Vector3), TOPIC_HEAD_STATE));
-
-    RCCHECK(rclc_publisher_init_default(
-        &pub_vel_state, &node,
-        ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist), TOPIC_VEL_STATE));
-
-    rcl_timer_t timer = rcl_get_zero_initialized_timer();
-#if UROS_TIMER_INIT_DEFAULT2
-    RCCHECK(rclc_timer_init_default2(&timer, &support,
-                                     RCL_MS_TO_NS(STATE_PUBLISH_PERIOD_MS), timer_cb, true));
-#else
-    RCCHECK(rclc_timer_init_default(&timer, &support,
-                                    RCL_MS_TO_NS(STATE_PUBLISH_PERIOD_MS), timer_cb));
-#endif
-
-    rclc_executor_t executor = rclc_executor_get_zero_initialized_executor();
-    RCCHECK(rclc_executor_init(&executor, &support.context, 3, &allocator));
-    RCCHECK(rclc_executor_add_timer(&executor, &timer));
-    RCCHECK(rclc_executor_add_subscription(&executor, &sub_cmd_vel, &msg_cmd_vel_in,
-                                           &cmd_vel_cb, ON_NEW_DATA));
-    RCCHECK(rclc_executor_add_subscription(&executor, &sub_head, &msg_head_in,
-                                           &head_cb, ON_NEW_DATA));
+    AgentState state = AGENT_WAITING;
+    TickType_t t_check = xTaskGetTickCount();
 
     for (;;) {
-        rclc_executor_spin_some(&executor, RCL_MS_TO_NS(10));
-        vTaskDelay(pdMS_TO_TICKS(5));
+        switch (state) {
+        case AGENT_WAITING:
+            /* No ROS executor running: keep applying the /cmd_vel timeout ourselves so
+             * the wheels go to 0 rad/s instead of repeating the last command forever. */
+            update_stm32_command();
+            if ((TickType_t)(xTaskGetTickCount() - t_check) >= pdMS_TO_TICKS(AGENT_RETRY_PERIOD_MS)) {
+                t_check = xTaskGetTickCount();
+                if (agent_reachable()) {
+                    state = AGENT_AVAILABLE;
+                } else {
+                    printf("micro-ROS agent %s:%s not reachable, retrying... "
+                           "(agent running? same Wi-Fi? UDP port open in the firewall? IP correct?)\n",
+                           CONFIG_MICRO_ROS_AGENT_IP, CONFIG_MICRO_ROS_AGENT_PORT);
+                }
+            }
+            vTaskDelay(pdMS_TO_TICKS(20));
+            break;
+
+        case AGENT_AVAILABLE:
+            if (create_entities()) {
+                printf("micro-ROS agent connected\n");
+                state = AGENT_CONNECTED;
+            } else {
+                destroy_entities();
+                state = AGENT_WAITING;
+            }
+            t_check = xTaskGetTickCount();
+            break;
+
+        case AGENT_CONNECTED:
+            rclc_executor_spin_some(&executor, RCL_MS_TO_NS(10));
+            if ((TickType_t)(xTaskGetTickCount() - t_check) >= pdMS_TO_TICKS(AGENT_PING_PERIOD_MS)) {
+                t_check = xTaskGetTickCount();
+                if (rmw_uros_ping_agent(AGENT_PING_TIMEOUT_MS, AGENT_PING_ATTEMPTS) != RMW_RET_OK) {
+                    printf("micro-ROS agent lost, reconnecting...\n");
+                    state = AGENT_DISCONNECTED;
+                }
+            }
+            vTaskDelay(pdMS_TO_TICKS(5));
+            break;
+
+        case AGENT_DISCONNECTED:
+        default:
+            destroy_entities();
+            update_stm32_command();
+            state = AGENT_WAITING;
+            t_check = xTaskGetTickCount();
+            break;
+        }
     }
 }
 

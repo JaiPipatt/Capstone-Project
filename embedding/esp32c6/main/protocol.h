@@ -30,7 +30,7 @@ typedef enum {
     MODE_DUTY     = 3   /* target = duty -1..+1 (open loop, for testing)  */
 } CtrlMode;
 
-/* Index order everywhere: [0]=M1_L  [1]=M2_R  [2]=M3_IL  [3]=M4_IR */
+/* Index order everywhere: [0]=M1_L  [1]=M2_IR  [2]=M3_IL  [3]=M4_R */
 typedef struct __attribute__((packed)) {
     uint8_t mode[4];
     float   target[4];

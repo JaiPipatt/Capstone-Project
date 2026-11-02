@@ -18,7 +18,7 @@ bool kin_wheels_valid(const KinParams *p);
 void kin_wheels_ik(const KinParams *p, float v, float w, float *wl, float *wr);
 void kin_wheels_fk(const KinParams *p, float wl, float wr, float *v, float *w);
 
-/* Inner differential (pan / tilt).  q3, q4 in rad (M3_IL, M4_IR).
+/* Inner differential (pan / tilt).  q3, q4 in rad (M3_IL, M2_IR).
  * IK clamps pan/tilt to the limits in KinParams first. */
 void kin_pantilt_ik(const KinParams *p, float pan, float tilt, float *q3, float *q4);
 void kin_pantilt_fk(const KinParams *p, float q3, float q4, float *pan, float *tilt);

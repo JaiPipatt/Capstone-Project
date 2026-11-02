@@ -27,3 +27,7 @@ __pycache__/
 
 # Editor settings (any folder)
 .vscode/
+.settings/
+
+.env
+sdkconfig.defaults

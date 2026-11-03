@@ -49,8 +49,12 @@
 #define WHEEL_RADIUS_M          0.050f
 #define TRACK_WIDTH_M           0.0999f
 
+/* The installed outer-wheel direction is opposite to the ROS diff-drive
+ * convention. Keep encoder signs unchanged and invert commanded wheel speed. */
+#define DRIVE_WHEEL_COMMAND_SIGN (-1.0f)
+
 /* Pan/tilt differential. q3, q4 = angle of the two inner 48T SPUR gears
- * (this is what the STM32 reports for M3 and M4).
+ * (this is what the STM32 reports for M1 and M2).
  *   tilt = K_TILT * (q3 + q4) / 2
  *   pan  = K_PAN  * (q3 - q4) / 2
  * Same relation as in your xacro (my_robot.ros2_control.xacro):

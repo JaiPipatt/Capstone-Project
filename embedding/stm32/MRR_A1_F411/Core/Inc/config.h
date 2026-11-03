@@ -76,21 +76,15 @@
 // #define ENC_SIGN_M3           (+1)
 // #define ENC_SIGN_M4           (-1)
 
-/* New M1_R gets old M4 values */
-#define MOTOR_DIR_SIGN_M1  (+1)   /* old MOTOR_DIR_SIGN_M4 */
-#define ENC_SIGN_M1        (-1)   /* old ENC_SIGN_M4 */
-
-/* New M2_L gets old M1 values */
-#define MOTOR_DIR_SIGN_M2  (-1)   /* old MOTOR_DIR_SIGN_M1 */
-#define ENC_SIGN_M2        (+1)   /* old ENC_SIGN_M1 */
-
-/* New M3_IR gets old M2 values */
-#define MOTOR_DIR_SIGN_M3  (+1)   /* old MOTOR_DIR_SIGN_M2 */
-#define ENC_SIGN_M3        (-1)   /* old ENC_SIGN_M2 */
-
-/* New M4_IL gets old M3 values */
-#define MOTOR_DIR_SIGN_M4  (-1)   /* old MOTOR_DIR_SIGN_M3 */
-#define ENC_SIGN_M4        (+1)   /* old ENC_SIGN_M3 */
+/* Signs follow the physical channels formerly labelled M3_IL, M2_IR, M1_L, M4_IR. */
+#define MOTOR_DIR_SIGN_M1  (-1)   /* old M3_IL */
+#define ENC_SIGN_M1        (+1)   /* old M3_IL */
+#define MOTOR_DIR_SIGN_M2  (+1)   /* old M2_IR */
+#define ENC_SIGN_M2        (-1)   /* old M2_IR */
+#define MOTOR_DIR_SIGN_M3  (-1)   /* old M1_L */
+#define ENC_SIGN_M3        (+1)   /* old M1_L */
+#define MOTOR_DIR_SIGN_M4  (+1)   /* old M4_R */
+#define ENC_SIGN_M4        (-1)   /* old M4_R */
 
 /* Low-pass on measured speed: v += alpha * (v_raw - v).
  * Smaller = smoother but slower.                                       [TUNE] */

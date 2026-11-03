@@ -14,8 +14,8 @@ The baud rate is ignored on USB. (Alternative: a 3.3 V USB-UART adapter on PA2/P
   python test_stm32.py COM7 pos  2 0.3 15        # position, motor 2, 0.3 rad
   python test_stm32.py COM7 zero all             # set position of the motors to zero
 
-Motor index:  0 = M1_L (left wheel)   1 = M2_IR (inner right)
-              2 = M3_IL (inner left)  3 = M4_R (right wheel)
+Motor index:  0 = M1_iL (inner left)  1 = M2_iR (inner right)
+              2 = M3_L (left wheel)   3 = M4_R (right wheel)
 The last number is the run time in seconds (default 3). Press Ctrl+C any time:
 the script always sends STOP before it exits and then prints a short verdict.
 Requires: pip install pyserial
@@ -34,8 +34,8 @@ BAUD = 115200            # ignored on USB; used only with a USB-UART adapter
 MSG_CMD, MSG_ZERO, MSG_STATE = 0x01, 0x04, 0x81
 MODE_STOP, MODE_VELOCITY, MODE_POSITION, MODE_DUTY = 0, 1, 2, 3
 
-# อัปเดตลำดับใหม่ให้ตรงกับ: [0]=M1_L [3]=M4_R [2]=M3_IL [1]=M2_IR
-NAMES = ["M1_L ", "M2_IR ", "M3_IL", "M4_R "]
+# Order matches the STM32 and ESP32 protocol: [0]=M1_iL [1]=M2_iR [2]=M3_L [3]=M4_R
+NAMES = ["M1_iL", "M2_iR", "M3_L ", "M4_R "]
 CFG = ["M1", "M2", "M3", "M4"]          # suffix used in config.h
 
 # encoder counts per radian of the 48T spur gear = 4 * PPR * gearbox * (48/9) / (2*pi)

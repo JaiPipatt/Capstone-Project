@@ -76,7 +76,7 @@ static uint32_t now_ms(void)
 }
 
 /* Commands -> IK -> 4 motor targets -> STM32 (resent by the link task at 50 Hz).
- * Motor order: [0]=M1_L [1]=M2_IR [2]=M3_IL [3]=M4_R */
+ * Motor order: [0]=M1_iL [1]=M2_iR [2]=M3_L [3]=M4_R */
 static void update_stm32_command(void)
 {
     CmdPayload c;
@@ -117,7 +117,7 @@ static void timer_cb(rcl_timer_t *timer, int64_t last_call_time)
     if (!stm32_link_get_state(&st, &age_ms) || age_ms > STATE_STALE_MS) return;
 
     float pan, tilt;
-    kin_pantilt_fk(&KIN, st.pos[2], st.pos[1], &pan, &tilt);
+    kin_pantilt_fk(&KIN, st.pos[0], st.pos[1], &pan, &tilt);
     msg_head_out.x = tilt;                       /* x = tilt, y = pan (same order as [tilt, pan]) */
     msg_head_out.y = pan;
     msg_head_out.z = 0.0;
@@ -125,7 +125,7 @@ static void timer_cb(rcl_timer_t *timer, int64_t last_call_time)
 
     if (kin_wheels_valid(&KIN)) {
         float v, w;
-        kin_wheels_fk(&KIN, st.vel[0], st.vel[3], &v, &w);
+        kin_wheels_fk(&KIN, st.vel[2], st.vel[3], &v, &w);
         msg_vel_out.linear.x  = v;
         msg_vel_out.angular.z = w;
         RCSOFTCHECK(rcl_publish(&pub_vel_state, &msg_vel_out, NULL));

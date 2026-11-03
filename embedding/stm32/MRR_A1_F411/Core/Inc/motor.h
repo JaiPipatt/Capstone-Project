@@ -5,19 +5,19 @@
 #include <stdint.h>
 
 /* Motor index order (same on ESP32, STM32 and test_stm32.py):
- *   [0] M1_L  = outer left  wheel   (TIM1 enc, TIM3_CH1 PWM, PB12/PB13)
- *   [1] M2_IR = inner right gear    (TIM2 enc, TIM3_CH2 PWM, PB14/PB15)
- *   [2] M3_IL = inner left  gear    (TIM4 enc, TIM3_CH3 PWM, PA4/PA5)
- *   [3] M4_R  = outer right wheel   (TIM5 enc, TIM3_CH4 PWM, PB4/PB5)
+ *   [0] M1_iL = inner left  gear   (TIM4 enc, TIM3_CH3 PWM, PA4/PA5)
+ *   [1] M2_iR = inner right gear   (TIM2 enc, TIM3_CH2 PWM, PB14/PB15)
+ *   [2] M3_L  = outer left  wheel  (TIM1 enc, TIM3_CH1 PWM, PB12/PB13)
+ *   [3] M4_R  = outer right wheel  (TIM5 enc, TIM3_CH4 PWM, PB4/PB5)
  * NOTE: the CubeMX pin labels in the .ioc / main.h still use the OLD names
  * (TB_1_B_..._M2_R, TB_2_B_..._M4_IR, ENC_M4_IR_...). They are the same pins;
  * only the physical role differs. Rename them in CubeMX if you regenerate.
  */
 typedef enum {
-    MOTOR_M1_R = 0,
-    MOTOR_M2_L,
-    MOTOR_M3_IR,
-    MOTOR_M4_IL,
+    MOTOR_M1_IL = 0,
+    MOTOR_M2_IR,
+    MOTOR_M3_L,
+    MOTOR_M4_R,
     MOTOR_COUNT
 } MotorId;
 

@@ -14,9 +14,12 @@ other; inside a round every moving module goes through
   navigate  follow its grid route to the pre-dock point
   adjust    turn in place to the goal heading
   approach  drive straight along its own x axis onto the goal
+<<<<<<< HEAD
 For an L/R (wheel-face) docking, after navigate:
   wheel_dock  pivot -> straight -> pivot -> straight (wheel_dock_plan.py,
               wheel_dock.py)
+=======
+>>>>>>> dacaa60 (First simulation (3 modules, L shape) - no avoidance)
 Moving modules do not avoid each other yet.
 """
 import math
@@ -32,6 +35,11 @@ from msrr_control.navigation import plan_routes
 from msrr_control.topology import (
     check_topology, coordinates_to_frame, find_root, Topology, unfold, wrap_angle)
 from msrr_control.wheel_dock import WheelDocker
+
+from msrr_control.assembly import assign_modules_to_slots, docking_tasks
+from msrr_control.navigation import plan_routes
+from msrr_control.topology import (
+    check_topology, coordinates_to_frame, find_root, Topology, unfold, wrap_angle)
 
 
 def yaw_from_quaternion(q):
@@ -78,7 +86,10 @@ class AlgoNode(Node):
         check_topology(self.shape, self.width)
 
         self.poses = {}     # module -> (x, y, yaw)
+<<<<<<< HEAD
         self.joints = {}    # module -> {joint name: (position, velocity)}
+=======
+>>>>>>> dacaa60 (First simulation (3 modules, L shape) - no avoidance)
         self.rounds = None  # list of rounds, each a list of DockingTask
         self.routes = {}    # module -> world waypoints
         self.round_idx = 0
@@ -100,6 +111,7 @@ class AlgoNode(Node):
         p = msg.pose.pose
         self.poses[module] = (p.position.x, p.position.y, yaw_from_quaternion(p.orientation))
 
+<<<<<<< HEAD
     def on_joints(self, module, msg):
         vel = list(msg.velocity) + [0.0] * (len(msg.name) - len(msg.velocity))
         self.joints[module] = {n: (q, v) for n, q, v in zip(msg.name, msg.position, vel)}
@@ -118,13 +130,33 @@ class AlgoNode(Node):
                     t.pre_dock = (2 * t.pre_dock[0] - gx, 2 * t.pre_dock[1] - gy, t.pre_dock[2])
         _, self.routes = plan_routes(self.rounds, f, root, slots, modules, m_root, self.grid)
 
+=======
+    def make_plan(self):
+        modules = {m: self.poses[m] for m in self.modules}
+        root, _ = find_root(self.shape)
+        slots = unfold(self.shape, root, self.width)
+        f, m_root = assign_modules_to_slots(slots, root, modules)
+        self.rounds = docking_tasks(self.shape, root, f, slots, modules, m_root, self.grid)
+        _, self.routes = plan_routes(self.rounds, f, root, slots, modules, m_root, self.grid)
+
+>>>>>>> dacaa60 (First simulation (3 modules, L shape) - no avoidance)
         log = self.get_logger()
         log.info(f'root slot {root} -> {m_root}; mapping '
                  + ', '.join(f'{s}->{m}' for s, m in sorted(f.items())))
         for i, tasks in enumerate(self.rounds, 1):
             log.info(f'round {i}: ' + ', '.join(str(t.action) for t in tasks))
             for t in tasks:
+<<<<<<< HEAD
                 self.state[t.action[0]] = {'phase': 'navigate', 'wp': 0}
+=======
+                m, face = t.action[0], t.action[1]
+                if face in ('L', 'R'):
+                    # a differential drive cannot move sideways; the paper uses a helping module
+                    log.warn(f'{m} would dock with its {face} face; skipping')
+                    self.state[m] = {'phase': 'done', 'wp': 0}
+                else:
+                    self.state[m] = {'phase': 'navigate', 'wp': 0}
+>>>>>>> dacaa60 (First simulation (3 modules, L shape) - no avoidance)
 
     def step(self):
         commands = {m: Twist() for m in self.modules}
@@ -158,8 +190,11 @@ class AlgoNode(Node):
             if math.hypot(target[0] - pose[0], target[1] - pose[1]) < (
                     self.tolerance if last else self.wp_tolerance):
                 if last:
+<<<<<<< HEAD
                     if task.action[1] in ('L', 'R'):
                         return self.wheel_dock_start(task, st)
+=======
+>>>>>>> dacaa60 (First simulation (3 modules, L shape) - no avoidance)
                     st['phase'] = 'adjust'
                 else:
                     st['wp'] += 1
@@ -185,6 +220,7 @@ class AlgoNode(Node):
             cmd.angular.z = self.clamp(-2.0 * eth, self.max_angular)
             return cmd
 
+<<<<<<< HEAD
         if st['phase'] == 'wheel_dock':
             return self.wheel_dock_step(task, st)
 
@@ -221,6 +257,9 @@ class AlgoNode(Node):
 
     def now(self):
         return self.get_clock().now().nanoseconds * 1e-9
+=======
+        return cmd  # done
+>>>>>>> dacaa60 (First simulation (3 modules, L shape) - no avoidance)
 
     def drive_to(self, pose, target):
         # turn toward the point, drive forward once roughly facing it

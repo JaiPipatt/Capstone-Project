@@ -28,7 +28,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'algo_node = msrr_control.algo_node:main'
+            'algo_node = msrr_control.algo_node:main',
+            'assembly_planner = msrr_control.assembly_planner:main',
         ],
     },
 )

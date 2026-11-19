@@ -32,12 +32,18 @@ Start the hotspot (every session):
 ```bash
 sudo iw dev wlo1 interface add ap0 type __ap   # only after a reboot; ap0 is not persistent
 sleep 2
+iw dev wlo1 info | grep channel 
+nmcli con modify Hotspot-1 802-11-wireless.channel 11 #the number should match what prev step says
 nmcli con up Hotspot-1
 ```
 
 - Stop: `nmcli con down Hotspot-1`
 - Check: `ip -br addr` shows `ap0 UP 10.42.0.1/24`; `ip neigh show dev ap0` lists connected ESP32s.
-- If ChulaWiFi drops or changes channel the hotspot drops too; run `nmcli con up Hotspot-1` again.
+- The hotspot channel must equal ChulaWiFi's channel, or activation fails with a misleading
+  "802.1X supplicant took too long to authenticate" (log: `ap0: Unable to setup interface`).
+  Check with `iw dev wlo1 info | grep channel`, then set it:
+  `nmcli con modify Hotspot-1 802-11-wireless.channel 6 && nmcli con up Hotspot-1`
+- If ChulaWiFi drops or changes channel the hotspot drops too; set the new channel as above and bring it up again.
 - Undo the 2.4 GHz lock: `nmcli con modify "ChulaWiFi" 802-11-wireless.band ""`
 
 ## Run the agent (PC)

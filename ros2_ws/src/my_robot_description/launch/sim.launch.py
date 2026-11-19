@@ -61,11 +61,17 @@ def spawn_modules(context):
         )
         actions.append(spawn)
 
-        # Controllers start only after this module exists in Gazebo
+        # All controller_managers live inside the single Gazebo process, and
+        # pluginlib's class loader is not thread-safe: loading the same
+        # controller library for several modules at once makes all but one fail
+        # with "no factory exists". So spawners run strictly one after another:
+        # module 1's after its model exists, module i's after module i-1's
+        # spawner exits (spawner itself waits for /<ns>/controller_manager).
         controllers = Node(
             package='controller_manager',
             executable='spawner',
             arguments=['-c', f'/{ns}/controller_manager',
+                       '--controller-manager-timeout', '60',
                        'joint_state_broadcaster',
                        'diff_drive_controller',
                        'head_position_controller'],

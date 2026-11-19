@@ -32,6 +32,8 @@ def spawn_modules(context):
 
     prev_controller = None
 
+    prev_controller = None
+
     for i in range(1, num_modules + 1):
         ns = f'module_{i}'
         y = (i - 1 - (num_modules - 1) / 2) * spacing  # centered row

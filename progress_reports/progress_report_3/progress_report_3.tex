@@ -19,8 +19,10 @@
 \usepackage{enumitem}
 \usepackage{amsmath,amssymb}
 \usepackage{siunitx}
+\usepackage{tabularx}
+\usepackage{qrcode}
 \usepackage[hidelinks]{hyperref}
-\usetikzlibrary{positioning, arrows.meta, fit, backgrounds}
+\usetikzlibrary{positioning, arrows.meta, fit, backgrounds, calc}
 
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
 \renewcommand{\arraystretch}{1.35}
@@ -52,6 +54,13 @@
 		bar label font=\scriptsize\bfseries, milestone label font=\scriptsize\bfseries},
 	gnext/.style={bar/.append style={fill=ganttnext}, milestone/.append style={fill=ganttnext}},
 }
+% Colours for the teleoperation / embedded diagrams (Section~\ref{sec:teleop-architecture})
+\definecolor{pcblue}{RGB}{225,236,250}
+\definecolor{espgreen}{RGB}{226,243,228}
+\definecolor{stmorange}{RGB}{253,236,220}
+\definecolor{hwgray}{RGB}{238,238,238}
+\definecolor{linkred}{RGB}{170,40,40}
+
 \DeclareRobustCommand{\ganttkey}[1]{\tikz[baseline=-0.6ex]\fill[#1, draw=black!50] (0,-0.12) rectangle (0.35,0.12);}
 
 \begin{document}
@@ -797,8 +806,8 @@ Figure~\ref{fig:a1-schematic} shows the Phase A-1 wiring. An STM32F411CEU6
 development board controls four N20 gearmotors through two dual-channel
 TB6612FNG H-bridge drivers (two motors each, shared standby line). Each motor
 has a PWM input and two direction inputs, and its quadrature encoder is read
-back by the MCU. M1 and M2 drive the left and right wheels; M3 and M4, the
-inner-left (IL) and inner-right (IR) motors, drive pan and tilt. An ESP32-C6 module provides the Wi-Fi link over UART,
+back by the MCU. M3 and M4 drive the left and right wheels; M1 and M2, the
+inner-left (iL) and inner-right (iR) motors, drive pan and tilt. An ESP32-C6 module provides the Wi-Fi link over UART,
 an ST-Link handles SWD programming, and USB gives a serial console for testing.
 
 Three buck converters run from the 3S pack through an XT30 connector. A 5\,V
@@ -903,13 +912,13 @@ buffer so incoming commands are not lost while the CPU is busy.
 \textbf{Function} & \textbf{Peripheral and pins} & \textbf{Setting} \\
 \midrule
 System clock & HSE 25\,MHz $\rightarrow$ PLL & 96\,MHz \\
-Motor PWM, M1--M4 & TIM3 CH1--4 (PA6, PA7, PB0, PB1) & 20\,kHz \\
-Motor direction & GPIO, 2 per motor (PB12--15, PA4--5, PB4--5) & -- \\
-Driver standby & GPIO PB10 (both TB6612) & -- \\
-Encoder M1 (L) & TIM1 (PA8, PA9), 16-bit & $\times$4 quadrature \\
-Encoder M2 (R) & TIM2 (PA15, PB3), 32-bit & $\times$4 quadrature \\
-Encoder M3 (IL) & TIM4 (PB6, PB7), 16-bit & $\times$4 quadrature \\
-Encoder M4 (IR) & TIM5 (PA0, PA1), 32-bit & $\times$4 quadrature \\
+Motor PWM, M1--M4 & TIM3 CH3/2/1/4 (PB0, PA7, PA6, PB1) & 20\,kHz \\
+Motor direction & GPIO (PA4--5, PB14--15, PB12--13, PB4--5) & -- \\
+Driver standby & GPIO PC15 (both TB6612) & -- \\
+Encoder M1 (iL) & TIM4 (PB6, PB7), 16-bit & $\times$4 quadrature \\
+Encoder M2 (iR) & TIM2 (PA15, PB3), 32-bit & $\times$4 quadrature \\
+Encoder M3 (L) & TIM1 (PA8, PA9), 16-bit & $\times$4 quadrature \\
+Encoder M4 (R) & TIM5 (PA0, PA1), 32-bit & $\times$4 quadrature \\
 Control loop tick & TIM10 interrupt & 1\,kHz \\
 ESP32-C6 link & USART2 (PA2, PA3) + DMA & 115\,200 baud \\
 PC console & USB OTG FS, CDC class & -- \\
@@ -1060,98 +1069,645 @@ Lower Tilt Joint & J4 & $\varnothing 55.15$ \\
 \label{sec:teleop-architecture}
 % ================================================================
 
-Figure~\ref{fig:teleop-architecture} shows the teleoperation stack. Controllers, topics and the robot model are shared between simulation and hardware; a launch argument selects the \texttt{ros2\_control} hardware plugin.
+Since Progress Report 2 the teleoperation stack has been brought up on the real module, and
+the module now drives on its wheels from ROS~2 velocity commands. The PC--module link was
+changed from the planned custom \texttt{ros2\_control} plugin with a UDP bridge to
+micro-ROS \cite{microros}, the kinematics moved onto the module's ESP32-C6, and the STM32F411
+firmware was completed for all four motors. Figure~\ref{fig:teleop-architecture} shows the
+new architecture, which replaces the PR2 architecture figure. The subsections below describe
+both firmwares and the test results.
+
+\subsection{Changes from Progress Report 2}
+
+Table~\ref{pr3:tab:changes} lists the changes made to the embedded design since PR2.
+The hardware (STM32F411 board, two TB6612FNG drivers, ESP32-C6, four N20 gearmotors)
+is unchanged. The changes are in the software architecture and in corrections found
+during bring-up.
+
+\begin{table}[H]
+\centering
+\caption{Embedded-system changes from PR2 to PR3.}
+\label{pr3:tab:changes}
+\small
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{3.0cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X}
+\toprule
+Item & PR2 & PR3 (current) \\
+\midrule
+PC--module link &
+  Custom \texttt{ros2\_control} plugin (\texttt{mrr\_hardware}) packs wheel targets into UDP packets;
+  the ESP32 is a transparent Wi-Fi$\leftrightarrow$UART bridge. &
+  \textbf{micro-ROS}: the ESP32-C6 is a ROS~2 node that talks to a micro-ROS agent on the PC
+  (Wi-Fi, UDP). \\
+Where kinematics run &
+  PC (\texttt{diff\_drive\_controller}). &
+  ESP32-C6 on each module (wheel IK/FK and pan/tilt mixing). \\
+Low-level control &
+  Wheel speed PID only (M1, M2). &
+  All four motors; cascaded position/velocity control; four modes. \\
+Motor numbering &
+  M1, M2 = wheels; M3, M4 = inner (pan/tilt). &
+  M3\_L, M4\_R = wheels; M1\_iL, M2\_iR = inner spur gears (Table~\ref{pr3:tab:pins}). \\
+Driver standby pin &
+  PB10. &
+  \textbf{PC15} (checked on the wired board; Table~\ref{tab:a1-periph} corrected). \\
+Wheel separation &
+  \SI{96.65}{mm} (measured from the CAD meshes). &
+  \SI{99.9}{mm} (re-measured on the assembled module). \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ----------------------------------------------------------------------
+\subsection{System Architecture}
+% ----------------------------------------------------------------------
+
+The architecture (Figure~\ref{fig:teleop-architecture}) has three processing levels,
+each with one job:
+
+\begin{enumerate}
+  \item \textbf{PC (ROS~2 Humble)} decides \emph{what} the module should do. Commander
+        nodes publish body-level commands: a teleoperation node in the current tests, and
+        later \texttt{msrr\_control} from Section~\ref{sec:sim-model}. The micro-ROS agent forwards them to the module.
+  \item \textbf{ESP32-C6 (micro-ROS node)} converts body commands into joint targets.
+        It runs the inverse kinematics, enforces the command timeout and joint limits,
+        and publishes feedback computed with forward kinematics.
+  \item \textbf{STM32F411 (bare-metal, HAL)} makes each motor follow its target. It
+        reads the four quadrature encoders, runs the PID loops at \SI{1}{kHz} and
+        drives the TB6612FNG H-bridges with \SI{20}{kHz} PWM.
+\end{enumerate}
 
 \begin{figure}[p]
 \centering
-\resizebox{\textwidth}{!}{%
+\resizebox{\linewidth}{!}{%
 \begin{tikzpicture}[
-  >={Stealth[length=2mm]},
-  blk/.style   ={draw, rounded corners=2pt, align=center, inner sep=4pt, minimum height=9mm},
-  shared/.style={blk, fill=gray!12},
-  iface/.style ={blk, fill=gray!28},
-  grp/.style   ={draw, rounded corners=4pt, inner sep=7pt},
-  alt/.style   ={grp, dashed},
-  tag/.style   ={inner sep=1pt, align=left},
+  font=\sffamily\footnotesize,
+  blk/.style={draw, rounded corners=2pt, fill=white, align=center, text width=58mm, minimum height=9mm, inner sep=3pt},
+  grp/.style={draw, rounded corners=4pt, inner sep=3mm, thick},
+  ttl/.style={font=\sffamily\bfseries, align=center},
+  arr/.style={-{Latex[length=2.2mm]}, thick},
+  red/.style={-{Latex[length=2.4mm]}, very thick, linkred},
+  note/.style={font=\sffamily\scriptsize, align=center},
 ]
-
-% ---------- operator and monitoring ----------
-\node[blk, text width=4.6cm] (teleop) at (3.3,0)
-  {Keyboard teleop\\ \texttt{teleop\_twist\_keyboard}};
-\node[blk, text width=4.0cm] (rviz) at (13.5,0)
-  {RViz2 / \texttt{ros2 topic echo}\\ monitoring};
-
-% ---------- shared ROS 2 layer ----------
-\node[tag, anchor=west] (sharedlbl) at (5.9,-1.75) {Shared ROS 2 layer (sim and real)};
-\node[shared, text width=4.5cm] (ddc) at (3.3,-2.9)
-  {\texttt{diff\_drive\_controller}\\ twist $\to$ wheel velocities};
-\node[shared, text width=2.4cm] (jsb) at (7.7,-2.9)
-  {\texttt{joint\_state\_}\\ \texttt{broadcaster}};
-\node[shared, text width=3.0cm] (rsp) at (13.5,-2.9)
-  {\texttt{robot\_state\_}\\ \texttt{publisher}};
-\node[iface, text width=14.2cm] (iface) at (8.1,-4.45)
-  {\texttt{ros2\_control} hardware interface\\
-   command: wheel velocity [rad/s] \quad state: wheel position [rad], velocity [rad/s]};
-
+% ---------------- PC ----------------
+\node[ttl] (pct) at (4,1.15) {PC --- ROS 2 Humble \normalfont\scriptsize(namespace \texttt{/module\_1})};
+\node[blk] (cmdr) at (0,0) {Commander nodes\\ \scriptsize teleoperation; \texttt{msrr\_control} (planned)};
+\node[blk] (mon)  at (8,0) {Monitoring\\ \scriptsize RViz2, \texttt{ros2 topic echo}};
+\node[blk, text width=138mm] (agent) at (4,-2.0) {micro-ROS Agent \scriptsize(UDP, XRCE-DDS $\leftrightarrow$ DDS)};
+\draw[arr] (cmdr.south) -- node[note, right] {\texttt{cmd\_vel\_unstamped}\\\texttt{head\_position\_controller/commands}} (cmdr.south |- agent.north);
+\draw[arr] (mon.south |- agent.north) -- node[note, left] {\texttt{esp32/vel\_state}\\\texttt{esp32/head\_state}} (mon.south);
 \begin{scope}[on background layer]
-  \node[grp, fit=(sharedlbl)(ddc)(jsb)(rsp)(iface)] (shared) {};
+\node[grp, fill=pcblue, fit=(pct)(cmdr)(mon)(agent)] (pc) {};
 \end{scope}
 
-\draw[->] (teleop) -- node[right, tag, xshift=1mm] {\texttt{/cmd\_vel}} (ddc);
-\draw[->] ([xshift=20mm]ddc.north) |- (6.0,-1.0) -| node[pos=0.25, above, tag] {\texttt{/odom}} ([xshift=-8mm]rviz.south);
-\draw[->] (rsp) -- node[right, tag] {\texttt{/tf}} (rviz);
-\draw[->] (jsb) -- node[above, tag] {\texttt{/joint\_states}} (rsp);
-\draw[->] (ddc.south) -- (ddc.south |- iface.north);
-\draw[->] (jsb.south |- iface.north) -- (jsb.south);
-
-% ---------- simulation ----------
-\node[blk, text width=4.6cm] (gzplug) at (3.3,-7.0)
-  {\texttt{gz\_ros2\_control}\\ GazeboSimSystem plugin};
-\node[blk, text width=4.6cm] (gz) at (3.3,-9.0)
-  {Gazebo Harmonic\\ physics + module model\\ (same URDF)};
-\draw[<->] (gzplug) -- node[right, tag] {cmd / state} (gz);
-\node[tag, anchor=north west] (simlbl) at (0.75,-5.95) {Simulation};
+% ---------------- ESP32 ----------------
+\node[ttl] (espt) at (4,-4.55) {ESP32-C6 --- micro-ROS node \texttt{esp32\_module}\\ \normalfont\scriptsize ESP-IDF + FreeRTOS};
+\node[blk] (subs)  at (0,-5.6)  {Subscriptions\\ \scriptsize Twist $(v,\omega)$; Float64MultiArray [tilt, pan]};
+\node[blk] (logic) at (0,-6.9)  {Command logic\\ \scriptsize 500\,ms \texttt{cmd\_vel} timeout, NaN check};
+\node[blk] (ik)    at (0,-8.2)  {Inverse kinematics\\ \scriptsize wheels Eq.~\eqref{pr3:eq:ik}; pan/tilt Eq.~\eqref{pr3:eq:ptik}, clamp $\pm$0.5 rad};
+\node[blk] (tx)    at (0,-9.7)  {\texttt{stm32\_tx} task\\ \scriptsize resend latest command every 20\,ms};
+\node[blk] (pubs)  at (8,-5.6)  {Publishers (20\,Hz timer)\\ \scriptsize Twist $(v,\omega)$; Vector3 (tilt, pan)};
+\node[blk] (fk)    at (8,-6.9)  {Forward kinematics\\ \scriptsize Eqs.~\eqref{pr3:eq:fk}, \eqref{pr3:eq:ptfk}; skipped if state $>$500\,ms old};
+\node[blk] (rx)    at (8,-9.7)  {\texttt{stm32\_rx} task\\ \scriptsize parse frames, store latest state};
+\draw[arr] (subs) -- (logic);
+\draw[arr] (logic) -- (ik);
+\draw[arr] (ik) -- (tx);
+\draw[arr] (rx) -- (fk);
+\draw[arr] (fk) -- (pubs);
 \begin{scope}[on background layer]
-  \node[alt, fit=(simlbl)(gzplug)(gz)] {};
+\node[grp, fill=espgreen, fit=(espt)(subs)(tx)(pubs)(rx)] (esp) {};
 \end{scope}
 
-% ---------- real hardware ----------
-\node[blk, text width=5.4cm] (hwplug) at (11.6,-7.0)
-  {\texttt{mrr\_hardware} plugin (PC)\\ packs targets, unpacks state};
-\node[blk, text width=5.4cm] (esp) at (11.6,-9.2)
-  {ESP32\\ Wi-Fi $\leftrightarrow$ UART bridge};
-\node[blk, text width=5.4cm] (stm) at (11.6,-11.4)
-  {STM32F411\\ 200 ms command watchdog\\ wheel speed PID, 1 kHz};
-\node[blk, text width=2.8cm] (tb) at (9.6,-13.4)
-  {TB6612FNG\\ motor driver};
-\node[blk, text width=2.8cm] (mot) at (9.6,-15.2)
-  {Wheel motors\\ M1, M2};
-\node[blk, text width=2.8cm] (enc) at (13.8,-15.2)
-  {Encoders\\ quadrature A/B};
+% PC <-> ESP link
+\draw[red] (cmdr.south |- agent.south) -- node[note, left, text=linkred, pos=0.4] {commands} (subs.north);
+\draw[red] (pubs.north) -- node[note, right, text=linkred, pos=0.6] {feedback} (mon.south |- agent.south);
+\node[note, text=linkred] at (4,-3.25) {\textbf{Wi-Fi, UDP}\\ agent ping every 1\,s, auto-reconnect};
 
-\draw[<->] (hwplug) -- node[left, tag, xshift=-1.5mm] {Wi-Fi (UDP)}
-  node[right, tag] {$\downarrow$ targets 20--50 Hz\\ $\uparrow$ state 50 Hz} (esp);
-\draw[<->] (esp) -- node[right, tag] {UART} (stm);
-\draw[->] (stm.south -| tb) -- node[left, tag, xshift=-1mm] {PWM} (tb);
-\draw[->] (tb) -- (mot);
-\draw[->] (mot) -- node[above, tag, yshift=1mm] {shaft} (enc);
-\draw[->] (enc) -- node[right, tag] {counts} (enc |- stm.south);
-\node[tag, anchor=north west] (hwlbl) at (8.35,-5.95) {Real hardware};
+% ---------------- STM32 ----------------
+\node[ttl] (stmt) at (4,-12.85) {STM32F411 --- motor control\\ \normalfont\scriptsize HAL, bare metal};
+\node[blk] (parse) at (0,-13.90) {USART2 RX (circular DMA + IDLE)\\ \scriptsize frame parser, CRC-16 check};
+\node[blk] (wd)    at (0,-15.20) {Mode + target for each motor\\ \scriptsize 200\,ms command watchdog $\rightarrow$ coast};
+\node[blk] (pid)   at (0,-16.50) {Cascaded PID (TIM10 interrupt)\\ \scriptsize position 100\,Hz $\rightarrow$ velocity 1\,kHz};
+\node[blk] (tele)  at (8,-13.90) {Telemetry every 20\,ms\\ \scriptsize USART2 TX (DMA) + USB CDC};
+\node[blk] (enc)   at (8,-15.20) {Encoder decoding\\ \scriptsize TIM1/2/4/5, $\times$4 quadrature, low-pass};
+\node[blk] (pwm)   at (8,-16.50) {PWM + direction pins\\ \scriptsize TIM3 CH1--4 at 20\,kHz; STBY PC15};
+\draw[arr] (parse) -- (wd);
+\draw[arr] (wd) -- (pid);
+\draw[arr] ([yshift=-2mm]pid.east) -- node[note, below] {duty $u$} ([yshift=-2mm]pwm.west);
+\draw[arr] (enc.west) -- ++(-0.4,0) |- node[note, pos=0.75, above] {$q$, $\hat\omega$} ([yshift=2mm]pid.east);
+\draw[arr] (enc) -- (tele);
 \begin{scope}[on background layer]
-  \node[alt, fit=(hwlbl)(hwplug)(esp)(stm)(tb)(mot)(enc)] {};
+\node[grp, fill=stmorange, fit=(stmt)(parse)(pid)(tele)(pwm)] (stm) {};
 \end{scope}
 
-% ---------- mode selection ----------
-\draw[->] (iface.south -| gzplug) -- node[pos=0.3, right, tag] {\texttt{use\_sim:=true}} (gzplug);
-\draw[->] (iface.south -| hwplug) -- node[pos=0.3, right, tag] {\texttt{use\_sim:=false}} (hwplug);
+% ESP <-> STM link
+\draw[red] (tx.south) -- node[note, left, text=linkred, pos=0.3] {\texttt{MSG\_CMD}\\26 B, 50\,Hz} (parse.north);
+\draw[red] (tele.north) -- node[note, right, text=linkred, pos=0.72] {\texttt{MSG\_STATE}\\43 B, 50\,Hz} (rx.south);
+\node[note, text=linkred] at (4,-11.3) {\textbf{UART 115\,200 baud, 8N1}\\ ESP GPIO4 $\rightarrow$ PA3, GPIO5 $\leftarrow$ PA2};
 
-\end{tikzpicture}%
-}
-\caption{Teleoperation architecture. The controllers, topics and robot model are shared;
-a launch argument selects the hardware plugin under the \texttt{ros2\_control} interface,
-either Gazebo through \texttt{gz\_ros2\_control} or one physical module over Wi-Fi.}
+% USB bench tool
+\node[blk, dashed, text width=30mm] (usb) at (13.9,-13.90) {\texttt{test\_stm32.py}\\ \scriptsize PC over USB-C\\(bench testing only)};
+\draw[dashed, thick, {Latex[length=2.2mm]}-{Latex[length=2.2mm]}] (usb.west) -- node[note, above] {same} node[note, below] {frames} (stm.east |- usb.west);
+
+% ---------------- Hardware ----------------
+\node[blk, fill=hwgray] (tb) at (8,-18.60) {2$\times$ TB6612FNG H-bridge\\ \scriptsize 6\,V motor supply};
+\node[blk, fill=hwgray, text width=42mm] (wheels) at (5.6,-20.50) {M3\_L, M4\_R: wheels\\ \scriptsize velocity mode};
+\node[blk, fill=hwgray, text width=42mm] (inner)  at (10.4,-20.50) {M1\_iL, M2\_iR: inner spurs\\ \scriptsize $\rightarrow$ 46T crown, pan/tilt\\ \scriptsize position mode};
+\node[font=\sffamily\scriptsize, anchor=south] (motl) at (8,-19.85) {4$\times$ N20 gearmotor, 298:1, 7 PPR encoder};
+\begin{scope}[on background layer]
+\node[grp, fill=hwgray!50, fit=(wheels)(inner)(motl), inner sep=2mm] (mot) {};
+\end{scope}
+\draw[arr] (pwm) -- node[note, right] {PWM, IN1/IN2} (tb);
+\draw[arr] (tb) -- (motl.north);
+\draw[arr] (mot.east) -- ++(1.2,0) |- node[note, pos=0.25, right] {encoder\\A/B} (enc.east);
+\end{tikzpicture}}
+\caption{Teleoperation and embedded system architecture (replaces the architecture figure of Progress Report~2). The PC sends
+body-level commands through micro-ROS; each module's ESP32-C6 computes the joint targets and
+the STM32F411 closes the motor loops. Red arrows are the two communication links. The dashed
+USB path is used only for bench testing without the ESP32.}
 \label{fig:teleop-architecture}
 \end{figure}
+
+\paragraph{Why micro-ROS.} PR2 planned a custom \texttt{ros2\_control} hardware plugin on the
+PC that packed wheel targets into UDP packets, with the ESP32 only forwarding bytes to the
+STM32. With micro-ROS the ESP32-C6 becomes a normal ROS~2 node instead:
+\begin{itemize}
+  \item No custom PC plugin or custom UDP packet format has to be written and maintained.
+        The module's topics appear in the ROS graph and can be inspected with standard tools
+        (\texttt{ros2 topic list}, \texttt{ros2 topic echo}), which makes debugging easier.
+  \item The command topics have the \emph{same names and message types} as the controllers in
+        the Gazebo simulation (Table~\ref{tab:sim-joints}). A commander node can therefore drive the simulated or the real
+        module without changes (tested so far with teleoperation only).
+  \item Kinematics run on each module, and the PC sends only body-level commands. This fits
+        the distributed SMORES-EP design and scales to $N$ modules, one namespace each
+        (\texttt{/module\_1}, \texttt{/module\_2}, \dots). It is also a step towards the onboard
+        computation of Phase~D.
+  \item The micro-ROS session is checked with a ping every second and is re-created
+        automatically when the connection returns (Section~\ref{pr3:sec:agent}).
+\end{itemize}
+Two trade-offs were accepted. The module namespace and the agent IP address are build-time
+settings, so each module currently needs its own build. On hardware the module publishes its
+measured velocity on \texttt{esp32/vel\_state} instead of \texttt{ros2\_control} producing
+\texttt{/odom} and \texttt{/joint\_states}.
+
+% ----------------------------------------------------------------------
+\subsection{ROS 2 Interface}
+% ----------------------------------------------------------------------
+
+Table~\ref{pr3:tab:topics} lists the module's ROS~2 interface. All names are relative to the
+module namespace (\texttt{/module\_1} for the first module).
+
+\begin{table}[H]
+\centering
+\caption{ROS~2 topics of the micro-ROS node \texttt{esp32\_module}.}
+\label{pr3:tab:topics}
+\small
+\begin{tabularx}{\linewidth}{l c >{\raggedright\arraybackslash}X}
+\toprule
+Topic and message type & Dir. & Content \\
+\midrule
+\texttt{diff\_drive\_controller/cmd\_vel\_unstamped} & sub & \texttt{linear.x} $=v$ [m/s], \texttt{angular.z} $=\omega$ [rad/s] \\
+\quad\footnotesize\texttt{geometry\_msgs/Twist} & & \\[2pt]
+\texttt{head\_position\_controller/commands} & sub & \texttt{data} $=[\theta_\text{tilt},\theta_\text{pan}]$ [rad] \\
+\quad\footnotesize\texttt{std\_msgs/Float64MultiArray} & & \\[2pt]
+\texttt{esp32/vel\_state} & pub & measured $v$, $\omega$ from the wheel encoders, 20\,Hz \\
+\quad\footnotesize\texttt{geometry\_msgs/Twist} & & \\[2pt]
+\texttt{esp32/head\_state} & pub & \texttt{x} $=\theta_\text{tilt}$, \texttt{y} $=\theta_\text{pan}$ [rad], 20\,Hz \\
+\quad\footnotesize\texttt{geometry\_msgs/Vector3} & & \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ----------------------------------------------------------------------
+\subsection{ESP32-C6 Firmware}
+\label{pr3:sec:esp}
+% ----------------------------------------------------------------------
+
+The firmware (ESP-IDF project \texttt{smores\_esp32c6}) uses the micro-ROS component for
+ESP-IDF on the Humble branch (\texttt{micro\_ros\_espidf\_component} \texttt{\^{}22}) with the
+default XRCE-DDS middleware over Wi-Fi. The Wi-Fi network and the agent's IP address and
+port are set in \texttt{menuconfig}. It is split into the files in Table~\ref{pr3:tab:espfiles}
+and runs the FreeRTOS tasks in Table~\ref{pr3:tab:esptasks}.
+
+\begin{table}[H]
+\centering
+\caption{ESP32-C6 source files.}
+\label{pr3:tab:espfiles}
+\small
+\begin{tabularx}{\linewidth}{l >{\raggedright\arraybackslash}X}
+\toprule
+File & Purpose \\
+\midrule
+\texttt{robot\_config.h} & All per-module settings: namespace, topic names, UART pins, timing, wheel radius and separation, pan/tilt gains and limits \\
+\texttt{main.c} & micro-ROS entities, subscription callbacks, 20\,Hz feedback timer, agent connection state machine \\
+\texttt{robot\_logic.c} & Stores the latest commands and builds the 4-motor STM32 command (mode + target), including the \texttt{cmd\_vel} timeout \\
+\texttt{kinematics.c} & Differential-drive and pan/tilt inverse and forward kinematics \\
+\texttt{stm32\_link.c} & UART driver and the RX/TX tasks; shares the latest command and state under a spinlock \\
+\texttt{protocol.c} & Frame builder and byte-by-byte parser with CRC-16 (same file as on the STM32) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{FreeRTOS tasks on the ESP32-C6 (micro-ROS task values are the project defaults in \texttt{Kconfig.projbuild}).}
+\label{pr3:tab:esptasks}
+\small
+\begin{tabularx}{\linewidth}{l c c >{\raggedright\arraybackslash}X}
+\toprule
+Task & Priority & Stack & Work \\
+\midrule
+\texttt{uros\_task}  & 5 & \SI{16000}{B} & micro-ROS executor (2 subscriptions + 1 timer), agent ping and reconnection \\
+\texttt{stm32\_tx}   & 6 & \SI{3072}{B}  & Sends the latest \texttt{MSG\_CMD} every \SI{20}{ms} (\texttt{vTaskDelayUntil}) \\
+\texttt{stm32\_rx}   & 6 & \SI{3072}{B}  & Reads the UART, parses frames, stores the latest \texttt{MSG\_STATE}; 1\,Hz debug log \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The callbacks only store the new command and rebuild the STM32 command; the
+\texttt{stm32\_tx} task sends it. Sending at a fixed \SI{50}{Hz}, independent of how often
+ROS publishes, keeps the STM32 watchdog (\SI{200}{ms}) fed while the PC is connected.
+
+\subsubsection{Wheel Kinematics}
+
+With wheel radius $r=\SI{50}{mm}$ and wheel separation $L=\SI{99.9}{mm}$, the inverse
+kinematics give the wheel angular velocities from the body command $(v,\omega)$:
+\begin{equation}
+  \omega_L = \frac{v-\omega L/2}{r}, \qquad \omega_R = \frac{v+\omega L/2}{r}.
+  \label{pr3:eq:ik}
+\end{equation}
+The installed wheels turn opposite to the ROS convention, so both targets are multiplied
+by a sign $s_\text{drive}=-1$ before they are sent; the encoder signs are not changed.
+The measured wheel velocities are converted back with the forward kinematics:
+\begin{equation}
+  v = \frac{r}{2}\,(\omega_R+\omega_L), \qquad \omega = \frac{r}{L}\,(\omega_R-\omega_L).
+  \label{pr3:eq:fk}
+\end{equation}
+As a check, the top speed in Section~\ref{sec:sim-model} ($v=\SI{0.049}{m/s}$) gives
+$\omega_L=\omega_R=\SI{0.98}{rad/s}$ at the wheel. This equals the free speed of the
+48T spur gear (\SI{50}{rpm} N20 output $\times\,9/48 = \SI{9.4}{rpm}$).
+
+\subsubsection{Pan/Tilt Kinematics}
+
+The pan/tilt mixing equation in Section~\ref{sec:sim-model} left the mixing to the firmware; it is now implemented on the ESP32.
+Let $q_\text{iL}$ and $q_\text{iR}$ be the angles of the two inner 48T spur gears. Turning
+both the same way tilts the face; turning them in opposite directions spins the 46T crown
+gear (pan):
+\begin{equation}
+  q_\text{iL} = \frac{\theta_\text{tilt}}{K_t} + \frac{\theta_\text{pan}}{K_p}, \qquad
+  q_\text{iR} = \frac{\theta_\text{tilt}}{K_t} - \frac{\theta_\text{pan}}{K_p},
+  \label{pr3:eq:ptik}
+\end{equation}
+\begin{equation}
+  \theta_\text{tilt} = K_t\,\frac{q_\text{iL}+q_\text{iR}}{2}, \qquad
+  \theta_\text{pan}  = K_p\,\frac{q_\text{iL}-q_\text{iR}}{2},
+  \label{pr3:eq:ptfk}
+\end{equation}
+with $K_t=1$ and $K_p=48/46$, the same relation as in the simulation's
+\texttt{ros2\_control} xacro. In the notation of that equation this is $N_t=1$ and
+$N_p=46/48$ at the spur-gear level; the remaining motor-to-spur reduction
+($298\times48/9$) is handled by the encoder scaling on the STM32 (Eq.~\eqref{pr3:eq:cpr}).
+Before Eq.~\eqref{pr3:eq:ptik} is applied, $\theta_\text{pan}$ and $\theta_\text{tilt}$ are
+clamped to $\pm\SI{0.5}{rad}$, a conservative range for first tests.
+
+\subsubsection{Agent Connection Handling}
+\label{pr3:sec:agent}
+
+The micro-ROS task follows the reconnection pattern of Figure~\ref{pr3:fig:agent}. ROS entities
+(node, subscriptions, publishers, timer, executor) exist only while the agent answers.
+When the agent is lost they are destroyed without waiting for the agent, and the task
+goes back to waiting. While it waits, the task keeps applying the \texttt{cmd\_vel} timeout,
+so the wheels are commanded to \SI{0}{rad/s} instead of repeating the last command.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  font=\sffamily\footnotesize, node distance=16mm and 45mm,
+  st/.style={draw, rounded corners=6pt, thick, minimum width=30mm, minimum height=9mm, align=center, fill=espgreen},
+  arr/.style={-{Latex[length=2.2mm]}, thick},
+  tl/.style={font=\sffamily\scriptsize, align=center}
+]
+\node[st] (w) {WAITING\\ \scriptsize ping agent every 1\,s};
+\node[st, right=of w] (a) {AVAILABLE\\ \scriptsize create entities};
+\node[st, below=of a] (c) {CONNECTED\\ \scriptsize spin executor};
+\node[st, below=of w] (d) {DISCONNECTED\\ \scriptsize destroy entities};
+\draw[arr] (w) -- node[tl, above] {ping OK} (a);
+\draw[arr] (a) -- node[tl, right] {all entities created} (c);
+\draw[arr] (a.north) to[bend right=25] node[tl, above] {creation failed} (w.north);
+\draw[arr] (c) -- node[tl, above] {3 pings failed (100\,ms each)} (d);
+\draw[arr] (d) -- node[tl, left] {} (w);
+\draw[arr] ([yshift=2mm]w.west) -- ++(-6mm,0) -- ++(0,-4mm) node[tl, left, pos=0.5] {no answer} -- ([yshift=-2mm]w.west);
+\end{tikzpicture}
+\caption{micro-ROS agent connection state machine on the ESP32-C6.}
+\label{pr3:fig:agent}
+\end{figure}
+
+% ----------------------------------------------------------------------
+\subsection{ESP32--STM32 Link Protocol}
+% ----------------------------------------------------------------------
+
+The ESP32-C6 (UART1, TX GPIO4, RX GPIO5) and the STM32 (USART2, PA3/PA2) exchange binary
+frames at \SI{115200}{baud}, 8N1. The same frame format is used on the STM32's USB-C virtual
+COM port, so the STM32 can also be driven from the PC without the ESP32. One source file,
+\texttt{protocol.c}, is shared by both microcontrollers.
+
+\begin{table}[H]
+\centering
+\caption{Frame format (multi-byte values little-endian, floats IEEE-754 single precision).}
+\label{pr3:tab:frame}
+\small
+\begin{tabular}{ccccccc}
+\toprule
+\texttt{0xAA} & \texttt{0x55} & TYPE & LEN & PAYLOAD & CRC\_lo & CRC\_hi \\
+\midrule
+1 B & 1 B & 1 B & 1 B & 0--48 B & 1 B & 1 B \\
+\bottomrule
+\end{tabular}
+
+\vspace{2mm}
+\parbox{0.92\linewidth}{\footnotesize CRC-16/CCITT-FALSE (polynomial \texttt{0x1021}, initial value
+\texttt{0xFFFF}) over TYPE, LEN and PAYLOAD. The parser is a byte-by-byte state machine: it
+resynchronises on the two start bytes, rejects lengths above 48 bytes, and silently drops
+frames with a wrong CRC.}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Message types. Motor index order everywhere: [0] M1\_iL, [1] M2\_iR, [2] M3\_L, [3] M4\_R.}
+\label{pr3:tab:msgs}
+\small
+\begin{tabularx}{\linewidth}{l l c >{\raggedright\arraybackslash}X}
+\toprule
+Message & Direction & Payload & Content \\
+\midrule
+\texttt{MSG\_CMD} (\texttt{0x01})   & ESP32 $\rightarrow$ STM32 & 20 B & \texttt{uint8 mode[4]}, \texttt{float target[4]}. Modes: 0 = stop (coast), 1 = velocity [rad/s], 2 = position [rad], 3 = duty [$-1$..1, open loop] \\
+\texttt{MSG\_ZERO} (\texttt{0x04})  & ESP32 $\rightarrow$ STM32 & 1 B  & Bit mask: set the position of the selected motors to zero \\
+\texttt{MSG\_STATE} (\texttt{0x81}) & STM32 $\rightarrow$ ESP32 & 37 B & \texttt{uint32 stamp\_ms}, \texttt{float pos[4]} [rad], \texttt{float vel[4]} [rad/s], \texttt{uint8 flags} (bit 0 = watchdog tripped) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+At \SI{115200}{baud} with 10 bits per byte the link carries \SI{11520}{B/s} in each direction.
+A command frame is 26 bytes (\SI{2.3}{ms} on the wire) and a state frame is 43 bytes
+(\SI{3.7}{ms}). At \SI{50}{Hz} they use about 11\,\% and 19\,\% of the two directions,
+which leaves margin for more messages in Phase~B (for example EP-Face commands).
+
+% ----------------------------------------------------------------------
+\subsection{STM32F411 Firmware}
+\label{pr3:sec:stm}
+% ----------------------------------------------------------------------
+
+The CubeMX configuration of Section~\ref{sec:phase-a1-hw} is kept: \SI{96}{MHz} system clock,
+TIM3 PWM at \SI{20}{kHz}, four timers in $\times4$ encoder mode, TIM10 interrupt at
+\SI{1}{kHz}, USART2 with DMA, and USB CDC. The project is built with CMake and
+\texttt{arm-none-eabi-gcc} in VS Code. The application code is in five files:
+\texttt{config.h} (all tunable numbers), \texttt{motor.c} (PWM, direction and encoder
+access), \texttt{pid.c}, \texttt{protocol.c} and \texttt{app.c} (control loop, frame handling,
+telemetry, watchdog). CubeMX-generated \texttt{main.c} only calls \texttt{App\_Init()} and
+\texttt{App\_MainLoop()}.
+
+\subsubsection{Motor Channel Assignment}
+
+During bring-up the motors were renumbered by their physical role, and the direction and
+encoder signs were calibrated so that a positive duty gives a positive encoder count on
+every channel. The motor names in Table~\ref{tab:a1-periph} have been updated to match. The pin labels
+in the CubeMX \texttt{.ioc} file still carry the old names; the pins themselves did not change.
+
+\begin{table}[H]
+\centering
+\caption{Motor channel assignment and calibrated signs.}
+\label{pr3:tab:pins}
+\footnotesize
+\begin{tabular}{c l l l l l c c}
+\toprule
+Idx & Name & Role & PWM & IN1 / IN2 & Encoder & Dir. & Enc. \\
+\midrule
+0 & M1\_iL & inner left  & CH3, PB0 & PA4 / PA5   & TIM4 (PB6, PB7), 16-bit  & $-1$ & $+1$ \\
+1 & M2\_iR & inner right & CH2, PA7 & PB14 / PB15 & TIM2 (PA15, PB3), 32-bit & $+1$ & $-1$ \\
+2 & M3\_L  & left wheel       & CH1, PA6 & PB12 / PB13 & TIM1 (PA8, PA9), 16-bit  & $-1$ & $+1$ \\
+3 & M4\_R  & right wheel      & CH4, PB1 & PB4 / PB5   & TIM5 (PA0, PA1), 32-bit  & $+1$ & $-1$ \\
+\midrule
+\multicolumn{8}{l}{PWM from TIM3. Driver standby (both TB6612FNG): \textbf{PC15} (PR2 listed PB10). LED: PC13.} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Encoder Scaling and Velocity Estimate}
+
+Every motor is reported as the angle of its 48T spur gear. With the 7~PPR encoder on the
+motor shaft, $\times4$ decoding, the 298:1 N20 gearbox and the 9T/48T stage, one spur-gear
+revolution is
+\begin{equation}
+  N_c = 4 \cdot 7 \cdot 298 \cdot \frac{48}{9} = \num{44501}\ \text{counts},
+  \qquad \Delta\theta = \frac{2\pi}{N_c} = \SI{1.41e-4}{rad}\ (\ang{0.0081}).
+  \label{pr3:eq:cpr}
+\end{equation}
+This resolution is much finer than the \SI{0.2}{mm} gear backlash allowance (about
+\SI{0.27}{\degree} at the 48T spur gear, or about 33 counts), so the encoder measures motor
+motion rather than the true output angle.
+
+The velocity is computed every $T=\SI{1}{ms}$ from the count change $\Delta n_k$ and smoothed
+with a first-order low-pass filter:
+\begin{equation}
+  \hat\omega_k = \hat\omega_{k-1} + \alpha\left(\frac{2\pi}{N_c}\frac{\Delta n_k}{T}-\hat\omega_{k-1}\right),
+  \qquad \alpha = 0.1 .
+\end{equation}
+One count in one tick is $2\pi/(N_c T)=\SI{0.14}{rad/s}$, about 14\,\% of the top speed, so the
+raw estimate is coarse. The filter ($\tau\approx\SI{9.5}{ms}$) smooths it. The 16-bit
+timers are unwrapped through a signed 16-bit difference and the 32-bit timers through a
+signed 32-bit difference, so counter overflow does not cause jumps.
+
+\subsubsection{Control Loop}
+
+The \SI{1}{kHz} TIM10 interrupt runs the controller in Figure~\ref{pr3:fig:pid} for each motor.
+In velocity mode the target is the velocity reference $\omega^*$ directly. In position mode
+an outer P loop, run every tenth tick (\SI{100}{Hz}), turns the position error into
+$\omega^*$, limited to $\pm\SI{0.9}{rad/s}$ (just below the \SI{0.98}{rad/s} top speed).
+The inner loop is a PI controller with velocity feed-forward:
+\begin{equation}
+  u = \operatorname{sat}_{\pm d_\text{max}}\!\Big(K_\text{ff}\,\omega^* + K_p e + K_i\!\int e\,dt + K_d\,\tfrac{d}{dt}(-\hat\omega)\Big),
+  \qquad e = \omega^*-\hat\omega .
+\end{equation}
+The derivative acts on the measurement, so a step in the setpoint gives no derivative kick.
+The integrator uses conditional integration (anti-windup): it is only updated when the output
+is not saturated or when the error drives the output back out of saturation. The PID output
+limit is set equal to the duty limit $d_\text{max}$ in \texttt{Motor\_SetDuty()}, so the
+integrator cannot wind up against a limit it does not know about. When a motor's mode
+changes, its PID states are reset. Duty mode bypasses the controller (used for testing),
+and stop mode coasts the motor (IN1 = IN2 = low).
+
+\begin{figure}[H]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[
+  font=\sffamily\footnotesize, node distance=9mm,
+  b/.style={draw, thick, minimum height=9mm, minimum width=16mm, align=center, fill=stmorange},
+  s/.style={draw, thick, circle, inner sep=1.5pt},
+  arr/.style={-{Latex[length=2mm]}, thick}
+]
+\node (in) {$q^*$};
+\node[s, right=6mm of in] (s1) {$\Sigma$};
+\node[b, right=of s1] (kp) {$K_{p,\text{pos}}$\\ \scriptsize 100\,Hz};
+\node[b, right=of kp] (sat1) {sat\\ \scriptsize $\pm0.9$ rad/s};
+\node[s, right=14mm of sat1] (s2) {$\Sigma$};
+\node[b, right=of s2] (pi) {PI\\ \scriptsize 1\,kHz};
+\node[s, right=of pi] (s3) {$+$};
+\node[b, right=of s3] (sat2) {sat\\ \scriptsize $\pm d_\text{max}$};
+\node[b, right=of sat2, fill=hwgray] (plant) {TB6612\\+ N20};
+\node[right=8mm of plant] (out) {$q$};
+\node[b, below=10mm of pi] (ff) {$K_\text{ff}$};
+\node[b, below=22mm of sat2, fill=hwgray] (enc) {Encoder\\ \scriptsize $\times4$, $N_c$};
+\node[b, left=of enc] (lpf) {$\Delta n/T$\\ + LPF};
+\node[above=7mm of s2] (vin) {\scriptsize $\omega^*$ (velocity mode)};
+\draw[arr] (in) -- (s1);
+\draw[arr] (s1) -- (kp);
+\draw[arr] (kp) -- (sat1);
+\draw[arr] (sat1) -- node[above] {$\omega^*$} (s2);
+\draw[arr, dashed] (vin) -- (s2);
+\draw[arr] (s2) -- node[above] {$e$} (pi);
+\draw[arr] (pi) -- (s3);
+\draw[arr] (s3) -- (sat2);
+\draw[arr] (sat2) -- node[above] {$u$} (plant);
+\draw[arr] (plant) -- (out);
+\draw[arr] ($(sat1.east)+(4mm,0)$) |- (ff);
+\draw[arr] (ff) -| (s3);
+\draw[arr] ($(plant.east)+(4mm,0)$) |- (enc);
+\draw[arr] (enc) -- (lpf);
+\draw[arr] (lpf) -| node[pos=0.9, left] {$-\hat\omega$} (s2);
+\draw[arr] (enc.south) -- ++(0,-4mm) -| node[pos=0.95, left] {$-q$} (s1);
+\end{tikzpicture}}
+\caption{Cascaded controller run for each motor on the STM32. Wheels use velocity mode (the
+dashed input); the inner pan/tilt gears use position mode.}
+\label{pr3:fig:pid}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Controller parameters (starting values, still to be tuned on the module).}
+\label{pr3:tab:gains}
+\small
+\begin{tabular}{l c p{6.2cm}}
+\toprule
+Parameter & Value & Note \\
+\midrule
+$K_p$, $K_i$, $K_d$ (velocity) & 0.30, 1.50, 0 & duty per rad/s \\
+$K_\text{ff}$ & 0.80 & slightly below $1/0.98$ so a stronger motor does not overshoot \\
+$K_{p,\text{pos}}$, $K_{i,\text{pos}}$, $K_{d,\text{pos}}$ & 0.80, 0, 0 & kept low because the velocity signal is coarse \\
+Position-loop velocity limit & \SI{0.9}{rad/s} & \\
+Duty limit $d_\text{max}$ & 1.0 & full duty allowed \\
+Velocity filter $\alpha$ & 0.10 & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The starting gains were chosen by simulating the firmware's control code against a DC-motor
+model built from the rated motor data (\SI{6}{V}, about \SI{0.98}{rad/s} at the spur gear at
+full duty). They were checked on several variations of that model (faster, slower, weaker,
+stronger, with a dead zone). They are a safe starting point, not final values.
+
+\subsubsection{Interrupts and Data Flow}
+
+The control tick (TIM10) has NVIC priority 1, and the USART2 and DMA interrupts have
+priority 2, so the control loop always pre-empts frame parsing. USART2 receives into a
+256-byte circular DMA buffer; the receive-to-idle callback passes only the new bytes to the
+parser, including when the buffer wraps around. When a valid command arrives, the parser
+copies all four modes and targets inside a short critical section, so the control loop never
+uses a half-updated command. Targets that are NaN or infinite, and unknown modes, are replaced
+by stop. Telemetry is sent from the main loop every \SI{20}{ms} with non-blocking DMA, on
+USART2 and, when a PC is connected, on USB CDC. A UART error restarts reception from the main
+loop. The LED shows the link state: a \SI{500}{ms} blink when commands arrive, \SI{250}{ms}
+when the watchdog has tripped.
+
+% ----------------------------------------------------------------------
+\subsection{Safety and Fault Handling}
+% ----------------------------------------------------------------------
+
+\begin{table}[H]
+\centering
+\caption{Fault handling at each level.}
+\label{pr3:tab:safety}
+\small
+\begin{tabularx}{\linewidth}{l l >{\raggedright\arraybackslash}X}
+\toprule
+Fault & Detected by & Reaction \\
+\midrule
+PC stops publishing \texttt{cmd\_vel}       & ESP32, 500\,ms timeout & Wheels commanded to \SI{0}{rad/s} (held, not coasting) \\
+micro-ROS agent lost                      & ESP32, 3 failed pings  & Entities destroyed, reconnect loop; wheel timeout still applied \\
+ESP32 stops sending (crash, cable)        & STM32, 200\,ms watchdog & All motors coast; flag in \texttt{MSG\_STATE}; fast LED blink \\
+Corrupted or partial frame                & CRC-16, length check   & Frame dropped \\
+NaN/Inf or unknown mode in a command      & ESP32 and STM32        & Command ignored (ESP32) or motor set to stop (STM32) \\
+Pan/tilt command out of range             & ESP32 IK               & Clamped to $\pm\SI{0.5}{rad}$ \\
+Stale feedback from the STM32 ($>$500\,ms)& ESP32                  & Feedback topics not published \\
+Power-up, before any command              & both                   & All motors in stop; TB6612 kept in standby until the STM32 is set up \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ----------------------------------------------------------------------
+\subsection{Bring-up and Test Results}
+\label{pr3:sec:test}
+% ----------------------------------------------------------------------
+
+The system was brought up one level at a time, so each fault could be traced to one part:
+
+\begin{enumerate}
+  \item \textbf{STM32 alone, over USB-C.} The Python tool \texttt{test\_stm32.py} sends the same
+        frames as the ESP32 over the USB virtual COM port. Its modes (\texttt{monitor},
+        \texttt{duty}, \texttt{vel}, \texttt{pos}, \texttt{zero}) were used to run each motor, read all
+        four encoders, and calibrate the direction and encoder signs in Table~\ref{pr3:tab:pins}.
+        All four motors run under the STM32 firmware.
+  \item \textbf{ESP32 $\rightarrow$ STM32 link.} A test build of the ESP32 firmware runs one
+        motor at a time at 30\,\% duty for \SI{2}{s}, with a \SI{2}{s} stop in between. This
+        confirmed the UART wiring and that index $i$ on the ESP32 moves the same physical motor
+        as index $i$ on the STM32, which led to the renumbering in Table~\ref{pr3:tab:pins}.
+  \item \textbf{Full chain through micro-ROS.} With the micro-ROS agent running on the PC,
+        velocity commands (\texttt{Twist}) from a teleoperation node, sent on the module's
+        wheel-command topic (Table~\ref{pr3:tab:topics}), drive the module. The wheel
+        kinematics and the wheel direction sign work on the real module. Only the wheels were tested in this step; no
+        pan/tilt commands were sent.
+\end{enumerate}
+
+\noindent\textbf{Result:} the wheel locomotion of the SMORES-EP style module works with the
+architecture of Figure~\ref{fig:teleop-architecture}. The pan/tilt path (Eqs.~\eqref{pr3:eq:ptik}--\eqref{pr3:eq:ptfk},
+position mode) is implemented in both firmwares but has \emph{not yet been tested} on the
+module through ROS~2.
+
+\subsubsection{Teleoperation Video}
+
+A video of the module being teleoperated from the PC is available on Google Drive. Velocity
+commands sent from ROS~2 drive the wheels through micro-ROS
+(Figure~\ref{pr3:fig:video}).
+
+\begin{figure}[H]
+\centering
+\begin{tabular}{c p{0.62\linewidth}}
+\raisebox{-0.5\height}{\href{https://drive.google.com/file/d/1tHmvNSHuG8BPgNlsanB781ZCGBjsgjm0/view?usp=sharing}{\qrcode[nolink,height=2.8cm]{https://drive.google.com/file/d/1tHmvNSHuG8BPgNlsanB781ZCGBjsgjm0/view?usp=sharing}}} &
+\raggedright Scan the QR code or open:\\[1mm]
+\footnotesize\url{https://drive.google.com/file/d/1tHmvNSHuG8BPgNlsanB781ZCGBjsgjm0/view?usp=sharing}
+\end{tabular}
+\caption{Teleoperation video: the SMORES-EP style module driven by ROS~2 velocity commands through micro-ROS (wheel locomotion).}
+\label{pr3:fig:video}
+\end{figure}
+
+
+% ----------------------------------------------------------------------
+\subsection{Remaining Work}
+% ----------------------------------------------------------------------
+
+\begin{itemize}
+  \item Tune the velocity and position gains on the module and record step responses
+        (overshoot, settling time, steady-state error) for the Phase~A test plan (Section~\ref{sec:software-testing}).
+  \item Test pan and tilt through ROS~2 (\texttt{head\_position\_controller/commands}); verify the direction signs ($K_t$, $K_p$) and widen the $\pm\SI{0.5}{rad}$
+        limits after testing; add homing, since the encoders are incremental.
+  \item Check the sign convention of the feedback topics against the commanded direction,
+        and integrate \texttt{esp32/vel\_state} into an odometry estimate on the PC.
+  \item Make the module namespace configurable (for example in \texttt{menuconfig}) so that
+        several modules can run the same build.
+  \item ESP32-C6 GPIO4 and GPIO5 are strapping pins. No problem has been seen so far, but if the
+        ESP32 misbehaves at boot only while the STM32 is connected, the UART should move to
+        other pins on the Phase~A main board.
+  \item Carry the Table~\ref{pr3:tab:pins} pin map and the PC15 standby pin into the Phase~A
+        main-board PCB.
+\end{itemize}
 
 \clearpage
 % ================================================================
@@ -1332,12 +1888,75 @@ The new coil and magnet configuration yields significant performance improvement
 \end{itemize}
 
 \subsection{Current Progress and Procurement Challenges}
-All theoretical calculations, parameter definitions, and geometric models have been successfully completed. We have ordered the SWG 28 double-coated enameled copper wire, NdFeB N52 magnets, Kapton tape, and high-viscosity CA glue gel. 
+\label{sec:ep-progress}
+% ======================================================================
 
-However, we are navigating two primary manufacturing and procurement hurdles before constructing our initial 8-EP prototype:
+The EP magnet follows the design above: an AlNiCo~5 and an NdFeB~N52 rod, both
+$\varnothing5\times\SI{15}{mm}$, between two low-carbon steel pole pieces, wound with 210
+turns of SWG~28 wire (6 layers $\times$ 35 turns). This period focused on the two
+procurement and fabrication problems reported in Progress Report~2: sourcing the AlNiCo~5 magnets and making the pole pieces.
+
+\subsubsection{Procurement}
+
+The AlNiCo~5 magnets, which were the hardest part to source, have now been ordered from a
+supplier in China. With this order, all the materials for the first EP magnets have been
+purchased or ordered (Table~\ref{pr3:tab:epbom}). The coil driver (half-bridges rated for at
+least \SI{10}{A}) has not been bought yet.
+
+\begin{table}[H]
+\centering
+\caption{EP magnet material status.}
+\label{pr3:tab:epbom}
+\small
+\begin{tabularx}{\linewidth}{l >{\raggedright\arraybackslash}X l}
+\toprule
+Part & Specification & Status \\
+\midrule
+AlNiCo 5 rod            & $\varnothing5\times\SI{15}{mm}$ & Ordered from China \\
+NdFeB N52 rod           & $\varnothing5\times\SI{15}{mm}$, Ni-Cu-Ni coating & Purchased \\
+Magnet wire             & SWG 28, double-coated enamel, \SI{220}{\celsius} class, \SI{98.4}{m} (\SI{0.1}{kg}) & Purchased \\
+Pole-piece stock        & SS400 steel rod, $\varnothing\SI{12}{mm}$ & In hand; machine access arranged \\
+Kapton tape, CA glue gel& \SI{15}{mm} tape; high-viscosity gel & Purchased \\
+Coil driver             & Half-bridge, $\geq\SI{10}{A}$ per channel & Not yet ordered \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The wire on hand is enough for the first prototype: at \SI{7.1}{m} per EP magnet
+(coil design above), the 8-EP prototype needs about \SI{57}{m} of the \SI{98.4}{m} reel.
+
+\subsubsection{Pole-Piece Fabrication}
+
+External machine shops and wire-cut services would not take the pole pieces because they are
+too small. The team will therefore make them in-house from a $\varnothing\SI{12}{mm}$ SS400
+steel rod. Use of the milling and cutting machines at the Hans Building has been arranged,
+and the team is ready to start milling and cutting the rod to the pole-piece geometry of
+Figure~\ref{fig:pole_piece}: a
+\SI{10.6}{mm} body, a \SI{9.6}{mm} semicircular contact foot, \SI{11.8}{mm} total height, with
+the contact plane standing \SI{0.5}{mm} out from the module face.
+
+SS400 is a general structural steel (JIS G3101). The standard specifies its strength rather
+than its carbon content, but the grade is normally a low-carbon steel, so it is expected to
+behave like the low-carbon steel assumed in the flux calculation above; this will be confirmed in the first
+holding-force test. The \SI{12}{mm} rod leaves about \SI{0.7}{mm} of stock on each side of the
+\SI{10.6}{mm} body for machining.
+
+The foot is the dimension that needs the most care. From the flux calculation above, the minimum foot diameter that
+keeps the steel below the assumed saturation of \SI{1.5}{T} is \SI{9.52}{mm}, against
+the \SI{9.6}{mm} design. A foot machined more than about \SI{0.08}{mm} undersize would
+therefore push the steel into saturation and reduce the holding force. The contact faces also
+need to be flat and level with each other, since any air gap between two connected faces
+reduces the holding force.
+
+\subsubsection{Next Steps}
+
 \begin{enumerate}
-    \item \textbf{AlNiCo 5 Sourcing:} The primary supplier is in China, creating purchasing and logistical roadblocks. It is exceptionally hard to find the perfect size ($\varnothing 5 \times 15$~mm) and grade (AlNiCo 5). We are actively seeking alternative vendors to prevent assembly delays.
-    \item \textbf{Pole Piece Fabrication:} Standard external machine shops and wire-cut services refuse to accept our custom cutting requirements due to the low-carbon steel pole pieces being exceptionally small. We plan to utilize the CNC machining facilities at the university to manufacture these pieces ourselves.
+  \item Mill and cut the pole pieces from the SS400 rod and measure the foot diameters and heights.
+  \item Wind the coils (210 turns, 6 $\times$ 35) and check each coil's resistance against the
+        calculated \SI{1.105}{\ohm}.
+  \item Assemble the first EP magnets when the AlNiCo~5 rods arrive.
+  \item Select and order the $\geq\SI{10}{A}$ half-bridge driver, then run the first
+        switching and holding-force tests (EP Face 1st Test in the schedule).
 \end{enumerate}
 
 % 
@@ -1377,6 +1996,10 @@ Kuhn, H.\ W. (1955). The Hungarian method for the assignment problem.
 \bibitem{munkres1957}
 Munkres, J. (1957). Algorithms for the assignment and transportation problems.
 \textit{Journal of the SIAM}, 5(1), 32--38.
+
+\bibitem{microros}
+micro-ROS project. \textit{micro-ROS: ROS~2 for microcontrollers}.
+\url{https://micro.ros.org}
 
 \end{thebibliography}
 

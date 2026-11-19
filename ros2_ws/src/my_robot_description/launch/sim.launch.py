@@ -29,6 +29,8 @@ def spawn_modules(context):
     bridge_args = ['/clock@rosgraph_msgs/msg/Clock[ignition.msgs.Clock']
     bridge_remaps = []
 
+    prev_controller = None
+
     for i in range(1, num_modules + 1):
         ns = f'module_{i}'
         y = (i - 1 - (num_modules - 1) / 2) * spacing  # centered row
@@ -69,7 +71,9 @@ def spawn_modules(context):
                        'head_position_controller'],
             output='screen'
         )
-        actions.append(RegisterEventHandler(OnProcessExit(target_action=spawn, on_exit=[controllers])))
+        trigger = spawn if prev_controller is None else prev_controller
+        actions.append(RegisterEventHandler(OnProcessExit(target_action=trigger, on_exit=[controllers])))
+        prev_controller = controllers  
 
         # Ground truth from Gazebo -> /module_i/ground_truth/odom and /tf
         bridge_args += [

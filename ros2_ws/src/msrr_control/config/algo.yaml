@@ -5,7 +5,13 @@ algo_node:
     rate: 10.0                      # Hz
     max_linear: 0.049               # m/s (50 RPM motor / 5.333 wheel gear * 0.05 m)
     max_angular: 1.0                # rad/s
-    goal_tolerance: 0.01            # m
-    # [x1, y1, x2, y2, x3, y3] in metres, world frame.
-    # Sim spawns module_1..3 at y = -0.3, 0, 0.3 (x = 0).
-    goals: [0.3, -0.3,  0.3, 0.0,  0.3, 0.3]
+    goal_tolerance: 0.01            # m, pre-dock and dock positions
+    waypoint_tolerance: 0.02        # m, intermediate grid nodes
+    heading_tolerance: 0.05         # rad
+    module_width: 0.107             # m, centre-to-centre when docked
+    grid: 0.107                     # m, keep equal to module_width so slots sit on grid nodes
+    # Target shape: 'u,cu,v,cv' = slot u face cu docks to slot v face cv.
+    # L-shape, corner at slot 0:  [2]
+    #                              |
+    #                             [0]-[1]
+    connections: ['1,B,0,T', '2,B,0,L']

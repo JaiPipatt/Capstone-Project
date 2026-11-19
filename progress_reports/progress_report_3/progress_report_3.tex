@@ -1811,6 +1811,110 @@ $v_3$ & module\_1 & $(0,\ -0.1,\ 0^\circ)$ \\
 
 \clearpage
 % ================================================================
+\section{Helper-Free Side (L/R) Docking}
+\label{sec:side-docking}
+
+\subsection{Problem and the Original Method}
+
+An L/R connection joins a module's wheel face to a face of its parent. Two properties of a differential-drive module make this hard:
+
+\begin{enumerate}[topsep=2pt,itemsep=2pt,parsep=0pt,leftmargin=1.5em]
+\item \textbf{The wheel face cannot move sideways.} The face normal points along the wheel axle, and a differential-drive module cannot translate along its axle. It therefore cannot simply drive its wheel face straight into the parent as it does for T/B connections.
+\item \textbf{The wheel face rotates while the module drives.} The face is part of the wheel, so its angle changes with every metre travelled. The EP connector only mates when the pattern on the wheel face lines up with the pattern on the parent face, so the final wheel angle is also a docking condition.
+\end{enumerate}
+
+In the parallel self-assembly method of Liu et al.\ \cite{liu2023}, which our planner follows (Section~\ref{sec:nav-plan}), L/R connections need a \textbf{helper module} to lift the moving module during docking. The extra module adds time, extra tasks in the assembly sequence, and an extra module that must be free and nearby. For this reason, Section~\ref{sec:nav-dock} proposed that L/R connections might be excluded.
+
+\subsection{Our Approach: Trajectory Planning for the Docking Wheel}
+
+To close this gap, we plan the module's whole final motion so that the wheel face arrives in the correct place, with the correct heading, \emph{and} at the correct wheel angle, with no helper. The method follows Wolfe et al.\ \cite{wolfe2010}, who generated such trajectories for wheeled modules that dock through their wheels. The approach has three parts: a closed-form nominal plan, an optimisation that lowers the motor effort, and a closed-loop executor.
+
+\subsubsection{Model and Docking Condition}
+
+As in \cite{wolfe2010}, the module pose is $g = (x, y, \theta)$, where $(x, y)$ is the midpoint of the axle and $\theta$ is the angle of the axle, so the driving direction is $\mathbf{h}(\theta) = (-\sin\theta, \cos\theta)$. With $\phi_1$ and $\phi_2$ the angles of the right and left wheels about their outward axes, wheel radius $r$ and wheel separation $W$,
+\begin{equation}
+\dot{g} = \frac{r}{2}
+\begin{bmatrix} \sin\theta & -\sin\theta \\ -\cos\theta & \cos\theta \\ -2/W & -2/W \end{bmatrix}
+\begin{bmatrix} \dot{\phi}_1 \\ \dot{\phi}_2 \end{bmatrix}.
+\end{equation}
+Driving straight forward corresponds to $\dot{\phi} = \omega_s(-1, 1)$. For docking wheel $d \in \{1, 2\}$, the docking condition is
+\begin{equation}
+\mathbf{p}_d(T) = \mathbf{p}_f, \qquad \theta(T) = \theta_f, \qquad \phi_d(T) \equiv \phi_f \pmod{\pi/2},
+\end{equation}
+where $\mathbf{p}_d$ is the centre of wheel $d$, and $\mathbf{p}_f$ is placed a small gap (\SI{3}{mm}) off the parent face, so that the EP magnets close the last gap.
+
+\textbf{Change from the paper.} Wolfe et al.\ require the wheel angle modulo $\pi$. The EP face has four-fold symmetry, so we use modulo $\pi/2$. This doubles the number of valid final wheel angles.
+
+\subsubsection{Nominal Plan: Pivot, Straight, Pivot, Straight}
+
+The module first pivots about its docking wheel, drives straight to an intermediate point $\mathbf{p}_1$, and pivots about the docking wheel again to the final heading $\theta_f$. It then drives straight along $\mathbf{h}(\theta_f)$, so the wheel face slides along the parent face into $\mathbf{p}_f$. In each pivot, wheel $d$ is held still and only the other wheel turns, so the docking wheel's angle changes \emph{only} during the two straights. Its total rotation is then fixed by the total distance driven.
+
+Let $\mathbf{p}_1 = \mathbf{p}_f + s\,\mathbf{h}(\theta_f)$, with $\mathbf{q} = \mathbf{p}_f - \mathbf{p}_0$ and $b = \mathbf{q} \cdot \mathbf{h}(\theta_f)$. For each integer $k$, the signed distance that wheel $d$ must roll to end at a valid angle is
+\begin{equation}
+c_k = \sigma_d\, r \left(\phi_f - \phi_{d,0} + k\frac{\pi}{2}\right),
+\end{equation}
+where $\sigma_d = \mp 1$ is the wheel's sign when driving forward. Requiring the two straights to add up to $c_k$ gives a closed-form position for $\mathbf{p}_1$:
+\begin{equation}
+s_k = \frac{c_k^2 - |\mathbf{q}|^2}{2\,(b - c_k)}.
+\end{equation}
+Candidates with a final straight shorter than a set minimum (\SI{0.16}{m}) are rejected. The plan with the lowest effort is selected.
+
+\textbf{Effort.} The motor effort is $J = \tfrac{1}{2}\int_0^T (\dot{\phi}_1^2 + \dot{\phi}_2^2)\,dt$. Pivots are run with the one moving wheel at $\sqrt{2}\,\omega_s$, which keeps the effort rate the same in every segment, so for a time budget $T$,
+\begin{equation}
+J = \frac{L^2}{r^2 T}, \qquad L = D_{01} + |s| + \frac{W}{\sqrt{2}}\left(|\Delta\theta_{01}| + |\Delta\theta_{1f}|\right),
+\end{equation}
+where $D_{01}$ is the length of the first straight, and $\Delta\theta_{01}$ and $\Delta\theta_{1f}$ are the two pivot angles. If a wheel would exceed the motor limit, $T$ is increased.
+
+\subsubsection{Optimisation: Sinusoidal Perturbations}
+
+Following \cite{wolfe2010}, the nominal wheel angles are perturbed by sine terms that are zero at both ends:
+\begin{equation}
+\phi_i(t) = \phi_i^{\mathrm{nom}}(t) + \sum_{j=1}^{N} \varepsilon_{ij} \sin\!\left(\frac{j\pi t}{T}\right), \qquad i = 1, 2.
+\end{equation}
+The wheel angles at $t = 0$ and $t = T$ do not change, so the final wheel angle and the final heading (which depends only on $\phi_1 + \phi_2$) are kept automatically. With this basis, $J$ is exactly quadratic in $\varepsilon$. Only $x(T)$ and $y(T)$ must be constrained, so the problem is solved with sequential quadratic programming (a KKT system at each step) with a line search. We use $N = 10$ terms per wheel. A SciPy SLSQP solver was used as an independent check and gives the same optimum.
+
+\subsubsection{Execution and Simulation Calibration}
+
+The plan is executed segment by segment in closed loop. A pivot ends when the heading error is below \SI{0.005}{rad}. A straight ends on the docking wheel's \emph{encoder} angle, not on time, so the wheel-angle condition holds even if the module is slow. During straights, the heading and the cross-track error of the docking wheel are corrected. Two model values were measured in Gazebo and used by the planner: the effective rolling radius (\SI{0.0492}{m} versus \SI{0.05}{m}) and the separation about which a held wheel actually pivots (\SI{0.1028}{m} versus \SI{0.0967}{m}).
+
+\subsection{Results}
+
+\textbf{Unit tests (offline).} Fifteen tests check the model against the URDF and controller, and the planner on random cases. In 60 random cases, the nominal plan reaches $\mathbf{p}_f$ within \SI{1}{mm}, $\theta_f$ within \ang{0.5}, and the wheel angle within \SI{1e-3}{rad}. The optimisation never increases $J$ and keeps the constraints. Over 50 random cases, using modulo $\pi/2$ instead of modulo $\pi$ lowered $J$ by \SI{7.2}{\percent} on average (up to \SI{41}{\percent}).
+
+\textbf{Two-module simulation.} In Gazebo, the moving module docked its left wheel face to the right face of the root module without a helper (Table~\ref{tab:side-dock-2}).
+
+\begin{table}[!htbp]
+\centering
+\caption{Two-module helper-free L/R docking in simulation (connection \texttt{1,L,0,R}).}
+\label{tab:side-dock-2}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Quantity} & \textbf{Value} \\
+\midrule
+Position error of the docking wheel & \SI{0.2}{mm} \\
+Gap to the parent face (target \SI{3}{mm}) & \SI{2.9}{mm} \\
+Heading error & \ang{0.02} \\
+Wheel-angle error (mod $\pi/2$) & \SI{0.005}{rad} \\
+Effort $J$: nominal / optimised / executed & 5.263 / 4.965 / 5.037 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The executor tracks the nominal plan, so the executed effort is close to the nominal value. The optimised plan is \SI{5.7}{\percent} lower, but it is currently only computed, not executed.
+
+\subsection{Remaining Work}
+
+\begin{itemize}[topsep=2pt,itemsep=2pt,parsep=0pt]
+\item Run the three-module side-by-side test of Table~\ref{tab:nav-n1}, in which both outer modules dock to the root in parallel.
+\item Execute the optimised trajectory instead of the nominal one.
+\item Take the target wheel angle $\phi_f$ from the parent face's actual orientation; it is currently a fixed parameter.
+\item Add collision checking between modules during the pivots.
+\item Verify the wheel-angle condition on hardware once the EP faces are built (Section~\ref{sec:phase-b-magnet}).
+\end{itemize}
+
+\clearpage
+% ================================================================
 \section{Preparation for Phase B: EP Magnet}
 \label{sec:phase-b-magnet}
 
@@ -1978,6 +2082,12 @@ doi:10.1007/s10514-022-10078-1.
 Liu, C., \& Yim, M. (2019). Configuration recognition with distributed
 information for modular robots. In \textit{Robotics Research (ISRR 2017)},
 Springer Proceedings in Advanced Robotics, vol.\ 10 (pp.\ 967--983).
+
+\bibitem{wolfe2010}
+Wolfe, K.\ C., Kutzer, M.\ D.\ M., Armand, M., \& Chirikjian, G.\ S. (2010).
+Trajectory generation and steering optimization for self-assembly of a modular
+robotic system. In \textit{IEEE International Conference on Robotics and
+Automation (ICRA)}.
 
 \bibitem{binder2019}
 Binder, B., Beck, F., K\"onig, F., \& Bader, M. (2019). Multi robot route

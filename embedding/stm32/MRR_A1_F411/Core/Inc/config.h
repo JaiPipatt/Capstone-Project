@@ -61,20 +61,30 @@
  *   counts = 4 * PPR * G * (48 / 9)                                          */
 #define ENC_CPR_SPUR    (ENC_DECODE_X * ENC_PPR * MOTOR_GEARBOX_RATIO * (SPUR_TEETH / PINION_TEETH))
 
-#define ENC_CPR_M1            ENC_CPR_SPUR    /* M1 left  wheel  (TIM1, 16-bit) */
-#define ENC_CPR_M2            ENC_CPR_SPUR    /* M2 inner right  (TIM2, 32-bit) */
-#define ENC_CPR_M3            ENC_CPR_SPUR    /* M3 inner left   (TIM4, 16-bit) */
-#define ENC_CPR_M4            ENC_CPR_SPUR    /* M4 right wheel  (TIM5, 32-bit) */
+#define ENC_CPR_M1  ENC_CPR_SPUR
+#define ENC_CPR_M2  ENC_CPR_SPUR
+#define ENC_CPR_M3  ENC_CPR_SPUR
+#define ENC_CPR_M4  ENC_CPR_SPUR
 
 /* +1 or -1. Flip until "positive duty" gives "positive encoder count". [TODO] */
-#define MOTOR_DIR_SIGN_M1     (-1)
-#define MOTOR_DIR_SIGN_M2     (+1) 
-#define MOTOR_DIR_SIGN_M3     (-1)
-#define MOTOR_DIR_SIGN_M4     (+1)
-#define ENC_SIGN_M1           (+1)
-#define ENC_SIGN_M2           (-1)
-#define ENC_SIGN_M3           (+1)
-#define ENC_SIGN_M4           (-1)
+// #define MOTOR_DIR_SIGN_M1     (-1)
+// #define MOTOR_DIR_SIGN_M2     (+1) 
+// #define MOTOR_DIR_SIGN_M3     (-1)
+// #define MOTOR_DIR_SIGN_M4     (+1)
+// #define ENC_SIGN_M1           (+1)
+// #define ENC_SIGN_M2           (-1)
+// #define ENC_SIGN_M3           (+1)
+// #define ENC_SIGN_M4           (-1)
+
+/* Signs follow the physical channels formerly labelled M3_IL, M2_IR, M1_L, M4_IR. */
+#define MOTOR_DIR_SIGN_M1  (-1)   /* old M3_IL */
+#define ENC_SIGN_M1        (+1)   /* old M3_IL */
+#define MOTOR_DIR_SIGN_M2  (+1)   /* old M2_IR */
+#define ENC_SIGN_M2        (-1)   /* old M2_IR */
+#define MOTOR_DIR_SIGN_M3  (-1)   /* old M1_L */
+#define ENC_SIGN_M3        (+1)   /* old M1_L */
+#define MOTOR_DIR_SIGN_M4  (+1)   /* old M4_R */
+#define ENC_SIGN_M4        (-1)   /* old M4_R */
 
 /* Low-pass on measured speed: v += alpha * (v_raw - v).
  * Smaller = smoother but slower.                                       [TUNE] */

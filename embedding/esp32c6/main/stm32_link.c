@@ -49,7 +49,7 @@ static void rx_task(void *arg)
             StatePayload st;
             uint32_t age_ms;
             if (stm32_link_get_state(&st, &age_ms)) {
-                ESP_LOGI(TAG, "STM32 ok | age=%u ms flags=%u | pos[rad] M1..M4 = %.3f %.3f %.3f %.3f",
+                ESP_LOGI(TAG, "STM32 ok | age=%u ms flags=%u | pos[rad] M1_iL M2_iR M3_L M4_R = %.3f %.3f %.3f %.3f",
                          (unsigned)age_ms, (unsigned)st.flags,
                          (double)st.pos[0], (double)st.pos[1], (double)st.pos[2], (double)st.pos[3]);
             } else {

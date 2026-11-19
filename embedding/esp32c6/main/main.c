@@ -76,7 +76,7 @@ static uint32_t now_ms(void)
 }
 
 /* Commands -> IK -> 4 motor targets -> STM32 (resent by the link task at 50 Hz).
- * Motor order: [0]=M1_L [1]=M2_IR [2]=M3_IL [3]=M4_R */
+    * Motor order: [0]=M1_iL [1]=M2_iR [2]=M3_L [3]=M4_R */
 static void update_stm32_command(void)
 {
     CmdPayload c;
@@ -117,7 +117,7 @@ static void timer_cb(rcl_timer_t *timer, int64_t last_call_time)
     if (!stm32_link_get_state(&st, &age_ms) || age_ms > STATE_STALE_MS) return;
 
     float pan, tilt;
-    kin_pantilt_fk(&KIN, st.pos[2], st.pos[1], &pan, &tilt);
+    kin_pantilt_fk(&KIN, st.pos[0], st.pos[1], &pan, &tilt);
     msg_head_out.x = tilt;                       /* x = tilt, y = pan (same order as [tilt, pan]) */
     msg_head_out.y = pan;
     msg_head_out.z = 0.0;
@@ -125,7 +125,7 @@ static void timer_cb(rcl_timer_t *timer, int64_t last_call_time)
 
     if (kin_wheels_valid(&KIN)) {
         float v, w;
-        kin_wheels_fk(&KIN, st.vel[0], st.vel[3], &v, &w);
+        kin_wheels_fk(&KIN, st.vel[2], st.vel[3], &v, &w);
         msg_vel_out.linear.x  = v;
         msg_vel_out.angular.z = w;
         RCSOFTCHECK(rcl_publish(&pub_vel_state, &msg_vel_out, NULL));
@@ -295,23 +295,53 @@ static void micro_ros_task(void *arg)
     }
 }
 
+// void app_main(void)
+// {
+// #if defined(CONFIG_MICRO_ROS_ESP_NETIF_WLAN)
+//     printf("=== Wi-Fi network (SSID): \"%s\"  | micro-ROS agent: %s:%s ===\n",
+//            CONFIG_ESP_WIFI_SSID, CONFIG_MICRO_ROS_AGENT_IP, CONFIG_MICRO_ROS_AGENT_PORT);
+// #endif
+// #if defined(CONFIG_MICRO_ROS_ESP_NETIF_WLAN) || defined(CONFIG_MICRO_ROS_ESP_NETIF_ENET)
+//     ESP_ERROR_CHECK(uros_network_interface_initialize());
+// #endif
+
+//     if (!kin_wheels_valid(&KIN)) {
+//         printf("WARNING: WHEEL_RADIUS_M / TRACK_WIDTH_M are 0 in robot_config.h -> wheel commands are ignored\n");
+//     }
+
+//     stm32_link_init();
+
+//     xTaskCreate(micro_ros_task, "uros_task",
+//                 CONFIG_MICRO_ROS_APP_STACK, NULL,
+//                 CONFIG_MICRO_ROS_APP_TASK_PRIO, NULL);
+// }
+
+// to check the motor id
 void app_main(void)
 {
-#if defined(CONFIG_MICRO_ROS_ESP_NETIF_WLAN)
-    printf("=== Wi-Fi network (SSID): \"%s\"  | micro-ROS agent: %s:%s ===\n",
-           CONFIG_ESP_WIFI_SSID, CONFIG_MICRO_ROS_AGENT_IP, CONFIG_MICRO_ROS_AGENT_PORT);
-#endif
-#if defined(CONFIG_MICRO_ROS_ESP_NETIF_WLAN) || defined(CONFIG_MICRO_ROS_ESP_NETIF_ENET)
-    ESP_ERROR_CHECK(uros_network_interface_initialize());
-#endif
+    // 1. เปิดการเชื่อมต่อ UART กับ STM32
+    stm32_link_init(); 
 
-    if (!kin_wheels_valid(&KIN)) {
-        printf("WARNING: WHEEL_RADIUS_M / TRACK_WIDTH_M are 0 in robot_config.h -> wheel commands are ignored\n");
+    CmdPayload c;
+    int test_index = 0;
+
+    while(1) {
+        // 2. สั่งหยุดมอเตอร์ทุกตัวก่อน 2 วินาที (เพื่อความปลอดภัยและให้เห็นจังหวะหยุด)
+        memset(&c, 0, sizeof(c));
+        stm32_link_set_command(&c);
+        vTaskDelay(pdMS_TO_TICKS(2000));
+
+        // 3. สั่งหมุนมอเตอร์แค่ตัวเดียว (จ่ายไฟ 30% = 0.3f) เป็นเวลา 2 วินาที
+        memset(&c, 0, sizeof(c));
+        c.mode[test_index] = MODE_DUTY; 
+        c.target[test_index] = 0.3f;    
+        stm32_link_set_command(&c);
+        
+        // แสดงสถานะผ่านไฟ LED หรือแค่หน่วงเวลา (สำหรับรันด้วยแบตเตอรี่)
+        vTaskDelay(pdMS_TO_TICKS(2000));
+
+        // 4. สลับไปทดสอบมอเตอร์ตัวถัดไป (0 -> 1 -> 2 -> 3 -> วนกลับ 0)
+        test_index++;
+        if (test_index > 3) test_index = 0;
     }
-
-    stm32_link_init();
-
-    xTaskCreate(micro_ros_task, "uros_task",
-                CONFIG_MICRO_ROS_APP_STACK, NULL,
-                CONFIG_MICRO_ROS_APP_TASK_PRIO, NULL);
 }

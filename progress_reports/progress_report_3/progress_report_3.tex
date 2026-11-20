@@ -770,56 +770,6 @@ run time (Section~\ref{sec:power-new}).
 Phase A-1 is the bench version of the locomotion electronics. It tests the
 wiring, power path and firmware set-up that will move onto the Phase A PCBs.
 
-\subsubsection{Hardware Schematic}
-
-Figure~\ref{fig:a1-schematic} shows the Phase A-1 wiring. An STM32F411CEU6
-development board controls four N20 gearmotors through two dual-channel
-TB6612FNG H-bridge drivers (two motors each, shared standby line). Each motor
-has a PWM input and two direction inputs, and its quadrature encoder is read
-back by the MCU. M3 and M4 drive the left and right wheels; M1 and M2, the
-inner-left (iL) and inner-right (iR) motors, drive pan and tilt. An ESP32-C6 module provides the Wi-Fi link over UART,
-an ST-Link handles SWD programming, and USB gives a serial console for testing.
-
-Three buck converters run from the 3S pack through an XT30 connector. A 5\,V
-buck supplies the MCU board and the ESP32-C6; the MCU board's 3.3\,V regulator
-supplies the driver logic and the encoders. One 6\,V buck per TB6612FNG
-supplies the motors, so the N20s run at their rated voltage at full PWM duty.
-A \SI{100}{nF} capacitor across each motor suppresses brush noise, and a
-\SI{10}{k\ohm} pull-down on STBY keeps both drivers disabled until the MCU
-enables them.
-
-\begin{figure}[!htbp]
-  \centering
-  \figOrBox{\textwidth}{../image/Phase_A1_Schematic.png}
-  \caption{Phase A-1 hardware schematic.}
-  \label{fig:a1-schematic}
-\end{figure}
-
-\subsubsection{Hardware Packaging}
-
-Figure~\ref{fig:a1-cad} shows the Phase A-1 hardware placed in the module.
-Three parts stack front to back inside the module shell. The three 18350 cells
-sit in a vertical column at the back. In front of them is the regulator board
-with the three buck converters. The controller board, carrying the STM32F411
-board, both TB6612FNG drivers and the ESP32-C6, sits at the front.
-
-\begin{figure}[!htbp]
-  \centering
-  \begin{subfigure}[b]{0.36\textwidth}
-    \centering
-    \figOrBox{\linewidth}{../image/Phase_A1_CAD.png}
-    \caption{Assembled.}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.6\textwidth}
-    \centering
-    \figOrBox{\linewidth}{../image/Phase_A1_CAD_Exploded.png}
-    \caption{Exploded.}
-  \end{subfigure}
-  \caption{Phase A-1 hardware packaging.}
-  \label{fig:a1-cad}
-\end{figure}
-
 \subsubsection{A-1 Power Budget}
 
 Table~\ref{tab:a1-power} gives the Phase A-1 load on the 3S pack, using the
@@ -1337,49 +1287,7 @@ to the tilt face, with the battery cells in a column at the back of the module.
 \subsection{Later Phases (B--D)}
 \label{sec:elec-later}
 
-\subsubsection{Module Packaging}
-
-All components fit within the \SI{100}{mm} cube based on rough CAD placement (Figure~\ref{fig:elec-packaging}).
-
-\begin{figure}[!htbp]
-	\centering
-	\begin{subfigure}[b]{0.45\textwidth}
-		\centering
-		\includegraphics[width=\linewidth]{../image/Elec_Assembly.png}
-		\caption{Assembled.}
-		\label{fig:elec-assembly}
-	\end{subfigure}
-	\hfill
-	\begin{subfigure}[b]{0.45\textwidth}
-		\centering
-		\includegraphics[width=\linewidth]{../image/Elec_Exploded_View.png}
-		\caption{Exploded.}
-		\label{fig:elec-exploded}
-	\end{subfigure}
-	\caption{Electronics packaging.}
-	\label{fig:elec-packaging}
-\end{figure}
-
-\subsubsection{Wheel Encoder}
-
-Replacing the original continuous-rotation potentiometer ($\sim$5$^\circ$ resolution, contact wear) with a non-contact encoder. Three options considered:
-
-\begin{table}[H]
-\centering\small
-\caption{Wheel encoder options.}
-\label{tab:encoders}
-\begin{tabular}{@{}L{0.20\textwidth} L{0.24\textwidth} L{0.24\textwidth} L{0.24\textwidth}@{}}
-\toprule
-& \textbf{On-axis magnetic} (AS5600) & \textbf{Off-axis tape} & \textbf{Custom inductive} \\
-\midrule
-Output & Absolute, 12--14 bit & Incremental + index & Absolute \\
-EP interference & Sensitive & Sensitive & Immune \\
-Design effort & Low & Medium & High \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The inductive option best handles the EP connector's nearby field but has the highest schedule risk. Decision deferred to Phase C.
+Phases B to D are planned and their hardware is not built yet. The phased plan is in Section~\ref{sec:elec-overview}.
 
 \clearpage
 % ================================================================

@@ -28,9 +28,6 @@ def spawn_modules(context):
     actions = []
     bridge_args = ['/clock@rosgraph_msgs/msg/Clock[ignition.msgs.Clock']
     bridge_remaps = []
-    prev_controllers = None
-
-    prev_controller = None
 
     prev_controller = None
 

@@ -1747,49 +1747,81 @@ This plan covers the \textbf{simulation stage} only.
 
 Reconfiguration planning follows the parallel self-assembly method of Liu et al.\ \cite{liu2023}, which was developed for SMORES-EP, the platform on which our module is based. The method consists of three stages: assigning each physical module to a position in the target configuration, determining the order in which modules connect, and driving each module into place to dock. Coordinated motion of multiple modules without collisions is handled by the prioritised route planner of Binder et al.\ \cite{binder2019,binder2017}.
 
+\textbf{Progress since PR2.} The three planning stages, grid navigation and T/B docking are now implemented in the \texttt{msrr\_control} package and were run in Gazebo with three modules assembling an L-shape. One node, \texttt{algo\_node}, reads every module's pose (ground truth from the simulator for now), computes the plan once all poses are known, and sends velocity commands to the modules round by round at \SI{10}{Hz}, on the same command topics as the real module. \textbf{Avoidance between moving modules is not implemented yet.} Table~\ref{tab:nav-status} summarises the status.
+
+\begin{table}[H]
+\centering\small
+\caption{Status of the navigation and avoidance plan.}
+\label{tab:nav-status}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{3.4cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{2.5cm}@{}}
+\toprule
+\textbf{Part} & \textbf{Implementation} & \textbf{Status} \\
+\midrule
+Target shape & Tree of face-to-face connections; checked for connectivity, loops and overlapping modules & Done \\
+Task assignment & Root at the tree centroid; Hungarian algorithm on module-to-slot distances & Done \\
+Assembly sequence & Tree layers from the root; L/R parent faces first in the first layer & Done \\
+Grid navigation & 4-connected A* to a pre-dock point; assembled slots blocked & Done \\
+Avoidance between moving modules & Prioritised time-aware planning, conflict resolution, rescheduling & \textbf{Not implemented} \\
+Alignment and approach (T/B) & Turn to the goal heading, back into place & Done (sim) \\
+Alignment and approach (L/R) & Helper-free method (Section~\ref{sec:side-docking}) & Not yet in \texttt{algo\_node} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
 \subsubsection{Planning Stages}
 
-A target configuration is represented as a tree in which each edge specifies the two connecting faces: T (top, the pan face), B (bottom), or L/R (the left and right wheel faces) \cite{liu2017}. The planar pose of each module is denoted $[x, y, \theta]$.
+A target configuration is represented as a tree in which each edge specifies the two connecting faces: T (top, the pan face), B (bottom), or L/R (the left and right wheel faces) \cite{liu2017}. The planar pose of each module is denoted $[x, y, \theta]$. In the implementation, a shape is given as a list of connections $(u, c_u, v, c_v)$ (face $c_u$ of slot $u$ docks to face $c_v$ of slot $v$). It must be connected, have exactly $n-1$ connections, and no two slots may fall on the same cell when it is laid out.
 
 \begin{enumerate}[topsep=2pt,itemsep=2pt,parsep=0pt,leftmargin=1.5em]
-\item \textbf{Task assignment.} A root module is selected at the centre of the target configuration, and the pose of every target position is expressed relative to it. Likewise, the physical module closest to the centroid of the group is selected as the physical root, and all physical poses are expressed relative to it. The cost of assigning a module to a target position is the distance between their relative positions, and the Hungarian algorithm \cite{kuhn1955,munkres1957} finds the assignment with the minimum total distance. The output is a goal pose for every module.
-\item \textbf{Assembly sequence.} The configuration is assembled outward from the root, one tree layer at a time. Each module in a layer connects to a module that is already in place, so all modules in the same layer can move in parallel. Each connection is written $(m, c, \tilde{m}, \tilde{c}')$, meaning module $m$ connects its face $c$ to face $\tilde{c}'$ of module $\tilde{m}$. When several modules connect directly to the root, L/R connections are performed before T/B connections.
-\item \textbf{Docking.} Each module navigates to the vicinity of its parent, aligns with the target face, and approaches it (Sections~\ref{sec:nav-avoid} and~\ref{sec:nav-dock}).
+\item \textbf{Task assignment.} A root module is selected at the centre of the target configuration, and the pose of every target position is expressed relative to it. As implemented, the root slot $\tau$ is the centroid of the tree: with $\mathrm{CN}^v_c$ the number of modules reached through face $c$ of slot $v$, $\tau$ satisfies $\max_c \mathrm{CN}^{\tau}_c \le n/2$ \cite{liu2023}. The other slot poses are laid out from the root; a child slot $v$ whose face $c_v$ docks to face $c_p$ of its parent $p$ is placed at
+\begin{equation}
+  \bar{p}_v = \bar{p}_p \oplus
+  \big(w\cos\varphi_{c_p},\ w\sin\varphi_{c_p},\ \varphi_{c_p} + \pi - \varphi_{c_v}\big),
+\end{equation}
+where $\oplus$ is planar pose composition, $\varphi_T = 0$, $\varphi_L = \pi/2$, $\varphi_B = \pi$, $\varphi_R = -\pi/2$ are the face directions in the module frame, and $w = \SI{0.107}{m}$ is the centre-to-centre distance of two docked modules. The physical module closest to the centroid of the group is selected as the physical root; it stays still, and the shape is built around it, aligned with its heading. The cost of assigning a module to a target position is the distance between their relative positions, and the Hungarian algorithm \cite{kuhn1955,munkres1957} (SciPy \texttt{linear\_sum\_assignment}) finds the assignment with the minimum total distance. The output is a goal pose for every module.
+\item \textbf{Assembly sequence.} The configuration is assembled outward from the root, one tree layer at a time. Each module in a layer connects to a module that is already in place, so all modules in the same layer can move in parallel. Each connection is written $(m, c, \tilde{m}, \tilde{c}')$, meaning module $m$ connects its face $c$ to face $\tilde{c}'$ of module $\tilde{m}$. When several modules connect directly to the root, L/R connections are performed before T/B connections. The next round starts when every module of the current round has docked.
+\item \textbf{Docking.} Each module navigates to a \emph{pre-dock} point one grid cell further out from its parent than its goal, with the goal heading, then aligns with the target face and approaches it (Sections~\ref{sec:nav-avoid} and~\ref{sec:nav-dock}).
 \end{enumerate}
 
 \subsubsection{Navigation and Collision Avoidance}
 \label{sec:nav-avoid}
 
-The workspace is discretised into a \SI{10}{cm} grid \cite{liu2023}, and routes are planned over its cells. Each module is modelled as a differential-drive robot, with forward velocity $v$ and angular velocity $\omega$ produced by the two wheels:
+The workspace is discretised into a grid \cite{liu2023}, and routes are planned over its cells. Each module is modelled as a differential-drive robot, with forward velocity $v$ and angular velocity $\omega$ produced by the two wheels:
 \begin{equation}
 \begin{bmatrix} \dot{x} \\ \dot{y} \\ \dot{\theta} \end{bmatrix} =
 \begin{bmatrix} \cos\theta & 0 \\ \sin\theta & 0 \\ 0 & 1 \end{bmatrix}
 \begin{bmatrix} v \\ \omega \end{bmatrix}.
 \end{equation}
 
-Each module first navigates to a waypoint one grid cell away from its docking pose.
+\textbf{Implemented: grid navigation.} The grid is centred on the physical root and aligned with its heading, and covers all start and pre-dock points plus two cells of margin. The cell size is \SI{0.107}{m}, equal to $w$, so that every slot lies on a grid node (PR2 planned \SI{10}{cm}). Each moving module's route runs from its start, through the nodes found by a 4-connected A* search (Manhattan heuristic), to its pre-dock point. The root and the slots filled in earlier rounds are blocked. The module follows the route with $\omega = 2e_\psi$ and $v = \min(v_\text{max}, 0.5d)$, driving forward only once the bearing error $|e_\psi| < \SI{0.3}{rad}$, where $d$ is the distance to the next waypoint. Speeds are limited to $v_\text{max} = \SI{0.049}{m/s}$ and $\omega_\text{max} = \SI{1}{rad/s}$. A waypoint counts as reached within \SI{2}{cm}, the pre-dock point within \SI{1}{cm}.
+
+\textbf{Not yet implemented: avoidance between moving modules.} Modules that move in the same round currently plan independently and do not avoid each other. The following parts of the plan remain to be implemented:
 
 \begin{itemize}
 \item \textbf{Prioritised planning.} Modules are assigned a priority order and planned sequentially. Each route is found with a time-aware A* search, in which a cell occupied by a previously planned module at a given time is treated as blocked. Waiting in place is permitted, and cell reservations overlap slightly in time so that two modules exchanging cells are detected as a collision.
 \item \textbf{Conflict resolution.} When a route is blocked, the planner applies five strategies in order: backtracking and waiting, yielding into a side branch at a crossing, yielding from the start cell, vacating the goal cell for a higher-priority module, and pushing the waiting position further along the route.
 \item \textbf{Rescheduling.} If no route is found, the maximum speed of the module causing the most conflicts is reduced. If this is insufficient, the priorities of the two most conflicting modules are swapped and planning is repeated.
-\item \textbf{Execution.} Each route segment carries a precondition of the form ``module $x$ has passed step $n$''. Each module tracks its route with a PID controller and publishes its current step, allowing the other modules to check their preconditions.
+\item \textbf{Execution.} Each route segment carries a precondition of the form ``module $x$ has passed step $n$''. Each module tracks its route and publishes its current step, allowing the other modules to check their preconditions.
 \end{itemize}
 
 \subsubsection{Alignment and Approach}
 \label{sec:nav-dock}
 
-On reaching its waypoint, the module aligns with the target face. Let $(x', y', \theta')$ denote the module's pose error relative to its docking pose. For L/R connections, the controller drives $x'$ and $\theta'$ to zero; for T/B connections, it drives $y'$ and $\theta'$ to zero. The module then moves straight forward until it contacts its parent. As the simulation does not model the EP magnets, a dock is considered successful when the modules are in contact and the residual error is within a set tolerance. On the physical system, L/R connections require a helper module to lift the moving module \cite{liu2023}; this connection type may therefore be excluded to reduce project complexity.
+On reaching its pre-dock point, the module aligns with the target face. As implemented for T/B connections, it first turns in place ($\omega = 2e_\theta$) until its heading error to the goal is below \SI{0.05}{rad}. It then approaches with $v = -0.5e_x$ and $\omega = -2e_\theta$, where $(e_x, e_y, e_\theta)$ is its pose error in the goal's frame, until $|e_x| < \SI{1}{cm}$. The negative sign makes the module back into place, since it docks with its B face. The lateral error $e_y$ is not yet corrected or checked. As the simulation does not model the EP magnets, docked modules are not joined.
+
+A connection in which the \emph{moving} module would use an L or R face is currently skipped by \texttt{algo\_node}, because a differential-drive module cannot move sideways into place. In the original method these connections need a helper module to lift the moving module \cite{liu2023}. The helper-free method of Section~\ref{sec:side-docking} was developed for this case and will be added to the node.
 
 \subsubsection{Test Procedure}
 
 \textbf{Setup.} Gazebo Fortress spawns $N$ modules in a row, each with its own differential-drive controller. Ground-truth poses from the simulator replace AprilTag localisation, and the linear speed is limited to \SI{0.049}{m/s} to match the physical motors.
 
-\textbf{Tests.} Tests are performed in increasing order of complexity: the planner in isolation (verifying that the assignment is optimal against an exhaustive search and that the assembly sequence is correct); single-module navigation to a goal; two-module conflict scenarios (head-on, crossing paths, an occupied goal, and a narrow passage); alignment and approach; and finally assembly of the goal configurations listed above.
+\textbf{Tests.} Tests are performed in increasing order of complexity: the planner in isolation (verifying that the assignment is optimal against an exhaustive search and that the assembly sequence is correct); single-module navigation to a goal; two-module conflict scenarios (head-on, crossing paths, an occupied goal, and a narrow passage); alignment and approach; and finally assembly of the goal configurations listed above. The two-module conflict scenarios wait for the avoidance planner.
 
 \textbf{Metrics.} Success rate, number of collisions (centre distance below one module width), planning time, total completion time, path-tracking error, and final alignment error.
 
-\textbf{Initial test case.} The first planner test uses three modules connected side by side ($v_3$--$v_2$--$v_1$, joined L to R), starting from the default simulation spawn positions. The expected output is shown in Table~\ref{tab:nav-n1}: the middle module becomes the root, and both outer modules connect to it in parallel. As this configuration uses only L/R connections, it would be affected if that connection type is excluded.
+\textbf{Unit tests.} Thirteen offline tests of the planner and the grid pass: root selection for 4- and 5-module chains and its independence from the search start, the slot layout of a T--T pair, the rounds of a five-module cross with a tail, loop rejection, L-shape acceptance, nearest-module assignment, the grid frame conversion, and A* on a straight line, around a blocked node and with no path.
+
+\textbf{Initial test case.} The first planner test uses three modules connected side by side ($v_3$--$v_2$--$v_1$, joined L to R), starting from the default simulation spawn positions. The expected output is shown in Table~\ref{tab:nav-n1}: the middle module becomes the root, and both outer modules connect to it in parallel. As this configuration uses only L/R connections, it needs the L/R docking of Section~\ref{sec:side-docking}.
 
 \begin{table}[!htbp]
 \centering
@@ -1808,6 +1840,75 @@ $v_3$ & module\_1 & $(0,\ -0.1,\ 0^\circ)$ \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\textbf{L-shape test (first simulation).} Because L/R docking is not yet in the node, the first test run in Gazebo was an L-shape, connections $(1, B, 0, T)$ and $(2, B, 0, L)$, in which both moving modules dock with their B face. The modules start from the same spawn positions. Slot~0, the corner, is the only slot that satisfies the root condition ($\mathrm{CN}^0 = \{T{:}1, L{:}1\}$, $\mathrm{CN}^1 = \mathrm{CN}^2 = \{B{:}2\}$). The planner output is given in Table~\ref{tab:nav-lshape} and Figure~\ref{fig:nav-lshape}: module\_2 is the physical root, the L-face connection comes first, and in round~2 module\_1 goes around the root to the pre-dock point in front of it and backs onto the root's T face. With one moving module per round, the missing avoidance does not affect this test.
+% TODO: add the measured final pose errors (and a Gazebo screenshot) of the L-shape run.
+
+\begin{table}[!htbp]
+\centering\small
+\caption{Planner output for the L-shape test (world frame).}
+\label{tab:nav-lshape}
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Slot} & \textbf{Module} & \textbf{Pre-dock $(x, y)$ [m]} & \textbf{Goal $(x, y, \theta)$} \\
+\midrule
+0 (root) & module\_2 & -- & $(0,\ 0,\ 0^\circ)$, does not move \\
+2 & module\_3 & $(0,\ 0.214)$ & $(0,\ 0.107,\ 90^\circ)$ \\
+1 & module\_1 & $(0.214,\ 0)$ & $(0.107,\ 0,\ 0^\circ)$ \\
+\midrule
+\multicolumn{4}{@{}l}{Round 1: (module\_3, B, module\_2, L) \qquad Round 2: (module\_1, B, module\_2, T)} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}[x=12cm, y=12cm, font=\sffamily\scriptsize, >={Stealth[length=1.6mm]}]
+  % grid nodes
+  \foreach \i in {-1,...,3} \foreach \j in {-3,...,3}
+    \fill[black!30] (0.107*\i, 0.107*\j) circle (0.5pt);
+  % goal slots
+  \draw[thick, dashed] (0.107-0.045,-0.045) rectangle (0.107+0.045,0.045);
+  \draw[thick, dashed] (-0.045,0.107-0.045) rectangle (0.045,0.107+0.045);
+  \node[anchor=west] at (0.157,0.045) {slot 1};
+  \node[anchor=west] at (0.050,0.140) {slot 2};
+  % start poses
+  \draw[thick, fill=black!10] (-0.045,-0.345) rectangle (0.045,-0.255);
+  \draw[thick, fill=stmorange] (-0.045,-0.045) rectangle (0.045,0.045);
+  \draw[thick, fill=black!10] (-0.045,0.255) rectangle (0.045,0.345);
+  \node[anchor=east] at (-0.055,-0.300) {module\_1};
+  \node[anchor=east, align=right] at (-0.055,0) {module\_2\\(root, fixed)};
+  \node[anchor=east] at (-0.055,0.300) {module\_3};
+  \foreach \y in {-0.3,0,0.3} \draw[->, thick] (0,\y) -- (0.035,\y);
+  % round 1: module_3
+  \draw[very thick, red!70!black, ->] (0,0.3) -- (0,0.321) -- (0,0.214);
+  \draw[thick, red!70!black, dashed, ->] (0.012,0.214) -- (0.012,0.152);
+  \fill[red!70!black] (0,0.214) circle (1.2pt);
+  \node[anchor=west, text=red!70!black] at (0.06,0.24) {round 1};
+  % round 2: module_1
+  \draw[very thick, blue!70!black, ->] (0,-0.3) -- (0,-0.321) -- (0,-0.107)
+       -- (0.107,-0.107) -- (0.107,0) -- (0.214,0);
+  \draw[thick, blue!70!black, dashed, ->] (0.214,0.014) -- (0.152,0.014);
+  \fill[blue!70!black] (0.214,0) circle (1.2pt);
+  \node[anchor=west, text=blue!70!black] at (0.125,-0.2) {round 2};
+  \node[anchor=west] at (0.225,0) {pre-dock};
+  % axes
+  \draw[->] (0.24,-0.33) -- (0.30,-0.33) node[right] {$x$};
+  \draw[->] (0.24,-0.33) -- (0.24,-0.27) node[above] {$y$};
+\end{tikzpicture}
+\caption{L-shape test: planned grid routes from the spawn poses (grid nodes every \SI{0.107}{m}). Arrows in the squares show the module heading. Solid lines: routes to the pre-dock points (dots); dashed: back-in approach to the slot, drawn slightly offset from the route.}
+\label{fig:nav-lshape}
+\end{figure}
+
+\textbf{Next steps.}
+\begin{itemize}[topsep=2pt,itemsep=2pt,parsep=0pt,beginpenalty=10000]
+\item Implement the avoidance between moving modules (prioritised planning, conflict resolution, rescheduling, execution preconditions) and run the two-module conflict scenarios.
+\item Check and correct the lateral error $e_y$ during the approach.
+\item Skip the first grid node of a route when it lies behind the module. In the L-shape test the nearest node is \SI{2.1}{cm} on the far side for both modules, so each first turns towards it and then turns back.
+\item Add the helper-free L/R docking to \texttt{algo\_node} and run the side-by-side test of Table~\ref{tab:nav-n1}.
+\item Join docked modules in the simulation with Gazebo detachable joints.
+\item Replace the ground-truth poses with AprilTag localisation.
+\end{itemize}
 
 \clearpage
 % ================================================================

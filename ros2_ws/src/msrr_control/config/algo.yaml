@@ -15,21 +15,3 @@ algo_node:
     #                              |
     #                             [0]-[1]
     connections: ['1,B,0,T', '2,B,0,L']
-
-    # LEFT/RIGHT (wheel-face) docking, Wolfe et al. ICRA 2010 (msrr_control/wheel_dock.py)
-    wheel_dock:
-      T: 30.0                       # s, docking time (raised if a wheel would exceed max_linear / r)
-      N: 10                         # sinusoids per wheel in the local optimisation (eq. 23)
-      max_iter: 30                  # optimisation iterations
-      step_norm: 2.0                # max step |delta eps| per iteration [rad]
-      face_gap: 0.003               # m, stop this far off the parent face; magnetic capture closes it
-      min_final_straight: 0.16      # m, final straight length |s| >= this (>= 2r, eq. 13)
-      pre_dock_s: 0.16              # m, navigate to p1 = pf +/- pre_dock_s along l_f
-      phi_f: 0.0                    # rad, target docking-wheel angle (mod pi/2)
-      axle_offset: [-0.004905, 0.0] # m, axle midpoint in base_link (URDF axle_x)
-      wheel_radius: 0.05            # m, = diff_drive_controller wheel_radius
-      wheel_separation: 0.09665     # m, = diff_drive_controller wheel_separation
-      rolling_radius: 0.0492        # m, effective rolling radius measured in Gazebo (planner only)
-      pivot_separation: 0.1028      # m, 2x |y| of the point that stays still when one wheel is
-                                    # held, measured in Gazebo (planner only)
-      results_dir: results          # wheel_dock.csv, relative to the working directory

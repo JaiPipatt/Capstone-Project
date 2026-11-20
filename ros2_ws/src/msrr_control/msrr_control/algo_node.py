@@ -14,18 +14,13 @@ other; inside a round every moving module goes through
   navigate  follow its grid route to the pre-dock point
   adjust    turn in place to the goal heading
   approach  drive straight along its own x axis onto the goal
-For an L/R (wheel-face) docking, after navigate (pre-dock point = p1 on l_f):
-  wd_exec   plan pivot -> straight -> pivot -> straight (Wolfe et al. 2010,
-            wheel_dock.py) from the measured pose and wheel angles and run it
-            closed-loop (wheel_dock_exec.py); J is logged to results/wheel_dock.csv
+For an L/R (wheel-face) docking, after navigate:
+  wheel_dock  pivot -> straight -> pivot -> straight (wheel_dock_plan.py,
+              wheel_dock.py)
 Moving modules do not avoid each other yet.
 """
-import csv
 import math
-import os
-import time
 
-import numpy as np
 import rclpy
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
@@ -36,15 +31,7 @@ from msrr_control.assembly import assign_modules_to_slots, docking_tasks
 from msrr_control.navigation import plan_routes
 from msrr_control.topology import (
     check_topology, coordinates_to_frame, find_root, Topology, unfold, wrap_angle)
-from msrr_control import wheel_dock as wd
-from msrr_control.wheel_dock_exec import ExecConfig, WheelDockExecutor
-
-WD_PARAMS = {  # wheel_dock.* parameters and defaults, see config/algo.yaml
-    'T': 30.0, 'N': 10, 'max_iter': 30, 'step_norm': 2.0, 'face_gap': 0.003,
-    'min_final_straight': 0.16, 'pre_dock_s': 0.16, 'phi_f': 0.0,
-    'axle_offset': [-0.004905, 0.0], 'wheel_radius': 0.05, 'wheel_separation': 0.09665,
-    'rolling_radius': 0.0492, 'pivot_separation': 0.1028, 'results_dir': 'results',
-}
+from msrr_control.wheel_dock import WheelDocker
 
 
 def yaw_from_quaternion(q):
@@ -74,8 +61,6 @@ class AlgoNode(Node):
         self.declare_parameter('grid', 0.107)               # m, navigation cell size
         # Target shape, one 'u,cu,v,cv' string per connection (slot u face cu -> slot v face cv)
         self.declare_parameter('connections', ['1,B,0,T', '2,B,0,L'])
-        for k, v in WD_PARAMS.items():
-            self.declare_parameter(f'wheel_dock.{k}', v)
 
         n = self.get_parameter('num_modules').value
         pose_topic = self.get_parameter('pose_topic').value
@@ -87,15 +72,6 @@ class AlgoNode(Node):
         self.width = self.get_parameter('module_width').value
         self.grid = self.get_parameter('grid').value
         connections = [parse_connection(c) for c in self.get_parameter('connections').value]
-        self.wdp = {k: self.get_parameter(f'wheel_dock.{k}').value for k in WD_PARAMS}
-        r, w = self.wdp['wheel_radius'], self.wdp['wheel_separation']
-        # self.wheel: diff_drive_controller's values, to turn wheel rates into cmd_vel
-        # self.model: planner geometry (Gazebo-measured rolling radius and the
-        # separation at which a held wheel actually pivots)
-        self.wheel = wd.WheelParams(r=r, W=w, omega_max=self.max_linear / r)
-        self.model = wd.WheelParams(r=self.wdp['rolling_radius'], W=self.wdp['pivot_separation'],
-                                    omega_max=self.max_linear / r)
-        self.run_id = time.strftime('%Y%m%d-%H%M%S')
 
         self.modules = [f'module_{i}' for i in range(1, n + 1)]
         self.shape = Topology(n, connections)
@@ -127,22 +103,6 @@ class AlgoNode(Node):
     def on_joints(self, module, msg):
         vel = list(msg.velocity) + [0.0] * (len(msg.name) - len(msg.velocity))
         self.joints[module] = {n: (q, v) for n, q, v in zip(msg.name, msg.position, vel)}
-        st = self.state.get(module)
-        if st and st['phase'] == 'wd_exec':
-            # measured wheel rates for J_executed (eq. 22)
-            t = msg.header.stamp.sec + 1e-9 * msg.header.stamp.nanosec
-            j = self.joints[module]
-            st['wd']['rates'].append(
-                (t, -j['right_wheel_joint'][1], j['left_wheel_joint'][1]))
-
-    def phi(self, module):
-        j = self.joints.get(module, {})
-        if 'left_wheel_joint' not in j:
-            return None
-        return wd.phi_from_joints(j['left_wheel_joint'][0], j['right_wheel_joint'][0])
-
-    def axle_pose(self, module):
-        return wd.axle_pose_from_base(self.poses[module], self.wdp['axle_offset'])
 
     def make_plan(self):
         modules = {m: self.poses[m] for m in self.modules}
@@ -150,17 +110,12 @@ class AlgoNode(Node):
         slots = unfold(self.shape, root, self.width)
         f, m_root = assign_modules_to_slots(slots, root, modules)
         self.rounds = docking_tasks(self.shape, root, f, slots, modules, m_root, self.grid)
-        # wheel-face tasks: pre-dock point = p1 on l_f (end of l_f nearer the module)
+        # wheel-face docking pivots about a wheel, so it needs 2 cells of room, not 1
         for tasks in self.rounds:
             for t in tasks:
                 if t.action[1] in ('L', 'R'):
-                    d, pf, th_f, _ = wd.dock_targets(t.goal, t.action[1], self.model,
-                                                     self.wdp['axle_offset'], self.wdp['face_gap'])
-                    start = modules[t.action[0]]
-                    t.pre_dock = min(
-                        (wd.pre_dock_base_pose(pf, th_f, d, s, self.model, self.wdp['axle_offset'])
-                         for s in (self.wdp['pre_dock_s'], -self.wdp['pre_dock_s'])),
-                        key=lambda q: math.hypot(q[0] - start[0], q[1] - start[1]))
+                    gx, gy, _ = t.goal
+                    t.pre_dock = (2 * t.pre_dock[0] - gx, 2 * t.pre_dock[1] - gy, t.pre_dock[2])
         _, self.routes = plan_routes(self.rounds, f, root, slots, modules, m_root, self.grid)
 
         log = self.get_logger()
@@ -230,116 +185,39 @@ class AlgoNode(Node):
             cmd.angular.z = self.clamp(-2.0 * eth, self.max_angular)
             return cmd
 
-        if st['phase'] == 'wd_exec':
+        if st['phase'] == 'wheel_dock':
             return self.wheel_dock_step(task, st)
 
-        return cmd  # done
+        return cmd  # done or failed
 
     # ------------------------------------------------------------ wheel-face docking
+    def wheel_angle(self, module, face):
+        joint = 'left_wheel_joint' if face == 'L' else 'right_wheel_joint'
+        return self.joints[module][joint][0]
+
     def wheel_dock_start(self, task, st):
-        m, face = task.action[0], task.action[1]
-        phi0 = self.phi(m)
-        if phi0 is None:
+        m, face, parent, _ = task.action
+        if m not in self.joints or parent not in self.joints:
             return Twist()  # wait for joint_states
-        p = self.model
-        d, pf, th_f, pf_slot = wd.dock_targets(task.goal, face, p, self.wdp['axle_offset'],
-                                               self.wdp['face_gap'])
-        phi_f = self.wdp['phi_f']
-        plan = wd.plan_nominal(self.axle_pose(m), phi0, d, pf, th_f, phi_f, p, self.wdp['T'],
-                               min_final=self.wdp['min_final_straight'])      # Section II-C
-        opt = wd.optimize(plan, N=self.wdp['N'], max_iter=self.wdp['max_iter'],
-                          step_norm=self.wdp['step_norm'])                     # Section II-D
-        st['wd'] = {'plan': plan, 'opt': opt, 'exec': WheelDockExecutor(plan, ExecConfig()),
-                    'pf_slot': pf_slot, 't0': self.now(), 'rates': []}
-        st['phase'] = 'wd_exec'
-        log = self.get_logger()
-        log.info(
-            f'{m} wheel-dock face {face} (wheel {d}): k={plan.k} s={plan.s:+.3f} '
-            f'dir01={plan.dir01:+d} T={plan.T:.1f}s J_nom={plan.J:.3f} J_opt={opt.J:.3f}')
-        log.info(f'  {m} p0=({plan.p0[0]:+.3f}, {plan.p0[1]:+.3f})  '
-                 f'p1=({plan.p1[0]:+.3f}, {plan.p1[1]:+.3f})  pf=({pf[0]:+.3f}, {pf[1]:+.3f})  '
-                 f'theta_f={math.degrees(th_f):+.1f} deg')
-        log.info(f'  {m} phi_d start {phi0[d - 1]:+.3f} rad -> target {phi_f:+.3f} '
-                 f'(mod pi/2); omega_s={plan.omega_s:.3f} omega_p={plan.omega_p:.3f} rad/s')
-        log.info(f'  {m} optimisation: {opt.iterations} iterations, J {opt.J_nominal:.3f} -> '
-                 f'{opt.J:.3f} ({100 * (1 - opt.J / opt.J_nominal):.0f}% lower)')
-        for i, sg in enumerate(plan.segments, 1):
-            log.info(f'  {m} segment {i}/{len(plan.segments)}: {self.describe(sg)}')
-        w = st['wd']
-        w['seg'] = 0
-        w['seg_t0'] = self.now()
+        st['docker'] = WheelDocker(face, task.goal, self.max_linear)
+        st['phase'] = 'wheel_dock'
         return Twist()
 
-    @staticmethod
-    def describe(sg):
-        if sg.kind == 'pivot':
-            return (f'pivot   {math.degrees(sg.dtheta):+7.1f} deg  rates '
-                    f'({sg.phidot[0]:+.2f}, {sg.phidot[1]:+.2f}) rad/s  {sg.duration:5.1f} s')
-        return (f'straight {sg.direction * sg.distance:+.3f} m  dphi_d {sg.dphi_d:+.2f} rad  '
-                f'rates ({sg.phidot[0]:+.2f}, {sg.phidot[1]:+.2f}) rad/s  {sg.duration:5.1f} s')
-
-    def log_segment_done(self, m, w, g, phi):
-        """Log how the segment that just finished ended versus its plan."""
-        sg = w['plan'].segments[w['seg']]
-        d = w['plan'].d
-        pw = wd.wheel_centre(g, d, self.model)
-        planned = wd.wheel_centre(sg.end, d, self.model)
-        off = 1000 * np.linalg.norm(pw - planned)
-        th_err = math.degrees(wrap_angle(g[2] - sg.end[2]))
-        self.get_logger().info(
-            f'  {m} segment {w["seg"] + 1} {sg.kind} done in {self.now() - w["seg_t0"]:.1f} s '
-            f'(planned {sg.duration:.1f}): wheel-d off plan {off:.1f} mm, '
-            f'theta err {th_err:+.2f} deg, phi_d {phi[d - 1]:+.3f} rad')
-        w['seg'] += 1
-        w['seg_t0'] = self.now()
-
     def wheel_dock_step(self, task, st):
-        w = st['wd']
-        m = task.action[0]
-        g, phi = self.axle_pose(m), self.phi(m)
-        rates = w['exec'].update(g, phi)
-        while w['seg'] < min(w['exec'].idx, len(w['plan'].segments)):
-            self.log_segment_done(m, w, g, phi)
-        if w['exec'].done:
-            self.wheel_dock_finish(task, st)
-            return Twist()
+        m, face, parent, parent_face = task.action
+        docker = st['docker']
+        v, omega = docker.update(
+            self.poses[m], self.wheel_angle(m, face),
+            self.poses[parent], self.wheel_angle(parent, parent_face))
+        if docker.failed:
+            st['phase'] = 'failed'
+            self.get_logger().error(f'{m} wheel dock failed: {docker.message}')
+        elif docker.done:
+            st['phase'] = 'done'
+            self.get_logger().info(f'{m} {docker.message}')
         cmd = Twist()
-        cmd.linear.x, cmd.angular.z = wd.twist_from_phidot(rates[0], rates[1], self.wheel)
+        cmd.linear.x, cmd.angular.z = v, omega
         return cmd
-
-    def wheel_dock_finish(self, task, st):
-        m, face = task.action[0], task.action[1]
-        w = st['wd']
-        plan = w['plan']
-        g, phi = self.axle_pose(m), self.phi(m)
-        err = wd.pose_error(g, plan.gf)
-        e_phi = wd.wrap_mod(phi[plan.d - 1] - plan.phi_f, plan.modulus)
-        rel = wd.wheel_centre(g, plan.d, self.model) - w['pf_slot']
-        normal = float(-rel @ wd.face_normal(plan.gf[2], plan.d))  # includes face_gap
-        parallel = float(rel @ wd.heading(plan.gf[2]))
-        r = np.array(w['rates'])
-        J_exec = float(0.5 * np.trapz(r[:, 1] ** 2 + r[:, 2] ** 2, r[:, 0])) if len(r) > 1 else 0.0
-        row = {'run_id': self.run_id, 'module': m, 'face': face, 'd': plan.d, 'k': plan.k,
-               's': plan.s, 'dir01': plan.dir01, 'T': plan.T, 'J_plan_nominal': plan.J,
-               'J_plan_opt': w['opt'].J, 'J_executed': J_exec, 'err_x': err[0],
-               'err_y': err[1], 'err_theta': err[2], 'err_phi_mod': e_phi,
-               'err_normal': normal, 'err_parallel': parallel,
-               'duration': self.now() - w['t0']}
-        out = os.path.abspath(self.wdp['results_dir'])
-        os.makedirs(out, exist_ok=True)
-        path = os.path.join(out, 'wheel_dock.csv')
-        new = not os.path.exists(path)
-        with open(path, 'a', newline='') as fh:
-            writer = csv.DictWriter(fh, fieldnames=list(row))
-            if new:
-                writer.writeheader()
-            writer.writerow(row)
-        st['phase'] = 'done'
-        self.get_logger().info(
-            f'{m} docked (wheel face {face}): pos err {1000 * math.hypot(err[0], err[1]):.1f} mm '
-            f'(normal {1000 * normal:.1f}, parallel {1000 * parallel:+.1f}), theta err '
-            f'{math.degrees(err[2]):+.2f} deg, phi err {e_phi:+.4f} rad, '
-            f'J nom/opt/exec {plan.J:.3f}/{w["opt"].J:.3f}/{J_exec:.3f}')
 
     def now(self):
         return self.get_clock().now().nanoseconds * 1e-9

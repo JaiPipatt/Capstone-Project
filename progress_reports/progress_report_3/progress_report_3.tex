@@ -63,6 +63,11 @@
 
 \DeclareRobustCommand{\ganttkey}[1]{\tikz[baseline=-0.6ex]\fill[#1, draw=black!50] (0,-0.12) rectangle (0.35,0.12);}
 
+% Placeholder-safe figure: grey box until the image exists.
+\providecommand{\figOrBox}[2]{%
+  \IfFileExists{#2}{\includegraphics[width=#1]{#2}}%
+  {\fbox{\parbox[c][0.3\textheight][c]{\dimexpr#1-2\fboxsep-2\fboxrule\relax}{\centering\small TODO: \detokenize{#2}}}}}
+
 \begin{document}
 
 %---------------------------------------------------------------- title page --
@@ -160,60 +165,60 @@ hardware without external localisation or computation.
 \label{sec:gantt}
 % ================================================================
 
-Task schedule from the team Notion timeline (as of 20~Oct~2026), grouped by phase.
+Task schedule from the team Notion timeline (as of 20~Nov~2026), grouped by phase.
 
 \begin{figure}[H]
 \centering\scriptsize
-\begin{ganttchart}[gantt style]{2026-08-17}{2027-01-17}
+\begin{ganttchart}[gantt style]{2026-08-17}{2027-03-21}
 \gantttitlecalendar{year, month=shortname} \\
-\ganttgroup{Phase A --- Locomotion, sensing and communication}{2026-08-28}{2027-01-09} \\
-\ganttbar[gpast]{(Phase\_A\_1) Planning/ Trade Study}{2026-08-28}{2026-09-30} \\
+\ganttgroup{Phase A --- Locomotion, sensing and communication}{2026-08-28}{2027-01-04} \\
+\ganttbar[gpast]{(Phase\_A\_1) Electronics Planning/ Trade Study}{2026-08-28}{2026-09-30} \\
 \ganttmilestone[gpast]{MILESTONE - Proposal submission}{2026-08-28} \\
 \ganttbar[gpast]{Module design Mechanic Draft 1 (CAD)}{2026-08-28}{2026-09-17} \\
 \ganttbar[gpast]{Module design Mechanic Draft 1 (FAB) Draft\_1}{2026-09-18}{2026-10-12} \\
 \ganttbar[gpast]{(sim) export URDF to gazebo, controller and locomotion}{2026-09-25}{2026-10-08} \\
 \ganttmilestone[gpast]{MILESTONE - First progress report}{2026-09-25} \\
-\ganttbar[gpast]{(Phase\_A\_1) Part Ordering/Shipping}{2026-10-01}{2026-10-15} \\
-\ganttbar[gnow]{Control board and firmware}{2026-10-01}{2026-10-10} \\
-\ganttbar[gnow]{Power, Main Board PCB Designing}{2026-10-01}{2026-10-15} \\
+\ganttbar[gnow]{(Phase\_A\_1) Part Ordering/Shipping}{2026-10-01}{2026-10-15} \\
+\ganttbar[gpast]{Control board and firmware}{2026-10-01}{2026-10-10} \\
+\ganttbar[gpast]{Power, Main Board PCB Designing}{2026-10-01}{2026-10-15} \\
 \ganttbar[gpast]{Gear and Shaft Print Testing and Redesign}{2026-10-05}{2026-10-25} \\
-\ganttbar[gnext]{(sim) Implement Reconfiguration planning}{2026-10-09}{2026-11-03} \\
+\ganttbar[gpast]{(sim) Implement Reconfiguration planning}{2026-10-09}{2026-11-03} \\
 \ganttbar[gnow]{(sim) Navigation and avoidance with known coordinate}{2026-10-09}{2026-10-21} \\
-\ganttbar[gnow]{Basic Locomotion Testing}{2026-10-13}{2026-10-20} \\
-\ganttbar[gnext]{(Phase\_A\_1) Testing}{2026-10-16}{2026-10-20} \\
-\ganttbar[gpast]{Power, Main Board PCB FAB + Part Ordering}{2026-10-16}{2026-10-29} \\
-\ganttbar[gnext]{(real) Localization and navigation from camera}{2026-10-23}{2026-11-03} \\
-\ganttmilestone[gnext]{MILESTONE - Second progress report}{2026-10-23} \\
-\ganttbar[gnext]{Power, Main Board Testing}{2026-10-30}{2026-11-12} \\
-\ganttbar[gnext]{Radio link and protocol}{2026-10-30}{2026-11-12} \\
-\ganttbar[gnext]{UWB \& Radio link wifi testing (Dev board)}{2026-10-30}{2026-11-12} \\
-\ganttbar[gnext]{low level control + Sensing IMU Encoder (Dev board)}{2026-10-30}{2026-11-12} \\
-\ganttbar[gnext]{(real) Implement Reconfiguration planning}{2026-11-04}{2026-11-18} \\
+\ganttbar[gpast]{Basic Locomotion Testing}{2026-10-13}{2026-10-20} \\
+\ganttbar[gnow]{(Phase\_A\_1) Testing}{2026-10-16}{2026-11-21} \\
+\ganttbar[gnow]{(real) Localization and navigation from camera}{2026-10-23}{2026-11-03} \\
+\ganttmilestone[gpast]{MILESTONE - Second progress report}{2026-10-23} \\
+\ganttbar[gnow]{(real) Implement Reconfiguration planning}{2026-11-04}{2026-11-18} \\
+\ganttbar[gnow]{low level control + Sensing IMU Encoder (Dev board)}{2026-11-08}{2026-11-21} \\
 \ganttbar[gnext]{Connector FAB (EP-Face) (1)}{2026-11-15}{2026-11-30} \\
-\ganttbar[gnext]{Connector design (EP-Face)}{2026-12-11}{2027-01-09} \\
-\ganttgroup{Phase B --- Docking and task-oriented reconfiguration}{2026-09-22}{2027-01-03} \\
-\ganttbar[gpast]{EP Research and Face Design}{2026-09-22}{2026-09-30} \\
-\ganttbar[gnow]{EP Face Part Ordering}{2026-10-01}{2026-10-14} \\
-\ganttbar[gnext]{IR Face Design}{2026-10-01}{2026-10-09} \\
-\ganttbar[gnext]{IR Face Part Ordering}{2026-10-10}{2026-10-23} \\
-\ganttbar[gnext]{EP Face 1st Test}{2026-10-15}{2026-10-28} \\
-\ganttbar[gnext]{IR 1st test}{2026-10-24}{2026-11-06} \\
-\ganttbar[gnext]{In-Wheel (EP and IR) Board Designing}{2026-10-29}{2026-11-11} \\
-\ganttbar[gnext]{(sim) urdf add contact face}{2026-11-05}{2026-11-18} \\
-\ganttbar[gnext]{Contract face testing}{2026-11-13}{2026-11-26} \\
-\ganttbar[gnext]{In-Wheel (EP and IR) Board FAB + Part Ordering}{2026-11-13}{2026-11-26} \\
-\ganttmilestone[gnext]{MILESTONE - Draft final report}{2026-11-18} \\
-\ganttbar[gnext]{(sim) precision docking with self alignment}{2026-11-20}{2026-12-03} \\
+\ganttbar[gnow]{Power, Main Board PCB FAB + Part Ordering}{2026-11-15}{2026-12-04} \\
+\ganttbar[gnow]{UWB \& Radio link wifi testing (Dev board)}{2026-11-25}{2026-12-08} \\
+\ganttbar[gnext]{Power, Main Board Testing}{2026-12-05}{2026-12-18} \\
+\ganttbar[gnow]{Radio link and protocol}{2026-12-08}{2026-12-21} \\
+\ganttbar[gnext]{Connector design (EP-Face)}{2026-12-19}{2027-01-04} \\
+\ganttgroup{Phase B --- Docking and task-oriented reconfiguration}{2026-10-01}{2027-03-14} \\
+\ganttbar[gpast]{EP Research and Face Design}{2026-10-01}{2026-10-25} \\
+\ganttbar[gpast]{EP Face Part Ordering}{2026-10-26}{2026-11-10} \\
+\ganttbar[gnow]{(sim) urdf add contact face}{2026-11-05}{2026-11-18} \\
+\ganttbar[gnow]{EP Face 1st Test}{2026-11-11}{2027-01-16} \\
+\ganttbar[gnow]{Contract face testing}{2026-11-13}{2026-11-26} \\
+\ganttmilestone[gnow]{MILESTONE - Draft final report}{2026-11-18} \\
+\ganttbar[gnow]{(sim) precision docking with self alignment}{2026-11-20}{2026-12-03} \\
 \ganttbar[gnext]{MILESTONE - Final presentation}{2026-11-22}{2026-12-03} \\
-\ganttbar[gnext]{In-Wheel (EP and IR) Board Testing}{2026-11-27}{2026-12-10} \\
 \ganttbar[gnext]{Locomotion with contact face testing}{2026-11-27}{2026-12-10} \\
-\ganttbar[gnext]{(real) Reconfiguration planning with precision docking}{2026-12-04}{2026-12-17} \\
+\ganttbar[gnow]{(real) Reconfiguration planning with precision docking}{2026-12-04}{2026-12-17} \\
+\ganttbar[gnext]{IR Face Design}{2026-12-04}{2026-12-18} \\
 \ganttmilestone[gnext]{MILESTONE - Final report (Project I)}{2026-12-10} \\
-\ganttbar[gnext]{W5 Assembled gaits, PPO training}{2026-12-11}{2027-01-03} \\
-\ganttbar[gnext]{W6 IR alignment and docking}{2026-12-11}{2026-12-27} \\
-\ganttbar[gnext]{W7 EP-Face build and characterisation}{2026-12-11}{2027-01-03} \\
-\ganttbar[gnext]{W8 Configuration library}{2026-12-11}{2026-12-27}
-\ganttvrule{Today (20 Oct)}{2026-10-20}
+\ganttbar[gnext]{Assembled gaits, PPO training}{2026-12-11}{2027-01-03} \\
+\ganttbar[gnext]{Configuration library}{2026-12-11}{2026-12-27} \\
+\ganttbar[gnext]{EP-Face build and characterisation}{2026-12-11}{2027-01-03} \\
+\ganttbar[gnext]{IR alignment and docking}{2026-12-11}{2026-12-27} \\
+\ganttbar[gnext]{IR Face Part Ordering}{2027-01-01}{2027-01-11} \\
+\ganttbar[gnext]{IR 1st test}{2027-01-12}{2027-01-25} \\
+\ganttbar[gnext]{In-Wheel (EP and IR) Board Designing}{2027-02-01}{2027-02-14} \\
+\ganttbar[gnext]{In-Wheel (EP and IR) Board FAB + Part Ordering}{2027-02-15}{2027-02-28} \\
+\ganttbar[gnext]{In-Wheel (EP and IR) Board Testing}{2027-03-01}{2027-03-14}
+\ganttvrule{Today (20 Nov)}{2026-11-20}
 \end{ganttchart}
 \caption{Project I schedule (Phases A--B). \ganttkey{ganttpast}~Completed \quad \ganttkey{ganttnow}~In progress \quad \ganttkey{ganttnext}~Upcoming; dashed line marks the report date.}
 \label{fig:gantt-ab}
@@ -228,28 +233,28 @@ Task schedule from the team Notion timeline (as of 20~Oct~2026), grouped by phas
 \ganttbar[gnext]{(sim) onboard perception obstacle avoidance and navigation}{2026-12-13}{2026-12-31} \\
 \ganttbar[gnext]{Onboard perception testing}{2026-12-24}{2027-01-06} \\
 \ganttbar[gnext]{(Real) Onboard Perception nav and configuration planning}{2027-01-01}{2027-01-18} \\
-\ganttbar[gnext]{Inductive Encoder Designing}{2027-01-01}{2027-01-20} \\
 \ganttbar[gnext]{Locomotion, Planning with internal Perception (IR and UWB)}{2027-01-03}{2027-01-31} \\
-\ganttbar[gnext]{W9 Camera and ToF integration}{2027-01-04}{2027-02-12} \\
-\ganttbar[gnext]{W5 Policy training on held-out params}{2027-01-11}{2027-02-26} \\
-\ganttbar[gnext]{W8 Obstacle state to configuration}{2027-01-18}{2027-03-05} \\
+\ganttbar[gnext]{Camera and ToF integration}{2027-01-04}{2027-02-12} \\
+\ganttbar[gnext]{Inductive Encoder Designing}{2027-01-05}{2027-01-20} \\
+\ganttbar[gnext]{Policy training on held-out params}{2027-01-11}{2027-02-26} \\
+\ganttbar[gnext]{Obstacle state to configuration}{2027-01-18}{2027-03-05} \\
 \ganttbar[gnext]{(sim) Configuration lookup table}{2027-01-19}{2027-02-01} \\
 \ganttbar[gnext]{Inductive Encoder FAB + Part Ordering}{2027-01-21}{2027-02-10} \\
-\ganttbar[gnext]{W9 Terrain and traversability pipeline}{2027-01-25}{2027-03-05} \\
+\ganttbar[gnext]{Terrain and traversability pipeline}{2027-01-25}{2027-03-05} \\
 \ganttbar[gnext]{(Real) environment adaptation}{2027-02-02}{2027-02-28} \\
 \ganttbar[gnext]{Inductive Encoder Testing}{2027-02-11}{2027-02-28} \\
 \ganttbar[gnext]{MILESTONE - Phase C evaluation}{2027-03-01}{2027-03-05} \\
 \ganttgroup{Phase D --- Fully onboard perception and computation}{2027-01-21}{2027-04-30} \\
 \ganttbar[gnext]{PCB for CM5 Designing}{2027-01-21}{2027-02-04} \\
 \ganttbar[gnext]{PCB for CM5 Designing FAB + Part Ordering}{2027-02-05}{2027-02-18} \\
-\ganttbar[gnext]{W10 Compute module bring-up}{2027-02-15}{2027-03-19} \\
+\ganttbar[gnext]{Compute module bring-up}{2027-02-15}{2027-03-19} \\
 \ganttbar[gnext]{CM5 with RGBD and TOF Testing}{2027-02-19}{2027-03-04} \\
 \ganttbar[gnext]{Onboard Odometry with no camera testing}{2027-02-22}{2027-03-11} \\
-\ganttbar[gnext]{W4 Onboard odometry, drop VICON}{2027-02-22}{2027-04-02} \\
+\ganttbar[gnext]{Onboard odometry, drop VICON}{2027-02-22}{2027-04-02} \\
 \ganttbar[gnext]{(sim) local interaction to reorganize (concept)}{2027-03-01}{2027-04-09} \\
 \ganttbar[gnext]{Full testing internal computation}{2027-03-01}{2027-04-02} \\
 \ganttbar[gnext]{Internal Computation}{2027-03-01}{2027-03-14} \\
-\ganttbar[gnext]{W10 Quantised inference on module}{2027-03-08}{2027-04-09} \\
+\ganttbar[gnext]{Quantised inference on module}{2027-03-08}{2027-04-09} \\
 \ganttbar[gnext]{MILESTONE - Loop closed on hardware}{2027-04-05}{2027-04-09} \\
 \ganttbar[gnext]{MILESTONE - Final evaluation (Project II)}{2027-04-26}{2027-04-30}
 \end{ganttchart}
@@ -642,13 +647,16 @@ The first milestone localises modules with AprilTags. To test algorithms before 
 \label{sec:electronics}
 % ================================================================
 
-\subsection{Phased Electronics Plan}
+\subsection{Overview and Changes from Progress Report 1}
+\label{sec:elec-overview}
+
+\subsubsection{Phased Electronics Plan}
 
 Electronics are built incrementally across project phases:
 
 \begin{itemize}
-  \item \textbf{Phase A-1:} COTS parts --- 2S battery, 4-channel motor driver with MCU, ESP32-C3 for Wi-Fi.
-  \item \textbf{Phase A:} Custom PCBs --- power board (buck, LDO, 4$\times$ H-bridge with current sensing) and main board (STM32G474, IMU, UWB, Wi-Fi).
+  \item \textbf{Phase A-1:} COTS parts --- 3S battery, 4-channel motor driver with MCU, ESP32-C6 for Wi-Fi.
+  \item \textbf{Phase A:} Custom PCBs --- buck, LDO, 4$\times$ H-bridge with current sensing, STM32G474, IMU, UWB, Wi-Fi.
   \item \textbf{Phase B:} In-wheel PCB with EP-Face circuitry and IR contact-alignment, connected via slip ring.
   \item \textbf{Phase C:} RGB-D/ToF camera (Sipeed MaixSense A075V) + wheel encoder added; compute still external.
   \item \textbf{Phase D:} Raspberry Pi CM5 on custom carrier PCB moves compute onboard.
@@ -699,8 +707,7 @@ Electronics are built incrementally across project phases:
 	\label{fig:phase-diagrams-cd}
 \end{figure}
 
-% ----------------------------------------------------------------
-\subsection{Component Selection}
+\subsubsection{Component Selection}
 
 \begin{table}[H]
 \centering\small
@@ -712,9 +719,9 @@ Electronics are built incrementally across project phases:
 \midrule
 4$\times$ N20 gearmotor & A-1+ & 6\,V, 50\,rpm; 7\,PPR encoder & A/B quadrature; H-bridge \\
 STM32G474 & A+ & Cortex-M4F @ 170\,MHz; 12-bit ADC; FDCAN & SPI/I2C/UART/CAN; 3.3\,V \\
-ICM-42688-P & A+ & $\pm$2000\,dps / $\pm$16\,g; 32\,kHz ODR & SPI or I2C; 1.8\,V \\
-DW3000 (UWB) & A+ & IEEE 802.15.4z; $\sim$10\,cm ranging & SPI; 3.3\,V \\
-ESP32-C3 & A-1+ & Wi-Fi 4 + BLE 5; RISC-V @ 160\,MHz & UART/SPI; 3.3\,V \\
+ICM-42605 & A+ & $\pm$2000\,dps / $\pm$16\,g; 32\,kHz ODR & SPI or I2C; 1.8\,V \\
+DWM3000 (UWB) & A+ & IEEE 802.15.4z; $\sim$10\,cm ranging & SPI; 3.3\,V \\
+ESP32-C6 & A-1+ & Wi-Fi 6 + BLE 5; RISC-V @ 160\,MHz & UART/SPI; 3.3\,V \\
 EP-Face + IR PCB & B & Custom; EP magnet + IR alignment & Slip ring; 3.3\,V \\
 RPi CM5 & D & Cortex-A76 @ 2.4\,GHz; up to 16\,GB RAM & Custom carrier; 5\,V \\
 Sipeed MaixSense A075V & C+ & ToF 320$\times$240 @ 30\,fps; RGB 800$\times$600 & USB 2.0; 5\,V \\
@@ -722,135 +729,48 @@ Sipeed MaixSense A075V & C+ & ToF 320$\times$240 @ 30\,fps; RGB 800$\times$600 &
 \end{tabular}
 \end{table}
 
-% ----------------------------------------------------------------
-\subsection{Electronics Packaging}
-
-All components fit within the \SI{100}{mm} cube based on rough CAD placement (Figure~\ref{fig:elec-packaging}).
-
-\begin{figure}[!htbp]
-	\centering
-	\begin{subfigure}[b]{0.45\textwidth}
-		\centering
-		\includegraphics[width=\linewidth]{../image/Elec_Assembly.png}
-		\caption{Assembled.}
-		\label{fig:elec-assembly}
-	\end{subfigure}
-	\hfill
-	\begin{subfigure}[b]{0.45\textwidth}
-		\centering
-		\includegraphics[width=\linewidth]{../image/Elec_Exploded_View.png}
-		\caption{Exploded.}
-		\label{fig:elec-exploded}
-	\end{subfigure}
-	\caption{Electronics packaging.}
-	\label{fig:elec-packaging}
-\end{figure}
-
-% ----------------------------------------------------------------
-\subsection{Wheel Encoder}
-
-Replacing the original continuous-rotation potentiometer ($\sim$5$^\circ$ resolution, contact wear) with a non-contact encoder. Three options considered:
+\subsubsection{Iterations Covered in This Report}
 
 \begin{table}[H]
 \centering\small
-\caption{Wheel encoder options.}
-\label{tab:encoders}
-\begin{tabular}{@{}L{0.20\textwidth} L{0.24\textwidth} L{0.24\textwidth} L{0.24\textwidth}@{}}
+\caption{Electronics iterations and where they are described.}
+\label{tab:elec-iterations}
+\begin{tabular}{@{}L{0.12\textwidth} L{0.52\textwidth} L{0.18\textwidth}@{}}
 \toprule
-& \textbf{On-axis magnetic} (AS5600) & \textbf{Off-axis tape} & \textbf{Custom inductive} \\
+\textbf{Iteration} & \textbf{Hardware} & \textbf{Section} \\
 \midrule
-Output & Absolute, 12--14 bit & Incremental + index & Absolute \\
-EP interference & Sensitive & Sensitive & Immune \\
-Design effort & Low & Medium & High \\
+A-1 & Carrier board with Black Pill STM32F411, TB6612FNG driver modules and UWB breakout & \ref{sec:phase-a1-hw} \\
+A & Custom main board (STM32G474) and communication board (ESP32-C6, DWM3000) & \ref{sec:power-new}, \ref{sec:phase-a-board} \\
+B--D & Planned: EP-Face, camera, onboard compute & \ref{sec:elec-later} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The inductive option best handles the EP connector's nearby field but has the highest schedule risk. Decision deferred to Phase C.
-
-% ----------------------------------------------------------------
-\subsection{Changes from Progress Report 1}
+\subsubsection{Changes from Progress Report 1}
 \label{sec:elec-changes}
 
-The phased plan (A-1 to D) and its scope are unchanged. The electronics work
-plan is delayed by one week, which shifts the electronics timeline and the
-work that depends on it by the same amount.
+The phased plan (A-1 to D) is unchanged. The electronics work is one week
+behind, which shifts the work that depends on it by the same amount.
 
-Phase A-1 was built from an STM32F411 development board, two TB6612FNG
-dual H-bridge drivers and an ESP32-C6 module, instead of the COTS 4-channel
-motor driver with a built-in MCU and the ESP32-C3 described in PR1. This gives direct control of the PWM, direction
-and encoder signals, so the wiring and firmware carry over to the Phase A main
-board.
+Phase A-1 uses an STM32F411 development board, two TB6612FNG dual H-bridge
+drivers and an ESP32-C6 module, in place of the COTS 4-channel driver with a
+built-in MCU and the ESP32-C3 from PR1. This gives direct control of the PWM,
+direction and encoder signals, so the wiring and firmware carry over to the
+Phase A main board.
 
-The only other hardware change is the battery. The 2S \SI{3000}{mAh} 505080 pack was
-replaced with a 3S pack of Vapcell M11 18350 Li-ion cells (\SI{1100}{mAh},
-\SI{10}{A} continuous, \SI{15}{A} burst), which can supply more current for the
-EP-Face in Phase B. The smaller capacity lowers the estimated run time
-(Section~\ref{sec:power-new}).
+The battery changes from the 2S \SI{3000}{mAh} 505080 pack to a 3S pack of
+Vapcell M11 18350 cells (\SI{1100}{mAh}, \SI{10}{A} continuous, \SI{15}{A}
+burst). It can supply more current for the EP-Face in Phase B, at the cost of
+run time (Section~\ref{sec:power-new}).
 
 % ----------------------------------------------------------------
-\subsection{Phase A-1 Hardware}
+\subsection{Phase A-1: Bench Hardware (First Iteration)}
 \label{sec:phase-a1-hw}
 
 Phase A-1 is the bench version of the locomotion electronics. It tests the
 wiring, power path and firmware set-up that will move onto the Phase A PCBs.
 
-% Placeholder-safe figure: grey box until the image exists.
-\providecommand{\figOrBox}[2]{%
-  \IfFileExists{#2}{\includegraphics[width=#1]{#2}}%
-  {\fbox{\parbox[c][0.3\textheight][c]{\dimexpr#1-2\fboxsep-2\fboxrule\relax}{\centering\small TODO: \detokenize{#2}}}}}
-
-\subsubsection{Hardware Schematic}
-
-Figure~\ref{fig:a1-schematic} shows the Phase A-1 wiring. An STM32F411CEU6
-development board controls four N20 gearmotors through two dual-channel
-TB6612FNG H-bridge drivers (two motors each, shared standby line). Each motor
-has a PWM input and two direction inputs, and its quadrature encoder is read
-back by the MCU. M3 and M4 drive the left and right wheels; M1 and M2, the
-inner-left (iL) and inner-right (iR) motors, drive pan and tilt. An ESP32-C6 module provides the Wi-Fi link over UART,
-an ST-Link handles SWD programming, and USB gives a serial console for testing.
-
-Three buck converters run from the 3S pack through an XT30 connector. A 5\,V
-buck supplies the MCU board and the ESP32-C6; the MCU board's 3.3\,V regulator
-supplies the driver logic and the encoders. One 6\,V buck per TB6612FNG
-supplies the motors, so the N20s run at their rated voltage at full PWM duty.
-A \SI{100}{nF} capacitor across each motor suppresses brush noise, and a
-\SI{10}{k\ohm} pull-down on STBY keeps both drivers disabled until the MCU
-enables them.
-
-\begin{figure}[!htbp]
-  \centering
-  \figOrBox{\textwidth}{../image/Phase_A1_Schematic.png}
-  \caption{Phase A-1 hardware schematic.}
-  \label{fig:a1-schematic}
-\end{figure}
-
-\subsubsection{Hardware Packaging}
-
-Figure~\ref{fig:a1-cad} shows the Phase A-1 hardware placed in the module.
-Three parts stack front to back inside the module shell. The three 18350 cells
-sit in a vertical column at the back. In front of them is the regulator board
-with the three buck converters. The controller board, carrying the STM32F411
-board, both TB6612FNG drivers and the ESP32-C6, sits at the front.
-
-\begin{figure}[!htbp]
-  \centering
-  \begin{subfigure}[b]{0.36\textwidth}
-    \centering
-    \figOrBox{\linewidth}{../image/Phase_A1_CAD.png}
-    \caption{Assembled.}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.6\textwidth}
-    \centering
-    \figOrBox{\linewidth}{../image/Phase_A1_CAD_Exploded.png}
-    \caption{Exploded.}
-  \end{subfigure}
-  \caption{Phase A-1 hardware packaging.}
-  \label{fig:a1-cad}
-\end{figure}
-
-\subsubsection{Power Calculation}
+\subsubsection{A-1 Power Budget}
 
 Table~\ref{tab:a1-power} gives the Phase A-1 load on the 3S pack, using the
 PR1 load figures. Motor power passes through the 6\,V regulators (90\,\%) and
@@ -913,7 +833,7 @@ buffer so incoming commands are not lost while the CPU is busy.
 \midrule
 System clock & HSE 25\,MHz $\rightarrow$ PLL & 96\,MHz \\
 Motor PWM, M1--M4 & TIM3 CH3/2/1/4 (PB0, PA7, PA6, PB1) & 20\,kHz \\
-Motor direction & GPIO (PA4--5, PB14--15, PB12--13, PB4--5) & -- \\
+Motor direction & GPIO (PA4--5, PB8--9, PB12 and PA10, PB4--5) & -- \\
 Driver standby & GPIO PC15 (both TB6612) & -- \\
 Encoder M1 (iL) & TIM4 (PB6, PB7), 16-bit & $\times$4 quadrature \\
 Encoder M2 (iR) & TIM2 (PA15, PB3), 32-bit & $\times$4 quadrature \\
@@ -921,19 +841,117 @@ Encoder M3 (L) & TIM1 (PA8, PA9), 16-bit & $\times$4 quadrature \\
 Encoder M4 (R) & TIM5 (PA0, PA1), 32-bit & $\times$4 quadrature \\
 Control loop tick & TIM10 interrupt & 1\,kHz \\
 ESP32-C6 link & USART2 (PA2, PA3) + DMA & 115\,200 baud \\
+UWB link & SPI2 (PB13--15), CS PB10, IRQ PB2, RST PC14 & BU01 module \\
 PC console & USB OTG FS, CDC class & -- \\
 Debug & SWD (PA13, PA14) & -- \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-% ----------------------------------------------------------------
-\subsection{New Power Calculation}
-\label{sec:power-new}
+\subsubsection{Module Board}
+
+The A-1 module board (\texttt{mrr\_a\_module}) is a carrier PCB with 2.54\,mm
+female sockets and no SMT parts (Figure~\ref{fig:a1-mod-sch}). It replaces the
+bench wiring. It carries a Black Pill STM32F411 board, two TB6612FNG driver
+modules, an MP1584EN buck module for the 5\,V rail, an ESP32-C6 Zero board for
+Wi-Fi, and the UWB breakout (next subsection) on a 1$\times$9 socket (J6). The
+battery input is J1. The motors connect through four 6-pin connectors (J2 to J5)
+with motor, encoder and encoder supply pins. The drivers run from the pack
+directly (3S maximum 12.6\,V, inside the TB6612FNG 13.5\,V limit), and a 10\,k$\Omega$
+pull-down holds STBY low at boot. Test pads are on BAT+, 5\,V, 3.3\,V and GND.
+The schematic symbol for the Wi-Fi board is drawn as an ESP32-C3 SuperMini, which has the same socket footprint.
+
+Adding the UWB socket used PB13 to PB15 (SPI2) and PB10, PB2 and PC14
+(CS, IRQ, RST). To free them, three TB6612FNG direction pins moved: AIN2 of
+driver 1 to PA10, and BIN1 and BIN2 of driver 1 to PB8 and PB9. The firmware uses
+the new pins, and Table~\ref{tab:a1-periph} and Table~\ref{pr3:tab:pins} are
+updated to match.
 
 \begin{figure}[!htbp]
   \centering
-  % TODO: re-export Power_Diagram.png with "3S 18350 1100 mAh, 9.0--12.6 V".
+  \includegraphics[width=\textwidth]{../image/PhaseA1_Sch_Module.png}
+  \caption{A-1 module board (carrier) schematic.}
+  \label{fig:a1-mod-sch}
+\end{figure}
+
+\begin{figure}[!htbp]
+  \centering
+  \begin{subfigure}[b]{0.38\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{../image/PhaseA1_Board_Module_Top.png}
+    \caption{Top.}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.38\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{../image/PhaseA1_Board_Module_Bottom.png}
+    \caption{Bottom.}
+  \end{subfigure}
+  \caption{A-1 module board PCB render.}
+  \label{fig:a1-mod-pcb}
+\end{figure}
+
+Figure~\ref{fig:a1-electronics-section} shows the stack inside the module. The
+boards stand upright, parallel to the tilt face, and are held apart by
+standoffs between the shell walls. From the top of the stack down the order is:
+the UWB breakout, then the carrier board with its plug-in modules (the Black Pill,
+the two TB6612FNG drivers, the buck module and the ESP32-C6 Zero on 2.54\,mm
+sockets), then the three 18350 cells in a vertical column against the back
+wall. The motor and encoder connectors sit at the bottom edge of the carrier,
+next to the drive motors. The cells sit at the back, away from the pan and tilt joint,
+so the wiring to the face stays short and the heaviest part is close to the wheel axis.
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=0.85\textwidth]{../image/Electronics_in_the_assembly.png}
+  \caption{Sectional view (A-A) of the electronics inside the MRR module: carrier board with plug-in modules, and the 18350 cell column at the back.}
+  \label{fig:a1-electronics-section}
+\end{figure}
+
+\subsubsection{UWB Module}
+
+The A-1 UWB node is a small breakout that plugs onto the carrier (Figure~\ref{fig:a1-uwb-sch}).
+It holds an Ai-Thinker BU01 UWB module (DW1000) and an AMS1117-3.3 LDO fed from
+the carrier 5\,V rail, with a through-hole output capacitor. A 1$\times$9 header (J1)
+carries 5\,V, GND, SCK, MISO, MOSI, CS, IRQ and RST to the STM32F411 board
+(SPI2: CS PB10, IRQ PB2, RST PC14). Optional series resistors, pull-ups and a TVS
+diode are left unfitted, and three solder jumpers bridge the SPI series
+positions.
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=0.85\textwidth]{../image/PhaseA1_Sch_UWB.png}
+  \caption{Phase A-1 UWB module schematic.}
+  \label{fig:a1-uwb-sch}
+\end{figure}
+
+\begin{figure}[!htbp]
+  \centering
+  \begin{subfigure}[b]{0.3\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{../image/PhaseA1_Board_UWB_Top.png}
+    \caption{Top.}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.3\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{../image/PhaseA1_Board_UWB_Bottom.png}
+    \caption{Bottom.}
+  \end{subfigure}
+  \caption{Phase A-1 UWB module PCB render.}
+  \label{fig:a1-uwb-pcb}
+\end{figure}
+
+% ----------------------------------------------------------------
+\subsection{Phase A: Power Architecture (Second Iteration)}
+\label{sec:power-new}
+
+Phase A is the second iteration: the A-1 bench wiring is replaced by custom
+boards. This subsection sets the power design for them; the next one
+(Section~\ref{sec:phase-a-board}) describes the boards themselves.
+
+\begin{figure}[!htbp]
+  \centering
   \includegraphics[width=0.6\textwidth]{../image/Power_Diagram.png}
   \caption{Power distribution block diagram.}
   \label{fig:power-diagram}
@@ -995,8 +1013,7 @@ The higher pack voltage sets new ratings for the power board: H-bridges for at
 least 2.1\,A per channel and a supply above 12.6\,V with margin, and buck
 regulators with a 9--12.6\,V input range.
 
-% ----------------------------------------------------------------
-\subsection{Next Steps}
+\subsubsection{From A-1 to Phase A}
 \label{sec:elec-next}
 
 The tested Phase A-1 wiring and CubeMX configuration are carried over to
@@ -1008,8 +1025,269 @@ design the Phase A main board and power board PCBs, with:
         point for the main-board pin-out.
 \end{itemize}
 
-\subsection{programming and debugging}
+% ----------------------------------------------------------------
+\subsection{Phase A: Main and Communication Boards (Second Iteration)}
+\label{sec:phase-a-board}
 
+\subsubsection{Board Overview}
+
+The Phase A electronics are two stacked boards that replace the A-1 bench
+wiring (Section~\ref{sec:phase-a1-hw}). The \emph{main board} (MRR\_A) carries
+the STM32G474 controller, four DRV8876 H-bridges with current sensing, the IMU,
+the battery charger and the power tree. The \emph{communication board}
+(MRR\_A\_RF) carries the ESP32-C6 Wi-Fi module and the DWM3000 UWB module. The
+RF board sits on top of the stack so the antennas are clear of the metal, and
+all signals cross a 2$\times$8 header (J21). Power comes from the 3S pack
+(Section~\ref{sec:power-new}).
+
+\begin{table}[H]
+\centering\small
+\caption{Phase A board summary.}
+\label{tab:a-board-summary}
+\begin{tabular}{@{}L{0.22\textwidth} L{0.34\textwidth} L{0.34\textwidth}@{}}
+\toprule
+ & \textbf{Main board (MRR\_A)} & \textbf{Comm.\ board (MRR\_A\_RF)} \\
+\midrule
+Controller & STM32G474RET6 (Cortex-M4F, 170\,MHz) & ESP32-C6-MINI-1U \\
+Motor drive & 4$\times$ DRV8876PWPR, PH/EN mode, IPROPI current output & -- \\
+Sensors / radio & ICM-42605 IMU (SPI) & DWM3000 UWB (SPI) \\
+Power & 3S input, e-fuse TPS259830L, buck TPS62933F (5\,V), LDO TPS7A9101 (3.3\,V), BQ25798 charger & 3.3\,V from the main board \\
+Communication & USB-C, FDCAN (500\,kbit/s), UART to ESP32-C6 & USB-C, UART header \\
+Size / layers & 68$	imes$50\,mm, 4 layers & 68$	imes$50\,mm, 4 layers \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Main Board Schematic}
+
+The schematic is hierarchical. Figure~\ref{fig:a-sch-main-root} shows the sheet
+map: MCU, sensor, power, charger, motor driver, I/O and the RF-board interface.
+The pack feeds a fuse and an e-fuse; a buck converter makes the 5\,V rail and
+an LDO the 3.3\,V rail. The motor driver sheet holds four identical
+DRV8876 channels. Each has PWM on EN, direction on PH, and a current-sense
+output (IPROPI) read by the ADC.
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=0.85\textwidth]{../image/PhaseA_Sch_Main_Root.png}
+  \caption{Main board schematic: sheet map.}
+  \label{fig:a-sch-main-root}
+\end{figure}
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=\textwidth]{../image/PhaseA_Sch_Main_MCU.png}
+  \caption{Main board schematic: STM32G474 MCU sheet.}
+  \label{fig:a-sch-main-mcu}
+\end{figure}
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=\textwidth]{../image/PhaseA_Sch_Main_Power.png}
+  \caption{Main board schematic: power sheet.}
+  \label{fig:a-sch-main-power}
+\end{figure}
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{../image/PhaseA_Sch_Main_Charger.png}
+  \caption{Main board schematic: BQ25798 charger sheet.}
+  \label{fig:a-sch-main-charger}
+\end{figure}
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=\textwidth]{../image/PhaseA_Sch_Main_Motor.png}
+  \caption{Main board schematic: one DRV8876 motor channel (channels 1--4 are identical).}
+  \label{fig:a-sch-main-motor}
+\end{figure}
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=0.5\textwidth]{../image/PhaseA_Sch_Main_Sensor.png}
+  \caption{Main board schematic: ICM-42605 IMU sheet.}
+  \label{fig:a-sch-main-sensor}
+\end{figure}
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=\textwidth]{../image/PhaseA_Sch_Main_IO.png}
+  \caption{Main board schematic: I/O sheet (USB-C, battery sense, status LED, SWD, CAN, face connectors).}
+  \label{fig:a-sch-main-io}
+\end{figure}
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=0.7\textwidth]{../image/PhaseA_Sch_Main_Interface.png}
+  \caption{Main board schematic: board-to-board link to the RF board.}
+  \label{fig:a-sch-main-iface}
+\end{figure}
+
+\subsubsection{Communication Board Schematic}
+
+The RF board has three sheets (Figure~\ref{fig:a-sch-comm-root}). The ESP32-C6
+module connects to the STM32 over UART. The DWM3000 connects over SPI with
+chip select, interrupt, reset and wake-up lines. Both run from the 3.3\,V rail
+on the header.
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=0.6\textwidth]{../image/PhaseA_Sch_Comm_Root.png}
+  \caption{Communication board schematic: sheet map.}
+  \label{fig:a-sch-comm-root}
+\end{figure}
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=\textwidth]{../image/PhaseA_Sch_Comm_ESP.png}
+  \caption{Communication board schematic: ESP32-C6 sheet.}
+  \label{fig:a-sch-comm-esp}
+\end{figure}
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=\textwidth]{../image/PhaseA_Sch_Comm_UWB.png}
+  \caption{Communication board schematic: DWM3000 UWB sheet.}
+  \label{fig:a-sch-comm-uwb}
+\end{figure}
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=0.7\textwidth]{../image/PhaseA_Sch_Comm_Interface.png}
+  \caption{Communication board schematic: header to the main board.}
+  \label{fig:a-sch-comm-iface}
+\end{figure}
+
+\subsubsection{Pin Mapping}
+
+Table~\ref{tab:a-pinmap} lists the STM32G474 pin assignment from the
+final schematic. Compared with the A-1 pin map (Table~\ref{tab:a1-periph}), the motors
+are now driven in PH/EN mode (PWM on the EN pin) and the four encoders use
+timers TIM2 to TIM5.
+
+\begin{table}[H]
+\centering\small
+\caption{STM32G474 pin mapping.}
+\label{tab:a-pinmap}
+\begin{tabular}{@{}L{0.25\textwidth} L{0.37\textwidth} L{0.28\textwidth}@{}}
+\toprule
+\textbf{Function} & \textbf{Pins} & \textbf{Peripheral} \\
+\midrule
+Motor PWM (EN), M1--M4 & PC6, PC7, PC8, PC9 & TIM8 CH1--CH4 \\
+Motor direction (PH), M1--M4 & PA8, PA9, PA10, PB9 & GPIO output \\
+Motor current (IPROPI), M1--M4 & PC0, PC1, PC2, PC3 & ADC1\,IN6/7, ADC2\,IN8/9 \\
+Encoder M1 (A, B) & PA15, PB3 & TIM2 CH1/2 \\
+Encoder M2 (A, B) & PB4, PB5 & TIM3 CH1/2 \\
+Encoder M3 (A, B) & PB6, PB7 & TIM4 CH1/2 \\
+Encoder M4 (A, B) & PA0, PA1 & TIM5 CH1/2 \\
+IMU SCK, MISO, MOSI & PC10, PC11, PC12 & SPI3 \\
+IMU CS, INT1 & PD2, PB14 & GPIO, EXTI \\
+UWB SCK, MISO, MOSI & PA5, PA6, PA7 & SPI1 \\
+UWB CS, RSTn, WAKEUP, IRQ & PA4, PB2, PB10, PB0 & GPIO, EXTI \\
+ESP32-C6 TX, RX & PC4, PC5 & USART1 \\
+CAN RX, TX & PB12, PB13 & FDCAN2 \\
+RGB LED data & PB15 & TIM15 CH2 \\
+Battery voltage, bus detect, board current & PB1, PA2, PB11 & ADC1\,IN12, ADC1\,IN3, ADC2\,IN14 \\
+Charger interrupt, enable & PA3, PC13 & GPIO \\
+Driver nSLEEP, nFAULT & PC14, PC15 & GPIO \\
+Boot select & PB8 & BOOT0 \\
+USB D$-$, D$+$ & PA11, PA12 & USB FS \\
+Debug & PA13, PA14 & SWD \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\subsubsection{MCU Configuration}
+
+The STM32G474 was configured in STM32CubeMX (Figure~\ref{fig:a-cubemx},
+Table~\ref{tab:a-periph}). The 8\,MHz crystal is divided by 2 and multiplied by
+85 in the PLL to give the 170\,MHz system clock. TIM8 generates the four motor
+PWM signals at 20\,kHz, the same as in A-1, and its trigger output starts the
+ADC conversions, so the current samples line up with the PWM. The ADCs run
+with DMA in continuous mode. Each encoder has its own timer in quadrature mode
+with input filtering. TIM6 sets the 1\,kHz control-loop tick.
+
+\begin{figure}[!htbp]
+  \centering
+  \figOrBox{0.7\textwidth}{../image/PhaseA_CubeMX.png}
+  \caption{STM32G474 pin and peripheral configuration.}
+  \label{fig:a-cubemx}
+\end{figure}
+
+\begin{table}[H]
+\centering\small
+\caption{STM32G474 peripheral settings.}
+\label{tab:a-periph}
+\begin{tabular}{@{}L{0.24\textwidth} L{0.40\textwidth} L{0.26\textwidth}@{}}
+\toprule
+\textbf{Function} & \textbf{Peripheral} & \textbf{Setting} \\
+\midrule
+System clock & HSE 8\,MHz, PLL $/2\times85$ & 170\,MHz \\
+Motor PWM & TIM8 CH1--CH4 & 20\,kHz \\
+ADC (current, voltage) & ADC1 (4 ch), ADC2 (3 ch), TIM8 trigger, DMA & continuous \\
+Encoders & TIM2, TIM3, TIM4, TIM5 & quadrature, filter 10 \\
+Control loop tick & TIM6 & 1\,kHz \\
+IMU, UWB & SPI3, SPI1 & 10.6\,Mbit/s each \\
+ESP32-C6 link & USART1 & 115\,200 baud \\
+CAN & FDCAN2 & 500\,kbit/s \\
+PC / programming & USB FS, SWD & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{PCB Layout}
+
+Figure~\ref{fig:a-pcb-main} and Figure~\ref{fig:a-pcb-comm} show the PCB
+renders from KiCad. Both boards share the same outline and mounting holes
+so they stack.
+
+\begin{figure}[!htbp]
+  \centering
+  \begin{subfigure}[b]{0.38\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{../image/PhaseA_Board_Main_Top.png}
+    \caption{Top.}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.38\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{../image/PhaseA_Board_Main_Bottom.png}
+    \caption{Bottom.}
+  \end{subfigure}
+  \caption{Main board (MRR\_A) PCB render.}
+  \label{fig:a-pcb-main}
+\end{figure}
+
+\begin{figure}[!htbp]
+  \centering
+  \begin{subfigure}[b]{0.38\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{../image/PhaseA_Board_Comm_Top.png}
+    \caption{Top.}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.38\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{../image/PhaseA_Board_Comm_Bottom.png}
+    \caption{Bottom.}
+  \end{subfigure}
+  \caption{Communication board (MRR\_A\_RF) PCB render.}
+  \label{fig:a-pcb-comm}
+\end{figure}
+
+\subsubsection{Assembly in the Module}
+
+The components sit in the same configuration as in Phase A-1
+(Figure~\ref{fig:a1-electronics-section}): the boards stand upright, parallel
+to the tilt face, with the battery cells in a column at the back of the module.
+% TODO: add photos of the fabricated boards and the assembled electronics.
+
+% ----------------------------------------------------------------
+\subsection{Later Phases (B--D)}
+\label{sec:elec-later}
+
+Phases B to D are planned and their hardware is not built yet. The phased plan is in Section~\ref{sec:elec-overview}.
 
 \clearpage
 % ================================================================
@@ -1470,7 +1748,7 @@ telemetry, watchdog). CubeMX-generated \texttt{main.c} only calls \texttt{App\_I
 During bring-up the motors were renumbered by their physical role, and the direction and
 encoder signs were calibrated so that a positive duty gives a positive encoder count on
 every channel. The motor names in Table~\ref{tab:a1-periph} have been updated to match. The pin labels
-in the CubeMX \texttt{.ioc} file still carry the old names; the pins themselves did not change.
+in the CubeMX \texttt{.ioc} file still carry the old names. The direction pins of M2\_iR and M3\_L moved when the UWB socket was added on the A-1 carrier board (Section~\ref{sec:phase-a1-hw}).
 
 \begin{table}[H]
 \centering
@@ -1482,8 +1760,8 @@ in the CubeMX \texttt{.ioc} file still carry the old names; the pins themselves 
 Idx & Name & Role & PWM & IN1 / IN2 & Encoder & Dir. & Enc. \\
 \midrule
 0 & M1\_iL & inner left  & CH3, PB0 & PA4 / PA5   & TIM4 (PB6, PB7), 16-bit  & $-1$ & $+1$ \\
-1 & M2\_iR & inner right & CH2, PA7 & PB14 / PB15 & TIM2 (PA15, PB3), 32-bit & $+1$ & $-1$ \\
-2 & M3\_L  & left wheel       & CH1, PA6 & PB12 / PB13 & TIM1 (PA8, PA9), 16-bit  & $-1$ & $+1$ \\
+1 & M2\_iR & inner right & CH2, PA7 & PB8 / PB9 & TIM2 (PA15, PB3), 32-bit & $+1$ & $-1$ \\
+2 & M3\_L  & left wheel       & CH1, PA6 & PB12 / PA10 & TIM1 (PA8, PA9), 16-bit  & $-1$ & $+1$ \\
 3 & M4\_R  & right wheel      & CH4, PB1 & PB4 / PB5   & TIM5 (PA0, PA1), 32-bit  & $+1$ & $-1$ \\
 \midrule
 \multicolumn{8}{l}{PWM from TIM3. Driver standby (both TB6612FNG): \textbf{PC15} (PR2 listed PB10). LED: PC13.} \\
@@ -1915,104 +2193,197 @@ $v_3$ & module\_1 & $(0,\ -0.1,\ 0^\circ)$ \\
 \section{Helper-Free Side (L/R) Docking}
 \label{sec:side-docking}
 
-\subsection{Problem and the Original Method}
+\subsection{Gap in the Original Method}
 
-An L/R connection joins a module's wheel face to a face of its parent. Two properties of a differential-drive module make this hard:
+Our reconfiguration planner follows the parallel self-assembly method of Liu et al.\ \cite{liu2023} (Section~\ref{sec:nav-plan}). In that method, an L/R connection, where a module docks with its wheel face, needs a \textbf{helper module} to lift the moving module during docking. This adds time, adds extra tasks to the assembly sequence, and needs an extra module that is free and close by. For this reason, Section~\ref{sec:nav-dock} proposed that L/R connections might be excluded.
+
+Docking through a wheel face is hard for two reasons:
 
 \begin{enumerate}[topsep=2pt,itemsep=2pt,parsep=0pt,leftmargin=1.5em]
-\item \textbf{The wheel face cannot move sideways.} The face normal points along the wheel axle, and a differential-drive module cannot translate along its axle. It therefore cannot simply drive its wheel face straight into the parent as it does for T/B connections.
-\item \textbf{The wheel face rotates while the module drives.} The face is part of the wheel, so its angle changes with every metre travelled. The EP connector only mates when the pattern on the wheel face lines up with the pattern on the parent face, so the final wheel angle is also a docking condition.
+\item \textbf{The wheel face cannot move sideways.} The face points along the wheel axle, and a differential-drive module cannot move along its axle. It cannot simply drive its wheel face straight into the parent, as it does for T/B connections.
+\item \textbf{The wheel face turns while the module drives.} The face is part of the wheel, so its angle changes as the module moves. The EP connector only mates when the pattern on the wheel face lines up with the pattern on the parent face, so the final wheel angle is also a docking condition.
 \end{enumerate}
 
-In the parallel self-assembly method of Liu et al.\ \cite{liu2023}, which our planner follows (Section~\ref{sec:nav-plan}), L/R connections need a \textbf{helper module} to lift the moving module during docking. The extra module adds time, extra tasks in the assembly sequence, and an extra module that must be free and nearby. For this reason, Section~\ref{sec:nav-dock} proposed that L/R connections might be excluded.
+\subsection{Trajectory Planning by Wolfe et al.}
 
-\subsection{Our Approach: Trajectory Planning for the Docking Wheel}
+To remove the need for a helper, we use the trajectory planning method of Wolfe et al.\ \cite{wolfe2010}. Their modules also dock through their wheels, so, like ours, the final wheel angle must be controlled, not only the position and heading. Their method plans the whole final motion so that the docking wheel arrives at the correct position, with the correct heading, and at the correct wheel angle.
 
-To close this gap, we plan the module's whole final motion so that the wheel face arrives in the correct place, with the correct heading, \emph{and} at the correct wheel angle, with no helper. The method follows Wolfe et al.\ \cite{wolfe2010}, who generated such trajectories for wheeled modules that dock through their wheels. The approach has three parts: a closed-form nominal plan, an optimisation that lowers the motor effort, and a closed-loop executor.
+There is one difference. In Wolfe et al.\ the wheel face has two-fold symmetry, so a valid wheel angle repeats every $\pi$. Our EP face has four-fold symmetry, so a valid wheel angle repeats every $\pi/2$. This gives us twice as many valid final wheel angles to choose from.
 
-\subsubsection{Model and Docking Condition}
+\subsection{Turn, Straight, Turn, Straight}
 
-As in \cite{wolfe2010}, the module pose is $g = (x, y, \theta)$, where $(x, y)$ is the midpoint of the axle and $\theta$ is the angle of the axle, so the driving direction is $\mathbf{h}(\theta) = (-\sin\theta, \cos\theta)$. With $\phi_1$ and $\phi_2$ the angles of the right and left wheels about their outward axes, wheel radius $r$ and wheel separation $W$,
+Wolfe et al.\ show that the module can always reach the goal with four segments: \textbf{turn, straight, turn, straight}. Each turn is a pivot about the docking wheel: the docking wheel is held still and only the other wheel turns. This keeps the problem simple, because the docking wheel's angle then changes \emph{only} during the two straights. The rotation of the docking wheel is just the sum of the two straight lengths divided by the wheel radius.
+
+Figure~\ref{fig:side-dock-steps} shows an example:
+
+\begin{enumerate}[topsep=2pt,itemsep=2pt,parsep=0pt,leftmargin=1.5em]
+\item \textbf{Turn.} At the start pose $\mathbf{p}_0$, the module pivots about its docking wheel to face the intermediate point $\mathbf{p}_1$.
+\item \textbf{Straight.} The module drives straight from $\mathbf{p}_0$ to $\mathbf{p}_1$ (Figure~\ref{fig:side-dock-2}).
+\item \textbf{Turn.} At $\mathbf{p}_1$, it pivots about the docking wheel again to the final heading $\theta_f$, so its wheel face is in line with the parent face (Figure~\ref{fig:side-dock-3}).
+\item \textbf{Straight.} It drives straight from $\mathbf{p}_1$ to $\mathbf{p}_f$, sliding the wheel face along the line of the parent face until it docks (Figure~\ref{fig:side-dock-4}).
+\end{enumerate}
+
+\begin{figure}[!htbp]
+	\centering
+	\begin{subfigure}[b]{0.45\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{../image/side_dock_1_start.png}
+		\caption{Start pose $\mathbf{p}_0$ and the planned path.}
+		\label{fig:side-dock-1}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.45\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{../image/side_dock_2_first_straight.png}
+		\caption{After the first turn and straight, at $\mathbf{p}_1$.}
+		\label{fig:side-dock-2}
+	\end{subfigure}
+	\par\vspace{6pt}
+	\begin{subfigure}[b]{0.45\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{../image/side_dock_3_second_pivot.png}
+		\caption{After the second turn, at heading $\theta_f$.}
+		\label{fig:side-dock-3}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.45\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{../image/side_dock_4_docked.png}
+		\caption{After the final straight, docked at $\mathbf{p}_f$.}
+		\label{fig:side-dock-4}
+	\end{subfigure}
+	\caption{Example of helper-free L/R docking with turn, straight, turn, straight. The orange line is the path of the docking wheel. The dots on the dashed line are candidate positions for $\mathbf{p}_1$.}
+	\label{fig:side-dock-steps}
+\end{figure}
+
+\subsection{Wheel Angle Constraint}
+
+Because the docking wheel only turns during the straights, the plan is two lines added together. The only thing left is to choose $\mathbf{p}_1$ so that the total length of the two lines turns the docking wheel to a valid angle.
+
+Let $\phi_{d,0}$ be the starting angle of the docking wheel, $\phi_f$ the target wheel angle and $r$ the wheel radius. With four-fold symmetry, the final wheel angle may be $\phi_f + k\pi/2$ for any integer $k$, so the total distance driven must be
 \begin{equation}
-\dot{g} = \frac{r}{2}
-\begin{bmatrix} \sin\theta & -\sin\theta \\ -\cos\theta & \cos\theta \\ -2/W & -2/W \end{bmatrix}
-\begin{bmatrix} \dot{\phi}_1 \\ \dot{\phi}_2 \end{bmatrix}.
+|\mathbf{p}_1 - \mathbf{p}_0| + |\mathbf{p}_f - \mathbf{p}_1| = c_k = r\left(\phi_f - \phi_{d,0} + k\frac{\pi}{2}\right), \qquad k \in \mathbb{Z},\ c_k > 0.
 \end{equation}
-Driving straight forward corresponds to $\dot{\phi} = \omega_s(-1, 1)$. For docking wheel $d \in \{1, 2\}$, the docking condition is
-\begin{equation}
-\mathbf{p}_d(T) = \mathbf{p}_f, \qquad \theta(T) = \theta_f, \qquad \phi_d(T) \equiv \phi_f \pmod{\pi/2},
-\end{equation}
-where $\mathbf{p}_d$ is the centre of wheel $d$, and $\mathbf{p}_f$ is placed a small gap (\SI{3}{mm}) off the parent face, so that the EP magnets close the last gap.
+The point $\mathbf{p}_1$ must also lie on the line through $\mathbf{p}_f$ along the final driving direction, so that the last straight runs along the parent face. Each $k$ therefore gives one candidate $\mathbf{p}_1$ on that line. Candidates whose final straight is too short, or that would cross the parent, are rejected (marked $\times$ in Figure~\ref{fig:side-dock-steps}), and the cheapest valid plan is chosen.
 
-\textbf{Change from the paper.} Wolfe et al.\ require the wheel angle modulo $\pi$. The EP face has four-fold symmetry, so we use modulo $\pi/2$. This doubles the number of valid final wheel angles.
+\subsection{Simulation Implementation}
 
-\subsubsection{Nominal Plan: Pivot, Straight, Pivot, Straight}
+The method is implemented in the \texttt{msrr\_control} ROS~2 package and tested in Gazebo. It has two parts: a planner (\texttt{wheel\_dock\_plan.py}, no ROS code) and an executor (\texttt{wheel\_dock.py}). The central controller (\texttt{algo\_node}) first drives the moving module along its grid route to a pre-dock point (Section~\ref{sec:nav-plan}). For an L/R connection, it then hands control to the executor. Both parts read the module pose from Gazebo ground truth and the wheel angles from \texttt{joint\_states}.
 
-The module first pivots about its docking wheel, drives straight to an intermediate point $\mathbf{p}_1$, and pivots about the docking wheel again to the final heading $\theta_f$. It then drives straight along $\mathbf{h}(\theta_f)$, so the wheel face slides along the parent face into $\mathbf{p}_f$. In each pivot, wheel $d$ is held still and only the other wheel turns, so the docking wheel's angle changes \emph{only} during the two straights. Its total rotation is then fixed by the total distance driven.
+\textbf{Planner.} The planner computes one plan from the module's current pose and docking-wheel angle:
+\begin{itemize}[topsep=2pt,itemsep=2pt,parsep=0pt]
+\item The goal $\mathbf{p}_f$ is the docking-wheel centre at the target slot, moved \SI{3}{mm} away from the parent so that the EP magnets close the last gap.
+\item $\mathbf{p}_1 = \mathbf{p}_f + s\,\mathbf{h}(\theta_f)$ is searched over $\SI{0.16}{m} \le |s| \le \SI{0.5}{m}$ on both sides of $\mathbf{p}_f$, with the first straight driven forwards or in reverse. The valid values of $s$ are the roots of $\sin\!\big(2(\phi_{d,\mathrm{end}}(s) - \phi_f)\big)$, which is zero exactly when the final wheel angle is a valid angle modulo $\pi/2$. They are found by sign change and bisection.
+\item Each candidate is checked for collisions with the parent: the body swept by each pivot must clear the parent, and the body square is checked against the parent square (separating axis test) every \SI{1}{cm} along both straights.
+\item The cost is $\sqrt{2}\,(\text{straight length}) + W\,(|\Delta\theta_1| + |\Delta\theta_2|)$. Candidates with at least \SI{1}{cm} clearance are preferred.
+\end{itemize}
 
-Let $\mathbf{p}_1 = \mathbf{p}_f + s\,\mathbf{h}(\theta_f)$, with $\mathbf{q} = \mathbf{p}_f - \mathbf{p}_0$ and $b = \mathbf{q} \cdot \mathbf{h}(\theta_f)$. For each integer $k$, the signed distance that wheel $d$ must roll to end at a valid angle is
-\begin{equation}
-c_k = \sigma_d\, r \left(\phi_f - \phi_{d,0} + k\frac{\pi}{2}\right),
-\end{equation}
-where $\sigma_d = \mp 1$ is the wheel's sign when driving forward. Requiring the two straights to add up to $c_k$ gives a closed-form position for $\mathbf{p}_1$:
-\begin{equation}
-s_k = \frac{c_k^2 - |\mathbf{q}|^2}{2\,(b - c_k)}.
-\end{equation}
-Candidates with a final straight shorter than a set minimum (\SI{0.16}{m}) are rejected. The plan with the lowest effort is selected.
+\textbf{Executor.} The executor runs the four segments in closed loop at \SI{10}{Hz}:
+\begin{itemize}[topsep=2pt,itemsep=2pt,parsep=0pt]
+\item \textbf{Pivot:} it commands $v = \pm\omega W/2$, so that the speed of the docking wheel is zero, and stops when the heading error is below \SI{0.03}{rad}.
+\item \textbf{Straight:} it drives with a proportional speed command, corrects heading and sideways error, and stops when the docking wheel is within \SI{3}{mm} of the segment end.
+\item If a segment ends more than \SI{1}{cm} away from the plan, the rest of the plan is computed again from the current pose.
+\item At the end, the wheel-angle error modulo $\pi/2$ is reported, and the dock is accepted if it is below \SI{0.2}{rad}.
+\end{itemize}
 
-\textbf{Effort.} The motor effort is $J = \tfrac{1}{2}\int_0^T (\dot{\phi}_1^2 + \dot{\phi}_2^2)\,dt$. Pivots are run with the one moving wheel at $\sqrt{2}\,\omega_s$, which keeps the effort rate the same in every segment, so for a time budget $T$,
-\begin{equation}
-J = \frac{L^2}{r^2 T}, \qquad L = D_{01} + |s| + \frac{W}{\sqrt{2}}\left(|\Delta\theta_{01}| + |\Delta\theta_{1f}|\right),
-\end{equation}
-where $D_{01}$ is the length of the first straight, and $\Delta\theta_{01}$ and $\Delta\theta_{1f}$ are the two pivot angles. If a wheel would exceed the motor limit, $T$ is increased.
+The model values are $r = \SI{0.05}{m}$, $W = \SI{0.09665}{m}$, body size \SI{0.107}{m} and top wheel speed \SI{0.049}{m/s}.
 
-\subsubsection{Optimisation: Sinusoidal Perturbations}
+\subsection{Simulation Results}
 
-Following \cite{wolfe2010}, the nominal wheel angles are perturbed by sine terms that are zero at both ends:
-\begin{equation}
-\phi_i(t) = \phi_i^{\mathrm{nom}}(t) + \sum_{j=1}^{N} \varepsilon_{ij} \sin\!\left(\frac{j\pi t}{T}\right), \qquad i = 1, 2.
-\end{equation}
-The wheel angles at $t = 0$ and $t = T$ do not change, so the final wheel angle and the final heading (which depends only on $\phi_1 + \phi_2$) are kept automatically. With this basis, $J$ is exactly quadratic in $\varepsilon$. Only $x(T)$ and $y(T)$ must be constrained, so the problem is solved with sequential quadratic programming (a KKT system at each step) with a line search. We use $N = 10$ terms per wheel. A SciPy SLSQP solver was used as an independent check and gives the same optimum.
+\textbf{Test.} Two modules were spawned \SI{0.3}{m} apart along $y$, both facing $+x$, with target connection \texttt{1,L,0,R}. The planner chose \texttt{module\_1} as the root. \texttt{module\_2} must dock its left wheel face onto the root's right face, so it has to finish on the far side of the root. The run was repeated twice from the same start.
 
-\subsubsection{Execution and Simulation Calibration}
+Figure~\ref{fig:sim-side-dock-shots} shows Gazebo screenshots of the successful run (top view), and Figure~\ref{fig:sim-side-dock-path} compares the planned and executed paths. Table~\ref{tab:sim-side-dock} lists the measured values.
 
-The plan is executed segment by segment in closed loop. A pivot ends when the heading error is below \SI{0.005}{rad}. A straight ends on the docking wheel's \emph{encoder} angle, not on time, so the wheel-angle condition holds even if the module is slow. During straights, the heading and the cross-track error of the docking wheel are corrected. Two model values were measured in Gazebo and used by the planner: the effective rolling radius (\SI{0.0492}{m} versus \SI{0.05}{m}) and the separation about which a held wheel actually pivots (\SI{0.1028}{m} versus \SI{0.0967}{m}).
+\begin{figure}[!htbp]
+	\centering
+	\begin{subfigure}[b]{0.31\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{../image/sim_side_dock_start.png}
+		\caption{Start. Root below, moving module above.}
+		\label{fig:sim-shot-start}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.31\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{../image/sim_side_dock_nav_collision.png}
+		\caption{Navigation: the module hits the corner of the root.}
+		\label{fig:sim-shot-collision}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.31\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{../image/sim_side_dock_dock_start.png}
+		\caption{Pre-dock point reached; the wheel dock starts.}
+		\label{fig:sim-shot-dockstart}
+	\end{subfigure}
+	\par\vspace{6pt}
+	\begin{subfigure}[b]{0.31\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{../image/sim_side_dock_straight1.png}
+		\caption{First straight, towards $\mathbf{p}_1$.}
+		\label{fig:sim-shot-straight1}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.31\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{../image/sim_side_dock_pivot2.png}
+		\caption{At $\mathbf{p}_1$ after the second pivot.}
+		\label{fig:sim-shot-pivot2}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.31\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{../image/sim_side_dock_docked.png}
+		\caption{Docked after the final straight (in reverse).}
+		\label{fig:sim-shot-docked}
+	\end{subfigure}
+	\caption{Gazebo top view of helper-free L/R docking (connection \texttt{1,L,0,R}).}
+	\label{fig:sim-side-dock-shots}
+\end{figure}
 
-\subsection{Results}
-
-\textbf{Unit tests (offline).} Fifteen tests check the model against the URDF and controller, and the planner on random cases. In 60 random cases, the nominal plan reaches $\mathbf{p}_f$ within \SI{1}{mm}, $\theta_f$ within \ang{0.5}, and the wheel angle within \SI{1e-3}{rad}. The optimisation never increases $J$ and keeps the constraints. Over 50 random cases, using modulo $\pi/2$ instead of modulo $\pi$ lowered $J$ by \SI{7.2}{\percent} on average (up to \SI{41}{\percent}).
-
-\textbf{Two-module simulation.} In Gazebo, the moving module docked its left wheel face to the right face of the root module without a helper (Table~\ref{tab:side-dock-2}).
+\begin{figure}[!htbp]
+	\centering
+	\includegraphics[width=0.62\textwidth]{../image/sim_side_dock_path.png}
+	\caption{Planned and executed paths of the successful run. The blue line is the grid navigation to the pre-dock point. The red line is the executed path of the docking wheel and the dashed line is the plan. The root was pushed when the moving module hit it during navigation.}
+	\label{fig:sim-side-dock-path}
+\end{figure}
 
 \begin{table}[!htbp]
 \centering
-\caption{Two-module helper-free L/R docking in simulation (connection \texttt{1,L,0,R}).}
-\label{tab:side-dock-2}
+\caption{Measured values of the successful run (ground truth from Gazebo).}
+\label{tab:sim-side-dock}
 \small
-\begin{tabular}{@{}ll@{}}
+\begin{tabular}{@{}lll@{}}
 \toprule
-\textbf{Quantity} & \textbf{Value} \\
+\textbf{Quantity} & \textbf{Plan} & \textbf{Executed} \\
 \midrule
-Position error of the docking wheel & \SI{0.2}{mm} \\
-Gap to the parent face (target \SI{3}{mm}) & \SI{2.9}{mm} \\
-Heading error & \ang{0.02} \\
-Wheel-angle error (mod $\pi/2$) & \SI{0.005}{rad} \\
-Effort $J$: nominal / optimised / executed & 5.263 / 4.965 / 5.037 \\
+First straight (forward) & \SI{0.294}{m} & \SI{0.289}{m} \\
+Second straight (reverse) & \SI{0.206}{m} & \SI{0.199}{m} \\
+Movement of the held wheel in pivot 1 / pivot 2 & 0 / 0 & \SI{9.2}{mm} / \SI{3.1}{mm} \\
+Final docking-wheel position error (along / normal to face) & -- & \SI{2.1}{mm} / \SI{1.6}{mm} \\
+Final heading error (world / relative to parent) & -- & \ang{0.2} / \ang{2.2} \\
+Final wheel-angle error (mod $\pi/2$) & 0 & \SI{0.046}{rad} (\ang{2.7}) \\
+Effective rolling radius & \SI{0.0500}{m} & \SI{0.0496}{m} \\
+Wheel-dock time / whole run (sim time) & -- & \SI{16.2}{s} / \SI{52.5}{s} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The executor tracks the nominal plan, so the executed effort is close to the nominal value. The optimised plan is \SI{5.7}{\percent} lower, but it is currently only computed, not executed.
+The four-segment plan works as intended. During both pivots, the docking wheel's joint angle did not change, so the wheel only turned during the two straights. The module finished \SI{2}{mm} from $\mathbf{p}_f$, and the wheel angle was \SI{0.046}{rad} from a valid angle, which is about \SI{2.3}{mm} of rolling. However, the second run from the same start \textbf{failed} with ``no clear docking plan'', so the method is not yet reliable.
 
-\subsection{Remaining Work}
+\subsection{Flaws Found}
 
-\begin{itemize}[topsep=2pt,itemsep=2pt,parsep=0pt]
-\item Run the three-module side-by-side test of Table~\ref{tab:nav-n1}, in which both outer modules dock to the root in parallel.
-\item Execute the optimised trajectory instead of the nominal one.
-\item Take the target wheel angle $\phi_f$ from the parent face's actual orientation; it is currently a fixed parameter.
-\item Add collision checking between modules during the pivots.
-\item Verify the wheel-angle condition on hardware once the EP faces are built (Section~\ref{sec:phase-b-magnet}).
-\end{itemize}
+\begin{enumerate}[topsep=2pt,itemsep=2pt,parsep=0pt,leftmargin=1.5em]
+\item \textbf{Collision during navigation.} The grid cell (\SI{0.107}{m}) is equal to the body width, so the route around the root leaves no clearance, and the turn-then-drive controller cuts the corner (Figure~\ref{fig:sim-shot-collision}). The moving module hit the root, which moved it by \SI{2}{mm} and rotated it by \ang{2.4} in the first run and by \ang{3.4} in the second run. This happens before the wheel dock, but it breaks the dock.
+\item \textbf{The goal does not follow the parent.} The goal $\mathbf{p}_f$ is taken from the fixed target slot in the world, not from the parent's actual pose. In the first run, the module therefore docked with a \ang{2.2} tilt relative to the parent face, and the gap was about \SI{4.3}{mm} at the face centre instead of \SI{3}{mm}. In the second run, the rotated root blocked every candidate path in the collision check, so no plan was found.
+\item \textbf{The held wheel slips during pivots.} In Gazebo, the body does not rotate exactly about the held wheel. The docking wheel moved \SI{9.2}{mm} in the first pivot, so the executed straights were 5 to \SI{8}{mm} shorter than planned. The plan is only recomputed if the error exceeds \SI{1}{cm}, so this error is not corrected.
+\item \textbf{Straights end on position, not on wheel angle.} A straight stops when the measured position reaches its end, so the final wheel angle depends on the rolling radius. The effective radius in Gazebo is \SI{0.0496}{m}, not \SI{0.05}{m}, and together with the pivot slip this gave the \SI{0.046}{rad} wheel-angle error. The acceptance tolerance (\SI{0.2}{rad}, about \SI{10}{mm} of rolling) is loose. It has not yet been checked against what the EP face pattern needs.
+\item \textbf{Heading tolerance at the end of pivots.} A pivot stops within \SI{0.03}{rad} (\ang{1.7}). The remaining heading error is only corrected during the final straight, so the wheel face approaches the parent at a small angle.
+\item \textbf{Target wheel angle not calibrated.} The target angle $\phi_f$ is taken from the parent face angle with a mirror offset that is still set to zero, so the absolute alignment of the face patterns has not been verified.
+\item \textbf{Ideal sensing and a small test.} The test uses ground-truth pose without noise, only two modules and one start configuration. The three-module side-by-side test (Table~\ref{tab:nav-n1}) has not been run.
+\end{enumerate}
+
+\textbf{Next steps.} Add a clearance margin to navigation (a larger grid or an inflated root cell), compute $\mathbf{p}_f$ from the parent's measured pose at the start of the dock, end the straights on the docking-wheel encoder angle, recompute the plan after each pivot, and repeat the test over many start poses to measure the success rate.
 
 \clearpage
 % ================================================================

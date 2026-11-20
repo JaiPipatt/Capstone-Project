@@ -165,60 +165,60 @@ hardware without external localisation or computation.
 \label{sec:gantt}
 % ================================================================
 
-Task schedule from the team Notion timeline (as of 20~Oct~2026), grouped by phase.
+Task schedule from the team Notion timeline (as of 20~Nov~2026), grouped by phase.
 
 \begin{figure}[H]
 \centering\scriptsize
-\begin{ganttchart}[gantt style]{2026-08-17}{2027-01-17}
+\begin{ganttchart}[gantt style]{2026-08-17}{2027-03-21}
 \gantttitlecalendar{year, month=shortname} \\
-\ganttgroup{Phase A --- Locomotion, sensing and communication}{2026-08-28}{2027-01-09} \\
-\ganttbar[gpast]{(Phase\_A\_1) Planning/ Trade Study}{2026-08-28}{2026-09-30} \\
+\ganttgroup{Phase A --- Locomotion, sensing and communication}{2026-08-28}{2027-01-04} \\
+\ganttbar[gpast]{(Phase\_A\_1) Electronics Planning/ Trade Study}{2026-08-28}{2026-09-30} \\
 \ganttmilestone[gpast]{MILESTONE - Proposal submission}{2026-08-28} \\
 \ganttbar[gpast]{Module design Mechanic Draft 1 (CAD)}{2026-08-28}{2026-09-17} \\
 \ganttbar[gpast]{Module design Mechanic Draft 1 (FAB) Draft\_1}{2026-09-18}{2026-10-12} \\
 \ganttbar[gpast]{(sim) export URDF to gazebo, controller and locomotion}{2026-09-25}{2026-10-08} \\
 \ganttmilestone[gpast]{MILESTONE - First progress report}{2026-09-25} \\
-\ganttbar[gpast]{(Phase\_A\_1) Part Ordering/Shipping}{2026-10-01}{2026-10-15} \\
-\ganttbar[gnow]{Control board and firmware}{2026-10-01}{2026-10-10} \\
-\ganttbar[gnow]{Power, Main Board PCB Designing}{2026-10-01}{2026-10-15} \\
+\ganttbar[gnow]{(Phase\_A\_1) Part Ordering/Shipping}{2026-10-01}{2026-10-15} \\
+\ganttbar[gpast]{Control board and firmware}{2026-10-01}{2026-10-10} \\
+\ganttbar[gpast]{Power, Main Board PCB Designing}{2026-10-01}{2026-10-15} \\
 \ganttbar[gpast]{Gear and Shaft Print Testing and Redesign}{2026-10-05}{2026-10-25} \\
-\ganttbar[gnext]{(sim) Implement Reconfiguration planning}{2026-10-09}{2026-11-03} \\
+\ganttbar[gpast]{(sim) Implement Reconfiguration planning}{2026-10-09}{2026-11-03} \\
 \ganttbar[gnow]{(sim) Navigation and avoidance with known coordinate}{2026-10-09}{2026-10-21} \\
-\ganttbar[gnow]{Basic Locomotion Testing}{2026-10-13}{2026-10-20} \\
-\ganttbar[gnext]{(Phase\_A\_1) Testing}{2026-10-16}{2026-10-20} \\
-\ganttbar[gpast]{Power, Main Board PCB FAB + Part Ordering}{2026-10-16}{2026-10-29} \\
-\ganttbar[gnext]{(real) Localization and navigation from camera}{2026-10-23}{2026-11-03} \\
-\ganttmilestone[gnext]{MILESTONE - Second progress report}{2026-10-23} \\
-\ganttbar[gnext]{Power, Main Board Testing}{2026-10-30}{2026-11-12} \\
-\ganttbar[gnext]{Radio link and protocol}{2026-10-30}{2026-11-12} \\
-\ganttbar[gnext]{UWB \& Radio link wifi testing (Dev board)}{2026-10-30}{2026-11-12} \\
-\ganttbar[gnext]{low level control + Sensing IMU Encoder (Dev board)}{2026-10-30}{2026-11-12} \\
-\ganttbar[gnext]{(real) Implement Reconfiguration planning}{2026-11-04}{2026-11-18} \\
+\ganttbar[gpast]{Basic Locomotion Testing}{2026-10-13}{2026-10-20} \\
+\ganttbar[gnow]{(Phase\_A\_1) Testing}{2026-10-16}{2026-11-21} \\
+\ganttbar[gnow]{(real) Localization and navigation from camera}{2026-10-23}{2026-11-03} \\
+\ganttmilestone[gpast]{MILESTONE - Second progress report}{2026-10-23} \\
+\ganttbar[gnow]{(real) Implement Reconfiguration planning}{2026-11-04}{2026-11-18} \\
+\ganttbar[gnow]{low level control + Sensing IMU Encoder (Dev board)}{2026-11-08}{2026-11-21} \\
 \ganttbar[gnext]{Connector FAB (EP-Face) (1)}{2026-11-15}{2026-11-30} \\
-\ganttbar[gnext]{Connector design (EP-Face)}{2026-12-11}{2027-01-09} \\
-\ganttgroup{Phase B --- Docking and task-oriented reconfiguration}{2026-09-22}{2027-01-03} \\
-\ganttbar[gpast]{EP Research and Face Design}{2026-09-22}{2026-09-30} \\
-\ganttbar[gnow]{EP Face Part Ordering}{2026-10-01}{2026-10-14} \\
-\ganttbar[gnext]{IR Face Design}{2026-10-01}{2026-10-09} \\
-\ganttbar[gnext]{IR Face Part Ordering}{2026-10-10}{2026-10-23} \\
-\ganttbar[gnext]{EP Face 1st Test}{2026-10-15}{2026-10-28} \\
-\ganttbar[gnext]{IR 1st test}{2026-10-24}{2026-11-06} \\
-\ganttbar[gnext]{In-Wheel (EP and IR) Board Designing}{2026-10-29}{2026-11-11} \\
-\ganttbar[gnext]{(sim) urdf add contact face}{2026-11-05}{2026-11-18} \\
-\ganttbar[gnext]{Contract face testing}{2026-11-13}{2026-11-26} \\
-\ganttbar[gnext]{In-Wheel (EP and IR) Board FAB + Part Ordering}{2026-11-13}{2026-11-26} \\
-\ganttmilestone[gnext]{MILESTONE - Draft final report}{2026-11-18} \\
-\ganttbar[gnext]{(sim) precision docking with self alignment}{2026-11-20}{2026-12-03} \\
+\ganttbar[gnow]{Power, Main Board PCB FAB + Part Ordering}{2026-11-15}{2026-12-04} \\
+\ganttbar[gnow]{UWB \& Radio link wifi testing (Dev board)}{2026-11-25}{2026-12-08} \\
+\ganttbar[gnext]{Power, Main Board Testing}{2026-12-05}{2026-12-18} \\
+\ganttbar[gnow]{Radio link and protocol}{2026-12-08}{2026-12-21} \\
+\ganttbar[gnext]{Connector design (EP-Face)}{2026-12-19}{2027-01-04} \\
+\ganttgroup{Phase B --- Docking and task-oriented reconfiguration}{2026-10-01}{2027-03-14} \\
+\ganttbar[gpast]{EP Research and Face Design}{2026-10-01}{2026-10-25} \\
+\ganttbar[gpast]{EP Face Part Ordering}{2026-10-26}{2026-11-10} \\
+\ganttbar[gnow]{(sim) urdf add contact face}{2026-11-05}{2026-11-18} \\
+\ganttbar[gnow]{EP Face 1st Test}{2026-11-11}{2027-01-16} \\
+\ganttbar[gnow]{Contract face testing}{2026-11-13}{2026-11-26} \\
+\ganttmilestone[gnow]{MILESTONE - Draft final report}{2026-11-18} \\
+\ganttbar[gnow]{(sim) precision docking with self alignment}{2026-11-20}{2026-12-03} \\
 \ganttbar[gnext]{MILESTONE - Final presentation}{2026-11-22}{2026-12-03} \\
-\ganttbar[gnext]{In-Wheel (EP and IR) Board Testing}{2026-11-27}{2026-12-10} \\
 \ganttbar[gnext]{Locomotion with contact face testing}{2026-11-27}{2026-12-10} \\
-\ganttbar[gnext]{(real) Reconfiguration planning with precision docking}{2026-12-04}{2026-12-17} \\
+\ganttbar[gnow]{(real) Reconfiguration planning with precision docking}{2026-12-04}{2026-12-17} \\
+\ganttbar[gnext]{IR Face Design}{2026-12-04}{2026-12-18} \\
 \ganttmilestone[gnext]{MILESTONE - Final report (Project I)}{2026-12-10} \\
-\ganttbar[gnext]{W5 Assembled gaits, PPO training}{2026-12-11}{2027-01-03} \\
-\ganttbar[gnext]{W6 IR alignment and docking}{2026-12-11}{2026-12-27} \\
-\ganttbar[gnext]{W7 EP-Face build and characterisation}{2026-12-11}{2027-01-03} \\
-\ganttbar[gnext]{W8 Configuration library}{2026-12-11}{2026-12-27}
-\ganttvrule{Today (20 Oct)}{2026-10-20}
+\ganttbar[gnext]{Assembled gaits, PPO training}{2026-12-11}{2027-01-03} \\
+\ganttbar[gnext]{Configuration library}{2026-12-11}{2026-12-27} \\
+\ganttbar[gnext]{EP-Face build and characterisation}{2026-12-11}{2027-01-03} \\
+\ganttbar[gnext]{IR alignment and docking}{2026-12-11}{2026-12-27} \\
+\ganttbar[gnext]{IR Face Part Ordering}{2027-01-01}{2027-01-11} \\
+\ganttbar[gnext]{IR 1st test}{2027-01-12}{2027-01-25} \\
+\ganttbar[gnext]{In-Wheel (EP and IR) Board Designing}{2027-02-01}{2027-02-14} \\
+\ganttbar[gnext]{In-Wheel (EP and IR) Board FAB + Part Ordering}{2027-02-15}{2027-02-28} \\
+\ganttbar[gnext]{In-Wheel (EP and IR) Board Testing}{2027-03-01}{2027-03-14}
+\ganttvrule{Today (20 Nov)}{2026-11-20}
 \end{ganttchart}
 \caption{Project I schedule (Phases A--B). \ganttkey{ganttpast}~Completed \quad \ganttkey{ganttnow}~In progress \quad \ganttkey{ganttnext}~Upcoming; dashed line marks the report date.}
 \label{fig:gantt-ab}
@@ -233,28 +233,28 @@ Task schedule from the team Notion timeline (as of 20~Oct~2026), grouped by phas
 \ganttbar[gnext]{(sim) onboard perception obstacle avoidance and navigation}{2026-12-13}{2026-12-31} \\
 \ganttbar[gnext]{Onboard perception testing}{2026-12-24}{2027-01-06} \\
 \ganttbar[gnext]{(Real) Onboard Perception nav and configuration planning}{2027-01-01}{2027-01-18} \\
-\ganttbar[gnext]{Inductive Encoder Designing}{2027-01-01}{2027-01-20} \\
 \ganttbar[gnext]{Locomotion, Planning with internal Perception (IR and UWB)}{2027-01-03}{2027-01-31} \\
-\ganttbar[gnext]{W9 Camera and ToF integration}{2027-01-04}{2027-02-12} \\
-\ganttbar[gnext]{W5 Policy training on held-out params}{2027-01-11}{2027-02-26} \\
-\ganttbar[gnext]{W8 Obstacle state to configuration}{2027-01-18}{2027-03-05} \\
+\ganttbar[gnext]{Camera and ToF integration}{2027-01-04}{2027-02-12} \\
+\ganttbar[gnext]{Inductive Encoder Designing}{2027-01-05}{2027-01-20} \\
+\ganttbar[gnext]{Policy training on held-out params}{2027-01-11}{2027-02-26} \\
+\ganttbar[gnext]{Obstacle state to configuration}{2027-01-18}{2027-03-05} \\
 \ganttbar[gnext]{(sim) Configuration lookup table}{2027-01-19}{2027-02-01} \\
 \ganttbar[gnext]{Inductive Encoder FAB + Part Ordering}{2027-01-21}{2027-02-10} \\
-\ganttbar[gnext]{W9 Terrain and traversability pipeline}{2027-01-25}{2027-03-05} \\
+\ganttbar[gnext]{Terrain and traversability pipeline}{2027-01-25}{2027-03-05} \\
 \ganttbar[gnext]{(Real) environment adaptation}{2027-02-02}{2027-02-28} \\
 \ganttbar[gnext]{Inductive Encoder Testing}{2027-02-11}{2027-02-28} \\
 \ganttbar[gnext]{MILESTONE - Phase C evaluation}{2027-03-01}{2027-03-05} \\
 \ganttgroup{Phase D --- Fully onboard perception and computation}{2027-01-21}{2027-04-30} \\
 \ganttbar[gnext]{PCB for CM5 Designing}{2027-01-21}{2027-02-04} \\
 \ganttbar[gnext]{PCB for CM5 Designing FAB + Part Ordering}{2027-02-05}{2027-02-18} \\
-\ganttbar[gnext]{W10 Compute module bring-up}{2027-02-15}{2027-03-19} \\
+\ganttbar[gnext]{Compute module bring-up}{2027-02-15}{2027-03-19} \\
 \ganttbar[gnext]{CM5 with RGBD and TOF Testing}{2027-02-19}{2027-03-04} \\
 \ganttbar[gnext]{Onboard Odometry with no camera testing}{2027-02-22}{2027-03-11} \\
-\ganttbar[gnext]{W4 Onboard odometry, drop VICON}{2027-02-22}{2027-04-02} \\
+\ganttbar[gnext]{Onboard odometry, drop VICON}{2027-02-22}{2027-04-02} \\
 \ganttbar[gnext]{(sim) local interaction to reorganize (concept)}{2027-03-01}{2027-04-09} \\
 \ganttbar[gnext]{Full testing internal computation}{2027-03-01}{2027-04-02} \\
 \ganttbar[gnext]{Internal Computation}{2027-03-01}{2027-03-14} \\
-\ganttbar[gnext]{W10 Quantised inference on module}{2027-03-08}{2027-04-09} \\
+\ganttbar[gnext]{Quantised inference on module}{2027-03-08}{2027-04-09} \\
 \ganttbar[gnext]{MILESTONE - Loop closed on hardware}{2027-04-05}{2027-04-09} \\
 \ganttbar[gnext]{MILESTONE - Final evaluation (Project II)}{2027-04-26}{2027-04-30}
 \end{ganttchart}

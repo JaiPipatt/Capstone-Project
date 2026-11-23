@@ -313,72 +313,60 @@ The design is based on SMORES-EP \cite{tosun2016} (originally \SI{80}{mm}), scal
 \subsection{Assembled Prototype}
 \label{sec:assembled-prototype}
 
-Figures~\ref{fig:real-views} and~\ref{fig:real-views-2} show the physically
+Figure~\ref{fig:real-views} shows the physically
 assembled module, with printed wheels, pan and tilt faces, spur and crown gears,
 and N20 motors mounted in the frame.
 
 \begin{figure}[!htbp]
 	\centering
-	\begin{subfigure}[t]{0.40\textwidth}
+	\begin{subfigure}[b]{0.31\textwidth}
 		\centering
-		\includegraphics[width=\linewidth]{../image/assembled_iso_view.jpg}
+		\includegraphics[width=\linewidth,height=3.4cm,keepaspectratio]{../image/assembled_iso_view.jpg}
 		\caption{Oblique view of the pan face and crown gear.}
 		\label{fig:real-iso}
 	\end{subfigure}
 	\hfill
-	\begin{subfigure}[t]{0.40\textwidth}
+	\begin{subfigure}[b]{0.31\textwidth}
 		\centering
-		\includegraphics[width=\linewidth]{../image/assembled_top_view.jpg}
+		\includegraphics[width=\linewidth,height=3.4cm,keepaspectratio]{../image/assembled_top_view.jpg}
 		\caption{Top view of wheels, spur gears, and frame.}
 		\label{fig:real-top}
 	\end{subfigure}
-	\par\vspace{6pt}
-	\begin{subfigure}[t]{0.40\textwidth}
+	\hfill
+	\begin{subfigure}[b]{0.31\textwidth}
 		\centering
-		\includegraphics[width=\linewidth]{../image/assembled_tilt_face.jpg}
+		\includegraphics[width=\linewidth,height=3.4cm,keepaspectratio]{../image/assembled_tilt_face.jpg}
 		\caption{Tilt face with EP-magnet openings.}
 		\label{fig:real-tilt}
 	\end{subfigure}
-	\hfill
-	\begin{subfigure}[t]{0.40\textwidth}
+	\par\vspace{6pt}
+	\begin{subfigure}[b]{0.31\textwidth}
 		\centering
-		\includegraphics[width=\linewidth]{../image/assembled_motor_mount.jpg}
+		\includegraphics[width=\linewidth,height=3.4cm,keepaspectratio]{../image/assembled_motor_mount.jpg}
 		\caption{N20 gearmotor in its printed mount.}
 		\label{fig:real-motor}
 	\end{subfigure}
-	\caption{Assembled prototype (1/2).}
-	\label{fig:real-views}
-\end{figure}
-
-\begin{figure}[!htbp]
-	\centering
-	\begin{subfigure}[t]{0.40\textwidth}
+	\hfill
+	\begin{subfigure}[b]{0.31\textwidth}
 		\centering
-		\includegraphics[width=\linewidth]{../image/assembled_workbench.jpg}
+		\includegraphics[width=\linewidth,height=3.4cm,keepaspectratio]{../image/assembled_workbench.jpg}
 		\caption{Module on the workbench.}
 		\label{fig:real-bench}
 	\end{subfigure}
 	\hfill
-	\begin{subfigure}[t]{0.40\textwidth}
+	\begin{subfigure}[b]{0.31\textwidth}
 		\centering
-		\includegraphics[width=\linewidth]{../image/assembled_size_reference.png}
+		\includegraphics[width=\linewidth,height=3.4cm,keepaspectratio]{../image/assembled_size_reference.png}
 		\caption{Module next to a cardboard box for scale.}
 		\label{fig:real-size}
 	\end{subfigure}
-	\caption{Assembled prototype (2/2).}
-	\label{fig:real-views-2}
+	\caption{Assembled prototype.}
+	\label{fig:real-views}
 \end{figure}
 
 % ----------------------------------------------------------------
 \subsection{Gear Train Design}
 \label{sec:gear-design}
-
-\begin{figure}[!htbp]
-	\centering
-	\includegraphics[width=0.6\textwidth]{../image/GearCAD.png}
-	\caption{CAD view of the gear train and motor arrangement (48T spur gears, 9T pinions, 46T crown gear).}
-	\label{fig:cad-gear-train}
-\end{figure}
 
 \subsubsection{SMORES-EP Reference Baseline}
 
@@ -386,6 +374,13 @@ The original SMORES-EP gear train was reverse-engineered from published data
 (Table~\ref{tab:smores-ref}). This gives module $m = 1.4$, a spur pitch
 diameter of $1.4 \times 48 = \SI{67.2}{mm}$ (OD $= 1.4 \times 50 = \SI{70}{mm}$),
 and a stage ratio of $48/9 \approx 5.33$.
+
+\begin{figure}[!htbp]
+	\centering
+	\includegraphics[width=0.5\textwidth]{../image/GearCAD.png}
+	\caption{CAD view of the gear train and motor arrangement (48T spur gears, 9T pinions, 46T crown gear).}
+	\label{fig:cad-gear-train}
+\end{figure}
 
 \begin{table}[H]
 	\centering
@@ -942,6 +937,15 @@ positions.
   \label{fig:a1-uwb-pcb}
 \end{figure}
 
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=0.6\textwidth]{../image/Power_Diagram.png}
+  \caption{Power distribution block diagram.}
+  \label{fig:power-diagram}
+\end{figure}
+
+\FloatBarrier
+
 % ----------------------------------------------------------------
 \subsection{Phase A: Power Architecture (Second Iteration)}
 \label{sec:power-new}
@@ -949,13 +953,6 @@ positions.
 Phase A is the second iteration: the A-1 bench wiring is replaced by custom
 boards. This subsection sets the power design for them; the next one
 (Section~\ref{sec:phase-a-board}) describes the boards themselves.
-
-\begin{figure}[!htbp]
-  \centering
-  \includegraphics[width=0.6\textwidth]{../image/Power_Diagram.png}
-  \caption{Power distribution block diagram.}
-  \label{fig:power-diagram}
-\end{figure}
 
 The PR1 load budget is unchanged; only the pack changes. The Phase A power
 board keeps the PR1 architecture: the H-bridges run directly from the pack,
@@ -2554,6 +2551,10 @@ doi:10.1007/s10514-022-10078-1.
 Liu, C., \& Yim, M. (2019). Configuration recognition with distributed
 information for modular robots. In \textit{Robotics Research (ISRR 2017)},
 Springer Proceedings in Advanced Robotics, vol.\ 10 (pp.\ 967--983).
+
+\bibitem{mirtich1996}
+Mirtich, B. (1996). Fast and accurate computation of polyhedral mass properties.
+\textit{Journal of Graphics Tools}, 1(2), 31--50.
 
 \bibitem{wolfe2010}
 Wolfe, K.\ C., Kutzer, M.\ D.\ M., Armand, M., \& Chirikjian, G.\ S. (2010).

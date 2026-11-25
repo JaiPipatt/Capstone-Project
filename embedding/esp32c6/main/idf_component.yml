@@ -1,3 +1,5 @@
 dependencies:
   # Humble branch of micro_ros_espidf_component = 22.x ; Jazzy branch = 24.x
-  micro-ros/micro_ros_espidf_component: "^22"
+  micro-ros/micro_ros_espidf_component:
+    version: "^22"
+    override_path: "../external/micro_ros_espidf_component"

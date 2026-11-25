@@ -25,11 +25,11 @@ typedef struct {
 
 static MotorHw g_m[MOTOR_COUNT] = {
     [MOTOR_M1_IL] = {
-        /* Existing old M3_IL hardware: inner left */
-        TB_2_A_IN1_M3_IL_GPIO_Port, TB_2_A_IN1_M3_IL_Pin,
-        TB_2_A_IN2_M3_IL_GPIO_Port, TB_2_A_IN2_M3_IL_Pin,
-        &htim3, TIM_CHANNEL_3,
-        &htim4, 0U,
+        /* Physical inner-left gear channel. */
+        TB_1_A_IN1_M1_L_GPIO_Port, TB_1_A_IN1_M1_L_Pin,
+        TB_1_A_IN2_M1_L_GPIO_Port, TB_1_A_IN2_M1_L_Pin,
+        &htim3, TIM_CHANNEL_1,
+        &htim1, 0U,
         MOTOR_DIR_SIGN_M1, ENC_SIGN_M1, ENC_CPR_M1, 0U, 0, 0.0f },
 
     [MOTOR_M2_IR] = {
@@ -41,11 +41,11 @@ static MotorHw g_m[MOTOR_COUNT] = {
         MOTOR_DIR_SIGN_M2, ENC_SIGN_M2, ENC_CPR_M2, 0U, 0, 0.0f },
 
     [MOTOR_M3_L] = {
-        /* Existing old M1_L hardware: left outer wheel */
-        TB_1_A_IN1_M1_L_GPIO_Port, TB_1_A_IN1_M1_L_Pin,
-        TB_1_A_IN2_M1_L_GPIO_Port, TB_1_A_IN2_M1_L_Pin,
-        &htim3, TIM_CHANNEL_1,
-        &htim1, 0U,
+        /* Physical left wheel channel, as confirmed by the index test. */
+        TB_2_A_IN1_M3_IL_GPIO_Port, TB_2_A_IN1_M3_IL_Pin,
+        TB_2_A_IN2_M3_IL_GPIO_Port, TB_2_A_IN2_M3_IL_Pin,
+        &htim3, TIM_CHANNEL_3,
+        &htim4, 0U,
         MOTOR_DIR_SIGN_M3, ENC_SIGN_M3, ENC_CPR_M3, 0U, 0, 0.0f },
 
     [MOTOR_M4_R] = {

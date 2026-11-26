@@ -7,7 +7,8 @@ sim:=false skips Gazebo (e.g. to drive the real robot: start the micro-ROS
 agent, see communcation/README.md, and the module ESP32s subscribe directly).
 teleop_twist_keyboard needs a TTY, so it opens in its own xterm window;
 keep that window focused while pressing keys.
-Do not run alongside algo.launch.py: both publish to the same cmd_vel topic.
+Do not run alongside algo_sim.launch.py or algo_real.launch.py: both publish
+to the same cmd_vel topic.
 """
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription

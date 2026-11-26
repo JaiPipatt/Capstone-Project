@@ -57,6 +57,23 @@ ros2 launch msrr_control teleop.launch.py module:=module_2 num_modules:=3
 Opens an xterm window; keep it focused while pressing keys. Do not run it
 together with `algo.launch.py` (both publish to the same `cmd_vel` topic).
 
+`teleop.launch.py` has no argument for an arbitrary topic. It only takes
+`module:=`, and builds the topic from that:
+
+```
+/<module>/diff_drive_controller/cmd_vel_unstamped
+```
+
+So `module:=module_3` publishes to `/module_3/diff_drive_controller/cmd_vel_unstamped`.
+The other arguments are `sim`, `gui`, `num_modules` and `spacing`.
+
+To publish to any other topic, run teleop directly in a terminal (it needs a TTY)
+and remap `cmd_vel`:
+
+```bash
+ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r cmd_vel:=/any/topic/you/want
+```
+
 ### Print the plan without a simulator
 
 ```bash

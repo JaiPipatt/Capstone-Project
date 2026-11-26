@@ -9,6 +9,8 @@ algo_node:
     waypoint_tolerance: 0.02        # m, intermediate grid nodes
     heading_tolerance: 0.05         # rad
     module_width: 0.107             # m, centre-to-centre when docked
+    pose_timeout: 0.0               # s, stop a module whose pose is older; 0 = off
+    world_frame: world              # frame of the poses (RViz)
     grid: 0.107                     # m, keep equal to module_width so slots sit on grid nodes
     # Target shape: 'u,cu,v,cv' = slot u face cu docks to slot v face cv.
     # L-shape, corner at slot 0:  [2]

@@ -1,0 +1,113 @@
+Panels:
+- Class: rviz_common/Displays
+  Name: Displays
+  Help Height: 78
+  Splitter Ratio: 0.5
+  Tree Height: 400
+- Class: rviz_common/Views
+  Name: Views
+  Splitter Ratio: 0.5
+Visualization Manager:
+  Class: ''
+  Displays:
+  - Class: rviz_default_plugins/Grid
+    Name: Grid (0.1 m)
+    Enabled: true
+    Value: true
+    Alpha: 0.4
+    Cell Size: 0.1
+    Color: 160; 160; 164
+    Plane: XY
+    Plane Cell Count: 30
+    Normal Cell Count: 0
+    Reference Frame: <Fixed Frame>
+    Line Style:
+      Line Width: 0.03
+      Value: Lines
+    Offset:
+      X: 0
+      Y: 0
+      Z: 0
+  - Class: rviz_default_plugins/TF
+    Name: TF
+    Enabled: true
+    Value: true
+    Marker Scale: 0.15
+    Show Arrows: false
+    Show Axes: true
+    Show Names: false
+    Update Interval: 0
+    Frame Timeout: 2
+  - Class: rviz_default_plugins/MarkerArray
+    Name: Plan (algo_node)
+    Enabled: true
+    Value: true
+    Namespaces: {}
+    Topic:
+      Depth: 5
+      Durability Policy: Volatile
+      History Policy: Keep Last
+      Reliability Policy: Reliable
+      Value: /algo/markers
+  - Class: rviz_default_plugins/MarkerArray
+    Name: Tags (tag_pose_node)
+    Enabled: true
+    Value: true
+    Namespaces: {}
+    Topic:
+      Depth: 5
+      Durability Policy: Volatile
+      History Policy: Keep Last
+      Reliability Policy: Reliable
+      Value: /tag/markers
+  - Class: rviz_default_plugins/Image
+    Name: Tag camera
+    Enabled: true
+    Value: true
+    Normalize Range: true
+    Max Value: 1
+    Min Value: 0
+    Median window: 5
+    Topic:
+      Depth: 5
+      Durability Policy: Volatile
+      History Policy: Keep Last
+      Reliability Policy: Best Effort
+      Value: /tag/debug_image
+  Enabled: true
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: world
+    Frame Rate: 30
+  Name: root
+  Tools:
+  - Class: rviz_default_plugins/MoveCamera
+  - Class: rviz_default_plugins/Measure
+    Line color: 128; 128; 0
+  Value: true
+  Views:
+    Current:
+      Class: rviz_default_plugins/TopDownOrtho
+      Name: Current View
+      Angle: 0
+      Scale: 600
+      Target Frame: <Fixed Frame>
+      Value: TopDownOrtho (rviz_default_plugins)
+      X: 0
+      Y: 0
+      Near Clip Distance: 0.01
+      Invert Z Axis: false
+      Enable Stereo Rendering:
+        Value: false
+    Saved: null
+Window Geometry:
+  Height: 900
+  Width: 1500
+  Hide Left Dock: false
+  Hide Right Dock: false
+  Displays:
+    collapsed: false
+  Views:
+    collapsed: true
+  Tag camera:
+    collapsed: false

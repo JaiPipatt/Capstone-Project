@@ -10,16 +10,16 @@
   <depend>rclpy</depend>
   <depend>geometry_msgs</depend>
   <depend>nav_msgs</depend>
-<<<<<<< HEAD
   <depend>sensor_msgs</depend>
+  <depend>visualization_msgs</depend>
   <exec_depend>python3-numpy</exec_depend>
-=======
->>>>>>> dacaa60 (First simulation (3 modules, L shape) - no avoidance)
   <exec_depend>python3-scipy</exec_depend>
 
   <exec_depend>launch_ros</exec_depend>
   <exec_depend>teleop_twist_keyboard</exec_depend>
   <exec_depend>my_robot_description</exec_depend>
+  <exec_depend>msrr_localization</exec_depend>
+  <exec_depend>rviz2</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

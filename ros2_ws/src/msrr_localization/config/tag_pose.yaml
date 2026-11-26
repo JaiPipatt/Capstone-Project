@@ -1,0 +1,17 @@
+tag_pose_node:
+  ros__parameters:
+    ip: '192.168.72.114'
+    framesize: 10              # 10 = XGA 1024x768; must match the calibration
+    exposure: 100              # aec_value in sensor lines (~0.053 ms each); -1 = auto
+    configure_camera: true
+    # '<tag id>:<module>', one per module. Tags not listed are drawn red in RViz.
+    tag_map: ['1:module_1', '2:module_2', '3:module_3']
+    pose_topic: tag/odom       # -> /module_i/tag/odom (algo_real.yaml reads this)
+    world_frame: world
+    homography_file: ~/.ros/msrr_floor_homography.yaml   # from tag_calibrate
+    m_per_px: 0.001            # only used when homography_file does not exist
+    heading_offset: 0.0        # rad, module forward = tag front + offset
+    lost_after: 0.5            # s without detection before a tag is dropped
+    publish_image: true        # /tag/debug_image for RViz
+    image_scale: 0.5
+    image_every: 2             # every n-th frame

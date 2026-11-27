@@ -7,7 +7,7 @@
  * ====================================================================== */
 
 /* ---- ROS 2 names (same topics as the simulation: ros2_control + controllers.yaml) ---- */
-#define MODULE_NAMESPACE        "/module_4"           /* CHANGE PER ROBOT: /module_2, /module_3, ... (must be unique) */
+#define MODULE_NAMESPACE        "/module_2"           /* CHANGE PER ROBOT: /module_2, /module_3, ... (must be unique) */
 #define MODULE_NODE_NAME        "esp32_module"
 #define TOPIC_CMD_VEL           "diff_drive_controller/cmd_vel_unstamped"   /* geometry_msgs/Twist          */
 #define TOPIC_HEAD_CMD          "head_position_controller/commands"         /* std_msgs/Float64MultiArray [tilt, pan] rad */

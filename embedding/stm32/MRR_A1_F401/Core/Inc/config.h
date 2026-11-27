@@ -76,14 +76,14 @@
 
 /* Drive and encoder polarity are inverted together so closed-loop direction
  * stays consistent while each motor's physical rotation reverses. */
-#define MOTOR_DIR_SIGN_M1  (-1)   /* M1_iL, inner left */
-#define ENC_SIGN_M1        (-1)   /* M1_iL, inner left */
-#define MOTOR_DIR_SIGN_M2  (+1)   /* M2_iR, inner right */
-#define ENC_SIGN_M2        (+1)   /* M2_iR, inner right */
-#define MOTOR_DIR_SIGN_M3  (-1)   /* M3_L, outer left */
-#define ENC_SIGN_M3        (-1)   /* M3_L, outer left */
-#define MOTOR_DIR_SIGN_M4  (+1)   /* M4_R, outer right */
-#define ENC_SIGN_M4        (+1)   /* M4_R, outer right */
+#define MOTOR_DIR_SIGN_M1  (+1)   /* M1_iL, inner left */
+#define ENC_SIGN_M1        (+1)   /* M1_iL, inner left */
+#define MOTOR_DIR_SIGN_M2  (-1)   /* M2_iR, inner right */
+#define ENC_SIGN_M2        (-1)   /* M2_iR, inner right */
+#define MOTOR_DIR_SIGN_M3  (+1)   /* M3_L, outer left */
+#define ENC_SIGN_M3        (+1)   /* M3_L, outer left */
+#define MOTOR_DIR_SIGN_M4  (-1)   /* M4_R, outer right */
+#define ENC_SIGN_M4        (-1)   /* M4_R, outer right */
 
 /* Low-pass on measured speed: v += alpha * (v_raw - v).
  * Smaller = smoother but slower.                                       [TUNE] */

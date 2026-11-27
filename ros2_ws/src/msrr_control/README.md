@@ -16,7 +16,17 @@ source install/setup.bash
 Dependencies: ROS 2 (Humble/Fortress setup used here), `numpy`, `scipy`,
 `ros_gz_sim`, `ros_gz_bridge`, `rviz2`, `teleop_twist_keyboard` (teleop only), `xterm` (teleop only).
 
-| | Simulation | Real robot |
+Pick simulation or the real modules with one argument:
+
+```bash
+ros2 launch msrr_control algo.launch.py robot:=sim    # Gazebo, poses from ground truth (default)
+ros2 launch msrr_control algo.launch.py robot:=real   # real modules, poses from AprilTags
+```
+
+`algo.launch.py` just includes the matching file below and passes every other
+argument through (e.g. `robot:=sim gui:=false`, `robot:=real algo:=false`).
+
+| | Simulation (`robot:=sim`) | Real robot (`robot:=real`) |
 |---|---|---|
 | Launch file | `algo_sim.launch.py` | `algo_real.launch.py` |
 | Parameters | `config/algo_sim.yaml` | `config/algo_real.yaml` |

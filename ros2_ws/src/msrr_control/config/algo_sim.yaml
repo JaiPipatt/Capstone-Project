@@ -12,6 +12,12 @@ algo_node:
     pose_timeout: 0.0               # s, stop a module whose pose is older; 0 = off
     world_frame: world              # frame of the poses (RViz)
     grid: 0.107                     # m, keep equal to module_width so slots sit on grid nodes
+    stuck_timeout: 5.0              # s with no progress before replanning; 0 = off
+    stuck_distance: 0.01            # m of travel that counts as progress
+    stuck_turn: 0.1                 # rad of turning that counts as progress
+    max_replans: 3                  # per module, then it is marked failed
+    offtrack_distance: 0.03         # m sideways off the route (wheel slip) -> replan; 0 = off
+    max_offtrack_replans: 10        # per module, then it is marked failed
     # Target shape: 'u,cu,v,cv' = slot u face cu docks to slot v face cv.
     # L-shape, corner at slot 0:  [2]
     #                              |

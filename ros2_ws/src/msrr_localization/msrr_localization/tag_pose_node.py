@@ -14,8 +14,11 @@ and for RViz
 
 Poses are Kalman filtered and extrapolated to the publish time (TagTracker). A tag
 that is lost for `lost_after` s is no longer published.
-Pixels -> metres: the homography from tag_calibrate (homography_file). Without
-that file a plain scale m_per_px around the image centre is used.
+Pixels -> metres, first that applies:
+  1. `anchors`: two fixed tags at known floor positions, re-fitted every frame
+     (camera bumps do not matter); assumes the camera looks roughly straight down
+  2. the homography from tag_calibrate (homography_file)
+  3. a plain scale m_per_px around the image centre
 """
 import math
 import os
@@ -61,6 +64,8 @@ class TagPoseNode(Node):
         p('pose_topic', 'tag/odom')
         p('raw_topic', 'tag/pose_raw')
         p('world_frame', 'world')
+        p('anchors', ['10:0.0:0.0', '14:1.635:-0.76'])   # '<tag id>:<x m>:<y m>', 2 tags or []
+        p('anchor_smoothing', 0.1)         # 0..1, weight of the newest anchor detection
         p('homography_file', '~/.ros/msrr_floor_homography.yaml')
         p('m_per_px', 0.001)               # fallback without homography_file
         p('heading_offset', 0.0)           # rad, module forward = tag front + offset
@@ -82,9 +87,26 @@ class TagPoseNode(Node):
         self.image_scale = g('image_scale')
         self.image_every = max(1, g('image_every'))
 
+        self.anchors = {}
+        for e in g('anchors'):
+            tag_id, x, y = e.split(':')
+            self.anchors[int(tag_id)] = (float(x), float(y))
+        if self.anchors and len(self.anchors) != 2:
+            raise ValueError('anchors: give exactly 2 tags (or [] to use the homography file)')
+        clash = set(self.anchors) & set(self.tag_map)
+        if clash:
+            raise ValueError(f'tags {sorted(clash)} are both anchors and modules')
+        self.anchor_smoothing = g('anchor_smoothing')
+        self.anchor_px = {}                # tag id -> smoothed image position
+        self.anchor_floor = None
+
         self.floor = None
         path = os.path.expanduser(g('homography_file'))
-        if path and os.path.exists(path):
+        if self.anchors:
+            self.get_logger().info(
+                'floor from anchors ' + ', '.join(
+                    f'tag {i} at ({x:+.3f}, {y:+.3f}) m' for i, (x, y) in self.anchors.items()))
+        elif path and os.path.exists(path):
             self.floor = FloorMap.load(path)
             self.get_logger().info(f'floor homography from {path}')
         else:
@@ -118,13 +140,43 @@ class TagPoseNode(Node):
             if not rclpy.ok():
                 break
             t_frame = self.get_clock().now().to_msg()
-            self.check_floor(frame)
             poses = self.tracker.process(frame, t_cam)
+            self.update_anchors(frame)
+            self.check_floor(frame)
             self.publish_raw(t_frame)
             self.publish_poses(poses)
             n += 1
             if self.publish_image and n % self.image_every == 0:
                 self.publish_debug_image(frame, poses)
+
+    def update_anchors(self, frame):
+        """Refit the floor from the anchor tags; keeps the last fit while one is hidden."""
+        if not self.anchors:
+            return
+        for tag_id in self.anchors:
+            d = self.tracker.detections.get(tag_id)
+            if d is None:
+                continue
+            old = self.anchor_px.get(tag_id)
+            k = self.anchor_smoothing
+            self.anchor_px[tag_id] = (d.x, d.y) if old is None else (
+                old[0] + k * (d.x - old[0]), old[1] + k * (d.y - old[1]))
+        missing = [i for i in self.anchors if i not in self.tracker.detections]
+        if len(self.anchor_px) < 2:
+            self.get_logger().warn(f'anchor tags {missing} not seen yet: poses use the '
+                                   'fallback scale', throttle_duration_sec=5.0)
+            return
+        if missing:
+            self.get_logger().warn(f'anchor tags {missing} hidden: using their last position',
+                                   throttle_duration_sec=5.0)
+        (a, wa), (b, wb) = [(self.anchor_px[i], w) for i, w in self.anchors.items()]
+        first = self.anchor_floor is None
+        self.anchor_floor = FloorMap.from_anchors(a, b, wa, wb,
+                                                  (frame.shape[1], frame.shape[0]))
+        self.floor = self.anchor_floor
+        if first:
+            self.get_logger().info(
+                f'anchors found: {self.floor.m_per_px * 1000:.3f} mm/px')
 
     def check_floor(self, frame):
         size = (frame.shape[1], frame.shape[0])
@@ -204,7 +256,9 @@ class TagPoseNode(Node):
 
     def tag_markers(self, stamp, tag_id, module, p, x, y, qz, qw):
         color = (0.0, 1.0, 1.0) if p.detected else (0.6, 0.6, 0.6)
-        if module is None:
+        if tag_id in self.anchors:
+            color, module = (1.0, 1.0, 0.0), 'anchor'
+        elif module is None:
             color = (1.0, 0.3, 0.3)   # tag not in tag_map
         out = []
         for ns, mtype in (('tag_arrows', Marker.ARROW), ('tag_labels', Marker.TEXT_VIEW_FACING)):

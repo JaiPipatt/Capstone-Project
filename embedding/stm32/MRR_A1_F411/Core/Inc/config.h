@@ -66,25 +66,16 @@
 #define ENC_CPR_M3  ENC_CPR_SPUR
 #define ENC_CPR_M4  ENC_CPR_SPUR
 
-/* +1 or -1. Flip until "positive duty" gives "positive encoder count". [TODO] */
-// #define MOTOR_DIR_SIGN_M1     (-1)
-// #define MOTOR_DIR_SIGN_M2     (+1) 
-// #define MOTOR_DIR_SIGN_M3     (-1)
-// #define MOTOR_DIR_SIGN_M4     (+1)
-// #define ENC_SIGN_M1           (+1)
-// #define ENC_SIGN_M2           (-1)
-// #define ENC_SIGN_M3           (+1)
-// #define ENC_SIGN_M4           (-1)
-
-/* Signs follow the physical channels formerly labelled M3_IL, M2_IR, M1_L, M4_IR. */
-#define MOTOR_DIR_SIGN_M1  (-1)   /* old M3_IL */
-#define ENC_SIGN_M1        (+1)   /* old M3_IL */
-#define MOTOR_DIR_SIGN_M2  (+1)   /* old M2_IR */
-#define ENC_SIGN_M2        (-1)   /* old M2_IR */
-#define MOTOR_DIR_SIGN_M3  (-1)   /* old M1_L */
-#define ENC_SIGN_M3        (+1)   /* old M1_L */
-#define MOTOR_DIR_SIGN_M4  (+1)   /* old M4_R */
-#define ENC_SIGN_M4        (-1)   /* old M4_R */
+/* Drive and encoder polarity are inverted together so closed-loop direction
+ * stays consistent while each motor's physical rotation reverses. */
+#define MOTOR_DIR_SIGN_M1  (+1)   /* M1_iL, inner left */
+#define ENC_SIGN_M1        (-1)   /* M1_iL, inner left */
+#define MOTOR_DIR_SIGN_M2  (-1)   /* M2_iR, inner right */
+#define ENC_SIGN_M2        (+1)   /* M2_iR, inner right */
+#define MOTOR_DIR_SIGN_M3  (+1)   /* M3_L, outer left */
+#define ENC_SIGN_M3        (-1)   /* M3_L, outer left */
+#define MOTOR_DIR_SIGN_M4  (-1)   /* M4_R, outer right */
+#define ENC_SIGN_M4        (+1)   /* M4_R, outer right */
 
 /* Low-pass on measured speed: v += alpha * (v_raw - v).
  * Smaller = smoother but slower.                                       [TUNE] */
@@ -98,13 +89,13 @@
 /* Velocity loop: input error in rad/s, output = duty (-1..+1)
  *   KFF = "guess the duty from the target speed": 0.8 duty per rad/s (~1/0.98 reduced
  *   a bit so a stronger-than-expected motor does not overshoot).                */
-#define VEL_KP                0.30f
-#define VEL_KI                1.50f
+#define VEL_KP                1.00f
+#define VEL_KI                0.00f
 #define VEL_KD                0.00f
-#define VEL_KFF               0.80f
+#define VEL_KFF               0.00f
 /* Position loop (outer, 100 Hz): input error in rad, output = velocity reference (rad/s).
  * Kept LOW on purpose: the speed signal is grainy (1 encoder count in 1 ms = 0.14 rad/s). */
-#define POS_KP                0.80f
+#define POS_KP                0.00f
 #define POS_KI                0.00f
 #define POS_KD                0.00f
 #define POS_MAX_VEL_RAD_S     0.90f

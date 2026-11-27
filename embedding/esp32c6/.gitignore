@@ -1,0 +1,8 @@
+build/
+managed_components/
+sdkconfig.old
+external/micro_ros_espidf_component/micro_ros_dev/
+external/micro_ros_espidf_component/micro_ros_src/
+external/micro_ros_espidf_component/include/
+external/micro_ros_espidf_component/libmicroros.a
+external/micro_ros_espidf_component/esp32_toolchain.cmake

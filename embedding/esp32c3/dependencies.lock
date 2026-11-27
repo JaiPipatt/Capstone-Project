@@ -1,0 +1,33 @@
+dependencies:
+  idf:
+    source:
+      type: idf
+    version: 5.4.4
+  micro-ros/micro_ros_espidf_component:
+    dependencies:
+    - name: espressif/esp_hosted
+      rules:
+      - if: target in [esp32p4]
+      version: ~2
+    - name: espressif/esp_wifi_remote
+      rules:
+      - if: target in [esp32p4]
+      version: '>=0.10,<2.0'
+    - name: idf
+      version: '>=5.2'
+    source:
+      path: /Users/prepraestellar/Documents/GitHub/Capstone-Project/embedding/esp32c3/external/micro_ros_espidf_component
+      type: local
+    targets:
+    - esp32
+    - esp32s2
+    - esp32s3
+    - esp32c3
+    - esp32c6
+    - esp32p4
+    version: 22.0.0
+direct_dependencies:
+- micro-ros/micro_ros_espidf_component
+manifest_hash: 261e3f2629f5765e0e91d719ea6a2006671f6960854751897f1039c01f96cc56
+target: esp32c3
+version: 2.0.0

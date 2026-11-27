@@ -1,7 +1,8 @@
 algo_node:
   ros__parameters:
     num_modules: 3
-    pose_topic: tag/odom            # from msrr_localization tag_pose_node
+    pose_topic: fused/odom          # camera + encoders (msrr_localization fusion_node);
+                                    # tag/odom = camera only (run with fusion:=false)
     rate: 10.0                      # Hz
     max_linear: 0.049               # m/s (50 RPM motor / 5.333 wheel gear * 0.05 m)
     max_angular: 1.0                # rad/s
@@ -9,7 +10,8 @@ algo_node:
     waypoint_tolerance: 0.02        # m, intermediate grid nodes
     heading_tolerance: 0.05         # rad
     module_width: 0.107             # m, centre-to-centre when docked
-    pose_timeout: 0.5               # s, stop a module whose tag is lost
+    pose_timeout: 0.5               # s, stop a module with no pose (fusion keeps
+                                    # publishing 1 s on encoders when the tag is hidden)
     world_frame: world              # frame of the poses (RViz)
     grid: 0.107                     # m, keep equal to module_width so slots sit on grid nodes
     stuck_timeout: 5.0              # s with no progress before replanning; 0 = off

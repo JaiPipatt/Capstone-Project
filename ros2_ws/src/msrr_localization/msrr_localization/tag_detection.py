@@ -56,10 +56,16 @@ class TagDetector:
         self._dict = aruco.getPredefinedDictionary(dictionary)
         self.use_binarized = use_binarized
         if hasattr(aruco, 'ArucoDetector'):                       # OpenCV >= 4.7
-            self._det = aruco.ArucoDetector(self._dict, aruco.DetectorParameters())
-            self._detect = self._det.detectMarkers
+            params = aruco.DetectorParameters()
         else:                                                     # OpenCV 4.5 (Humble)
             params = aruco.DetectorParameters_create()
+        # Sub-pixel corners from the tag's edge lines. Without it corners snap to whole
+        # pixels and theta flips between two values (~0.5 deg); measured 2-4x less jitter.
+        params.cornerRefinementMethod = aruco.CORNER_REFINE_CONTOUR
+        if hasattr(aruco, 'ArucoDetector'):
+            self._det = aruco.ArucoDetector(self._dict, params)
+            self._detect = self._det.detectMarkers
+        else:
             self._detect = lambda img: aruco.detectMarkers(img, self._dict, parameters=params)
 
     def detect(self, image, return_binarized=False):

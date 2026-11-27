@@ -45,8 +45,9 @@ def main(argv=None):
                     help='webcam name (part of), /dev/videoN or index')
     ap.add_argument('--width', type=int, default=1280)
     ap.add_argument('--height', type=int, default=720)
-    ap.add_argument('--exposure', type=int, default=-1,
-                    help='exposure in 100 us units (lower = less blur, darker); -1 = auto')
+    ap.add_argument('--exposure', type=int, default=50,
+                    help='exposure in 100 us units (lower = less blur, darker); -1 = auto. '
+                         '50 (5 ms) keeps all tags; 150+ washes them out')
     args, _ = ap.parse_known_args(argv)              # ignore ROS args from ros2 run
 
     cam = UsbCam(args.device, args.width, args.height)

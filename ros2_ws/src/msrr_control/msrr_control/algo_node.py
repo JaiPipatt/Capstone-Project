@@ -20,6 +20,9 @@ For an L/R (wheel-face) docking, after navigate:
   wheel_dock  pivot -> straight -> pivot -> straight (wheel_dock_plan.py,
               wheel_dock.py)
 A module whose pose is older than pose_timeout is stopped until it is seen again.
+A navigating module that makes no progress for stuck_timeout, or drifts more
+than offtrack_distance off its route (wheel slip), gets a new grid route from
+where it is (replan.py); after max_replans / max_offtrack_replans it is failed.
 Moving modules do not avoid each other yet.
 """
 import math
@@ -33,6 +36,7 @@ from visualization_msgs.msg import Marker, MarkerArray
 
 from msrr_control.assembly import assign_modules_to_slots, docking_tasks
 from msrr_control.navigation import plan_routes
+from msrr_control.replan import off_track, Replanner, StuckDetector
 from msrr_control.topology import (
     check_topology, coordinates_from_frame, coordinates_to_frame, find_root, Topology,
     unfold, wrap_angle)
@@ -79,6 +83,12 @@ class AlgoNode(Node):
         self.declare_parameter('grid', 0.107)               # m, navigation cell size
         self.declare_parameter('pose_timeout', 0.0)         # s, stop a module not seen; 0 = off
         self.declare_parameter('world_frame', 'world')      # frame of the poses, for RViz
+        self.declare_parameter('stuck_timeout', 5.0)        # s without progress; 0 = off
+        self.declare_parameter('stuck_distance', 0.01)      # m of travel that counts as progress
+        self.declare_parameter('stuck_turn', 0.1)           # rad of turning that counts
+        self.declare_parameter('max_replans', 3)            # per module, then it is failed
+        self.declare_parameter('offtrack_distance', 0.03)   # m sideways off the route; 0 = off
+        self.declare_parameter('max_offtrack_replans', 10)  # per module, then it is failed
         # Target shape, one 'u,cu,v,cv' string per connection (slot u face cu -> slot v face cv)
         self.declare_parameter('connections', ['1,B,0,T', '2,B,0,L'])
 
@@ -93,6 +103,14 @@ class AlgoNode(Node):
         self.grid = self.get_parameter('grid').value
         self.pose_timeout = self.get_parameter('pose_timeout').value
         self.world_frame = self.get_parameter('world_frame').value
+        stuck_timeout = self.get_parameter('stuck_timeout').value
+        self.stuck = StuckDetector(
+            stuck_timeout, self.get_parameter('stuck_distance').value,
+            self.get_parameter('stuck_turn').value) if stuck_timeout > 0.0 else None
+        self.max_replans = self.get_parameter('max_replans').value
+        self.offtrack_distance = self.get_parameter('offtrack_distance').value
+        self.max_offtrack_replans = self.get_parameter('max_offtrack_replans').value
+        self.replanner = None    # made with the plan
         connections = [parse_connection(c) for c in self.get_parameter('connections').value]
 
         self.modules = [f'module_{i}' for i in range(1, n + 1)]
@@ -146,6 +164,9 @@ class AlgoNode(Node):
                     t.pre_dock = (2 * t.pre_dock[0] - gx, 2 * t.pre_dock[1] - gy, t.pre_dock[2])
         self.nav_grid, self.routes = plan_routes(
             self.rounds, f, root, slots, modules, m_root, self.grid)
+        self.root, self.slot_of = root, {m: s for s, m in f.items()}
+        self.replanner = Replanner(self.nav_grid, slots, self.max_replans,
+                                   self.max_offtrack_replans)
 
         self.slot_world = {s: coordinates_from_frame(modules[m_root], p) for s, p in slots.items()}
         slot_of = {m: s for s, m in f.items()}
@@ -172,6 +193,9 @@ class AlgoNode(Node):
         if stale:
             self.get_logger().warn(f'no recent pose for {sorted(stale)}: stopped',
                                    throttle_duration_sec=2.0)
+            if self.stuck is not None:
+                for m in stale:
+                    self.stuck.reset(m)   # a pause while unseen is not being stuck
 
         if self.rounds is not None and self.round_idx < len(self.rounds):
             tasks = self.rounds[self.round_idx]
@@ -213,6 +237,14 @@ class AlgoNode(Node):
                 else:
                     st['wp'] += 1
                 return cmd
+            if self.stuck is not None and self.stuck.update(m, pose, self.now()):
+                self.replan(task, st, target, 'stuck')
+                return cmd
+            if self.offtrack_distance > 0.0 and st['wp'] > 0:
+                offset = off_track(pose, route[st['wp'] - 1], target, self.offtrack_distance)
+                if offset is not None:
+                    self.replan(task, st, None, 'off_track', offset)
+                    return cmd
             return self.drive_to(pose, target)
 
         if st['phase'] == 'adjust':
@@ -238,6 +270,30 @@ class AlgoNode(Node):
             return self.wheel_dock_step(task, st)
 
         return cmd  # done or failed
+
+    # ------------------------------------------------------------ stuck -> replan
+    def replan(self, task, st, stuck_target, reason, offset=0.0):
+        """reason 'stuck' (stuck_target = waypoint it could not reach) or 'off_track'."""
+        m = task.action[0]
+        filled = {self.root} | {self.slot_of[t.action[0]]
+                                for tasks in self.rounds[:self.round_idx] for t in tasks}
+        others = [p for o, p in self.poses.items() if o != m]
+        route = self.replanner.replan(m, self.poses[m], task.pre_dock, stuck_target,
+                                      filled, others, reason)
+        if self.stuck is not None:
+            self.stuck.reset(m)
+        what = (f'stuck near {tuple(round(c, 3) for c in stuck_target)}' if reason == 'stuck'
+                else f'off track by {offset:.3f} m')
+        if route is None:
+            st['phase'] = 'failed'
+            self.get_logger().error(f'{m} {what} and no {reason} replan left: failed')
+            return
+        self.routes[m] = route
+        st['wp'] = 0
+        limit = self.max_replans if reason == 'stuck' else self.max_offtrack_replans
+        self.get_logger().warn(f'{m} {what}: replanned '
+                               f'({self.replanner.used(m, reason)}/{limit}), '
+                               f'{len(route)} waypoints')
 
     # ------------------------------------------------------------ wheel-face docking
     def wheel_angle(self, module, face):

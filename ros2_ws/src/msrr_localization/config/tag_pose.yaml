@@ -1,0 +1,17 @@
+tag_pose_node:
+  ros__parameters:
+    device: 'C270'             # webcam name (part of), /dev/videoN or index
+    width: 1280                # must match the calibration
+    height: 720
+    exposure: -1               # 100 us units (lower = less blur, darker); -1 = auto
+    # '<tag id>:<module>', one per module. Tags not listed are drawn red in RViz.
+    tag_map: ['1:module_1', '2:module_2', '3:module_3']
+    pose_topic: tag/odom       # -> /module_i/tag/odom (algo_real.yaml reads this)
+    world_frame: world
+    homography_file: ~/.ros/msrr_floor_homography.yaml   # from tag_calibrate
+    m_per_px: 0.001            # only used when homography_file does not exist
+    heading_offset: 0.0        # rad, module forward = tag front + offset
+    lost_after: 0.5            # s without detection before a tag is dropped
+    publish_image: true        # /tag/debug_image for RViz
+    image_scale: 0.5
+    image_every: 2             # every n-th frame

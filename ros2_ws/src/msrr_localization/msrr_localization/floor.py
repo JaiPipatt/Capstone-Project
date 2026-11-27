@@ -5,8 +5,9 @@ The floor (more exactly: the plane of the tags on top of the modules) is flat, s
 one 3x3 homography H maps an image point (u, v) to a world point (x, y):
     [x*w, y*w, w] = H @ [u, v, 1]
 World frame: x, y on the floor, z up (right-handed), origin wherever the
-calibration points put it. Fit H with tag_calibrate; FloorMap.from_scale is a
-fallback that is only right if the camera looks straight down.
+calibration points put it. Fit H with tag_calibrate, or build it every frame from
+two fixed anchor tags (FloorMap.from_anchors); FloorMap.from_scale is a fallback.
+from_anchors and from_scale are only right if the camera looks straight down.
 """
 import math
 import os
@@ -29,6 +30,28 @@ class FloorMap:
         return cls([[m_per_px, 0.0, -m_per_px * cx],
                     [0.0, -m_per_px, m_per_px * cy],
                     [0.0, 0.0, 1.0]], (width, height))
+
+    @classmethod
+    def from_anchors(cls, img_a, img_b, world_a, world_b, image_size=None):
+        """Similarity (scale, rotation, shift) from two tags at known floor positions.
+
+        Image y points down and world y up, so the image is mirrored first. With complex
+        numbers z_img = u - i*v and z_world = x + i*y the map is z_world = c*z_img + d.
+        """
+        zi_a, zi_b = complex(img_a[0], -img_a[1]), complex(img_b[0], -img_b[1])
+        zw_a, zw_b = complex(*world_a), complex(*world_b)
+        if abs(zi_b - zi_a) < 1e-6:
+            raise ValueError('anchor tags at the same image point')
+        c = (zw_b - zw_a) / (zi_b - zi_a)
+        d = zw_a - c * zi_a
+        a, b = c.real, c.imag
+        # x = a*u + b*v + d.real ;  y = b*u - a*v + d.imag
+        return cls([[a, b, d.real], [b, -a, d.imag], [0.0, 0.0, 1.0]], image_size)
+
+    @property
+    def m_per_px(self):
+        """Scale at the image centre (exact for from_scale / from_anchors)."""
+        return float(np.sqrt(abs(np.linalg.det(self.H[:2, :2]))))
 
     @classmethod
     def load(cls, path):

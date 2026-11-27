@@ -8,7 +8,13 @@ tag_pose_node:
     tag_map: ['1:module_1', '2:module_2', '3:module_3']
     pose_topic: tag/odom       # -> /module_i/tag/odom (algo_real.yaml reads this)
     world_frame: world
-    homography_file: ~/.ros/msrr_floor_homography.yaml   # from tag_calibrate
+    # Floor frame from two fixed tags, '<tag id>:<x m>:<y m>', re-fitted every frame.
+    # Tag 10 top-left of the view = origin, x right, y up; tag 14 bottom-right,
+    # 163.5 cm right and 76 cm down from tag 10 (centre to centre).
+    # [] = use homography_file instead.
+    anchors: ['10:0.0:0.0', '14:1.635:-0.76']
+    anchor_smoothing: 0.1      # 0..1, weight of the newest anchor detection (they do not move)
+    homography_file: ~/.ros/msrr_floor_homography.yaml   # from tag_calibrate, if no anchors
     m_per_px: 0.001            # only used when homography_file does not exist
     heading_offset: 0.0        # rad, module forward = tag front + offset
     lost_after: 0.5            # s without detection before a tag is dropped

@@ -2,7 +2,7 @@ algo_node:
   ros__parameters:
     num_modules: 3
     pose_topic: fused/odom          # camera + encoders (msrr_localization fusion_node);
-                                    # tag/odom = camera only (run with fusion:=false)
+                                    # tag/odom = camera only (localization.launch.py fusion:=false)
     rate: 10.0                      # Hz
     max_linear: 0.049               # m/s (50 RPM motor / 5.333 wheel gear * 0.05 m)
     max_angular: 1.0                # rad/s

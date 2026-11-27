@@ -1,13 +1,17 @@
 """
-AprilTag localization of the real modules (overhead USB webcam), optionally with RViz.
+AprilTag localization of the real modules (overhead USB webcam) + encoder fusion + RViz.
 
     ros2 launch msrr_localization localization.launch.py
+    ros2 launch msrr_control algo_real.launch.py        # planner, in a second terminal
+
+RViz shows the tags, the fused module poses, the camera image and, once algo_node
+runs, its plan (/algo/markers).
 
 config:=<file>  parameter file (default config/tag_pose.yaml: camera device, tag map)
 rviz:=false     no RViz
 fusion:=false   no encoder fusion (fusion_node, config/fusion.yaml)
 fusion_config:=<file>  fusion_node parameter file
-Calibrate the floor first: ros2 run msrr_localization tag_calibrate --help
+Floor frame from the anchor tags in config/tag_pose.yaml (or tag_calibrate --help).
 """
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument

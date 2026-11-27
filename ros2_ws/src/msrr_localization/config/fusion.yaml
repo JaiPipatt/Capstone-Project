@@ -1,0 +1,27 @@
+fusion_node:
+  ros__parameters:
+    modules: ['module_1', 'module_2', 'module_3']
+    encoder_topic: esp32/vel_state    # geometry_msgs/Twist from the ESP32 (measured v, w)
+    camera_topic: tag/pose_raw        # from tag_pose_node
+    output_topic: fused/odom          # -> /module_i/fused/odom (algo_real.yaml reads this)
+    world_frame: world
+    rate: 30.0                        # Hz
+    camera_delay: 0.03                # s, exposure + USB before the frame arrives
+    encoder_delay: 0.02               # s, STM32 -> ESP32 -> WiFi
+    encoder_v_sign: 1.0               # -1 if driving forward shows negative linear.x
+    encoder_w_sign: 1.0               # -1 if turning left (CCW from above) shows negative angular.z
+    max_dead_reckoning: 1.0           # s on encoders only (tag hidden) before output stops
+    publish_tf: true                  # world -> module_i/base_link_fused
+    # noise model
+    cam_pos_std: 0.003                # m
+    cam_yaw_std: 0.01                 # rad
+    enc_v_std: 0.002                  # m/s, encoder noise floor
+    enc_w_std: 0.02                   # rad/s
+    enc_v_rel: 0.10                   # x |v|, slip / wheel radius error
+    enc_w_rel: 0.10                   # x |w|, slip / track width error
+    encoder_timeout: 0.3              # s without encoder -> camera only
+    stale_v_std: 0.05                 # m/s
+    stale_w_std: 0.5                  # rad/s
+    gate_chi2: 16.3                   # reject camera outliers (3 dof, 99.9 %)
+    reset_after: 10                   # rejections in a row -> jump to the camera
+    horizon: 1.0                      # s of history for late camera frames

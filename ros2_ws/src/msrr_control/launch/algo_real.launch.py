@@ -9,8 +9,9 @@ floor calibrated (ros2 run msrr_localization tag_calibrate --help).
 
 algo:=false        localization + RViz only, the modules do not move (check tags first)
 rviz:=false        no RViz
-tag_config:=<file> tag_pose_node parameters (camera IP, tag map); default from
+tag_config:=<file> tag_pose_node parameters (camera, tag map); default from
                    msrr_localization/config/tag_pose.yaml
+fusion:=false      camera only; then set pose_topic: tag/odom in config/algo_real.yaml
 The target shape is `connections` in config/algo_real.yaml.
 """
 from launch import LaunchDescription
@@ -32,10 +33,13 @@ def generate_launch_description():
         DeclareLaunchArgument('rviz', default_value='true'),
         DeclareLaunchArgument('tag_config', default_value=PathJoinSubstitution(
             [loc_share, 'config', 'tag_pose.yaml'])),
+        DeclareLaunchArgument('fusion', default_value='true',
+                              description='fuse wheel encoders with the camera'),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
                 PathJoinSubstitution([loc_share, 'launch', 'localization.launch.py'])),
             launch_arguments={'config': LaunchConfiguration('tag_config'),
+                              'fusion': LaunchConfiguration('fusion'),
                               'rviz': 'false'}.items(),
         ),
         Node(

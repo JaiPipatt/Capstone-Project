@@ -32,6 +32,7 @@ setup(
             'tag_live_view = msrr_localization.tag_live_view:main',
             'tag_pose_node = msrr_localization.tag_pose_node:main',
             'tag_calibrate = msrr_localization.tag_calibrate:main',
+            'fusion_node = msrr_localization.fusion_node:main',
         ],
     },
 )

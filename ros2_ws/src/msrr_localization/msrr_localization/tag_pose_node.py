@@ -5,6 +5,8 @@ ROS 2 node: module poses from the overhead USB webcam AprilTags.
 
 For each tag in `tag_map` ('<tag id>:<module>') it publishes
   /<module>/<pose_topic>   nav_msgs/Odometry  pose in world_frame, twist in the body frame
+  /<module>/<raw_topic>    geometry_msgs/PoseWithCovarianceStamped  unfiltered detection,
+                           stamped with the frame arrival time (input of fusion_node)
   TF  world_frame -> <module>/base_link
 and for RViz
   /tag/markers             visualization_msgs/MarkerArray  every tracked tag (grey = predicted)
@@ -20,7 +22,7 @@ import os
 import threading
 
 import cv2
-from geometry_msgs.msg import TransformStamped
+from geometry_msgs.msg import PoseWithCovarianceStamped, TransformStamped
 from nav_msgs.msg import Odometry
 import rclpy
 from rclpy.node import Node
@@ -57,6 +59,7 @@ class TagPoseNode(Node):
         p('exposure', -1)                  # 100 us units; -1 = auto
         p('tag_map', ['1:module_1', '2:module_2', '3:module_3'])
         p('pose_topic', 'tag/odom')
+        p('raw_topic', 'tag/pose_raw')
         p('world_frame', 'world')
         p('homography_file', '~/.ros/msrr_floor_homography.yaml')
         p('m_per_px', 0.001)               # fallback without homography_file
@@ -92,6 +95,10 @@ class TagPoseNode(Node):
         self.odom_pubs = {
             module: self.create_publisher(Odometry, f'/{module}/{g("pose_topic")}', 10)
             for module in self.tag_map.values()}
+        self.raw_pubs = {
+            module: self.create_publisher(PoseWithCovarianceStamped,
+                                          f'/{module}/{g("raw_topic")}', 10)
+            for module in self.tag_map.values()}
         self.marker_pub = self.create_publisher(MarkerArray, '/tag/markers', 10)
         self.image_pub = self.create_publisher(Image, '/tag/debug_image', 2)
         self.tf = TransformBroadcaster(self)
@@ -110,8 +117,10 @@ class TagPoseNode(Node):
         for frame, t_cam in cam.frames(log=self.get_logger().info):
             if not rclpy.ok():
                 break
+            t_frame = self.get_clock().now().to_msg()
             self.check_floor(frame)
             poses = self.tracker.process(frame, t_cam)
+            self.publish_raw(t_frame)
             self.publish_poses(poses)
             n += 1
             if self.publish_image and n % self.image_every == 0:
@@ -138,6 +147,22 @@ class TagPoseNode(Node):
         yaw = wrap_angle(yaw + self.heading_offset)
         c, s = math.cos(yaw), math.sin(yaw)
         return x, y, yaw, c * vx + s * vy, -s * vx + c * vy, omega
+
+    def publish_raw(self, stamp):
+        """Unfiltered detections of this frame, for fusion_node."""
+        for tag_id, d in self.tracker.detections.items():
+            module = self.tag_map.get(tag_id)
+            if module is None:
+                continue
+            x, y, yaw = self.floor.pose(d.x, d.y, d.theta)
+            yaw = wrap_angle(yaw + self.heading_offset)
+            msg = PoseWithCovarianceStamped()
+            msg.header.stamp = stamp
+            msg.header.frame_id = self.world_frame
+            msg.pose.pose.position.x, msg.pose.pose.position.y = x, y
+            msg.pose.pose.orientation.z = math.sin(yaw / 2)
+            msg.pose.pose.orientation.w = math.cos(yaw / 2)
+            self.raw_pubs[module].publish(msg)
 
     def publish_poses(self, poses):
         stamp = self.get_clock().now().to_msg()

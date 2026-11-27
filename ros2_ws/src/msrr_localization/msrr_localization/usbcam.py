@@ -56,7 +56,7 @@ class UsbCam:
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.size[0])
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.size[1])
         cap.set(cv2.CAP_PROP_FPS, self.fps)
-        cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)                              # newest frame only
+        cap.set(cv2.CAP_PROP_BUFFERSIZE, 2)      # 1 halves the C270 to 15 fps; 2 = 30 fps
         if self.exposure is None:
             cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 3)                       # V4L2: 3 = auto
         else:

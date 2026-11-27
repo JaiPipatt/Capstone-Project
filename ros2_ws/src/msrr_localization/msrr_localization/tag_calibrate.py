@@ -5,11 +5,11 @@ Put 4 or more AprilTags at known positions, at the SAME HEIGHT as the tags on th
 modules (e.g. on spare modules, or the modules themselves), spread over the area
 the modules drive in, not all on one line. Then:
 
-  ros2 run msrr_localization tag_calibrate --ip 192.168.72.114 \\
+  ros2 run msrr_localization tag_calibrate --device C270 \\
       --points 1:0:0 2:0.6:0 3:0.6:0.4 4:0:0.4
 
 Each point is <tag id>:<x m>:<y m> in the world frame you want (x, y on the floor,
-z up). Use the same --framesize as tag_pose_node: H only fits that resolution.
+z up). Use the same --width/--height as tag_pose_node: H only fits that resolution.
 Writes ~/.ros/msrr_floor_homography.yaml (change with --out) and prints the fit error.
 """
 import argparse
@@ -17,9 +17,9 @@ import sys
 
 import numpy as np
 
-from msrr_localization.espcam import EspCam, FRAMESIZE_XGA
 from msrr_localization.floor import fit_homography
 from msrr_localization.tag_detection import TagDetector
+from msrr_localization.usbcam import UsbCam
 
 
 def parse_point(text):
@@ -29,22 +29,23 @@ def parse_point(text):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description='Fit the image -> floor homography.')
-    ap.add_argument('--ip', default='192.168.72.114')
     ap.add_argument('--points', nargs='+', required=True, help='<tag id>:<x m>:<y m>, 4 or more')
     ap.add_argument('--frames', type=int, default=30, help='frames to average')
     ap.add_argument('--out', default='~/.ros/msrr_floor_homography.yaml')
-    ap.add_argument('--framesize', type=int, default=FRAMESIZE_XGA)
-    ap.add_argument('--exposure', type=int, default=100, help='-1 = auto exposure')
-    ap.add_argument('--no-config', action='store_true', help='leave camera settings as they are')
+    ap.add_argument('--device', default='C270',
+                    help='webcam name (part of), /dev/videoN or index')
+    ap.add_argument('--width', type=int, default=1280)
+    ap.add_argument('--height', type=int, default=720)
+    ap.add_argument('--exposure', type=int, default=-1,
+                    help='exposure in 100 us units (lower = less blur, darker); -1 = auto')
     args, _ = ap.parse_known_args(argv)
 
     world = dict(parse_point(p) for p in args.points)
     if len(world) < 4:
         sys.exit('need at least 4 points')
 
-    cam = EspCam(args.ip)
-    if not args.no_config:
-        cam.configure(args.framesize, None if args.exposure < 0 else args.exposure)
+    cam = UsbCam(args.device, args.width, args.height)
+    cam.configure(exposure=None if args.exposure < 0 else args.exposure)
     detector = TagDetector()
 
     seen = {tag_id: [] for tag_id in world}

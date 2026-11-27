@@ -20,7 +20,7 @@ setup(
     zip_safe=True,
     maintainer='jaipipatt',
     maintainer_email='j.jaijai108@gmail.com',
-    description='AprilTag localization tools for MSRR modules (ESP32-CAM, detection, Kalman tracking)',
+    description='AprilTag localization tools for MSRR modules (USB webcam, detection, Kalman tracking)',
     license='TODO: License declaration',
     extras_require={
         'test': [

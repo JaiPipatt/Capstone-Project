@@ -2,7 +2,7 @@
 Multi-tag tracker: detection + one Kalman filter per tag id.
 
   tracker = TagTracker()
-  for frame, t_cam in EspCam(ip).frames():
+  for frame, t_cam in UsbCam('C270').frames():
       poses = tracker.process(frame, t_cam)          # {tag_id: TagPose}
 
 Each TagPose is latency-compensated: extrapolated from the frame's capture time to

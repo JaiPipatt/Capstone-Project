@@ -1,5 +1,5 @@
 """
-ROS 2 node: module poses from the overhead ESP32-CAM AprilTags.
+ROS 2 node: module poses from the overhead USB webcam AprilTags.
 
   ros2 launch msrr_localization localization.launch.py
 
@@ -28,11 +28,11 @@ from sensor_msgs.msg import Image
 from tf2_ros import TransformBroadcaster
 from visualization_msgs.msg import Marker, MarkerArray
 
-from msrr_localization.espcam import EspCam
 from msrr_localization.floor import FloorMap
 from msrr_localization.tag_detection import wrap_angle
 from msrr_localization.tag_live_view import draw
 from msrr_localization.tag_tracker import TagTracker
+from msrr_localization.usbcam import UsbCam
 
 VEL_DT = 0.1   # s, finite difference used to map image velocities to the floor
 
@@ -51,10 +51,10 @@ class TagPoseNode(Node):
     def __init__(self):
         super().__init__('tag_pose_node')
         p = self.declare_parameter
-        p('ip', '192.168.72.114')
-        p('framesize', 10)                 # 10 = XGA 1024x768, must match the calibration
-        p('exposure', 100)                 # aec_value in sensor lines; -1 = auto
-        p('configure_camera', True)
+        p('device', 'C270')                # webcam name (part of), /dev/videoN or index
+        p('width', 1280)                   # must match the calibration
+        p('height', 720)
+        p('exposure', -1)                  # 100 us units; -1 = auto
         p('tag_map', ['1:module_1', '2:module_2', '3:module_3'])
         p('pose_topic', 'tag/odom')
         p('world_frame', 'world')
@@ -67,10 +67,10 @@ class TagPoseNode(Node):
         p('image_every', 2)                # publish every n-th frame
 
         g = lambda name: self.get_parameter(name).value  # noqa: E731
-        self.ip = g('ip')
-        self.framesize = g('framesize')
+        self.device = g('device')
+        self.width = g('width')
+        self.height = g('height')
         self.exposure = g('exposure')
-        self.configure_camera = g('configure_camera')
         self.tag_map = parse_tag_map(g('tag_map'))
         self.world_frame = g('world_frame')
         self.m_per_px = g('m_per_px')
@@ -97,18 +97,15 @@ class TagPoseNode(Node):
         self.tf = TransformBroadcaster(self)
 
         self.get_logger().info(
-            f'camera {self.ip}, tags ' + ', '.join(f'{i}->{m}' for i, m in self.tag_map.items()))
+            f'camera {self.device} {self.width}x{self.height}, tags '
+            + ', '.join(f'{i}->{m}' for i, m in self.tag_map.items()))
         self.thread = threading.Thread(target=self.camera_loop, daemon=True)
         self.thread.start()
 
     # ------------------------------------------------------------ camera thread
     def camera_loop(self):
-        cam = EspCam(self.ip)
-        if self.configure_camera:
-            try:
-                cam.configure(self.framesize, None if self.exposure < 0 else self.exposure)
-            except Exception as e:  # noqa: BLE001
-                self.get_logger().warn(f'could not configure the camera ({e}); using its settings')
+        cam = UsbCam(self.device, self.width, self.height)
+        cam.configure(exposure=None if self.exposure < 0 else self.exposure)
         n = 0
         for frame, t_cam in cam.frames(log=self.get_logger().info):
             if not rclpy.ok():

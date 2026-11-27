@@ -1,7 +1,7 @@
 """
-Live view of AprilTag tracking from the ESP32-CAM.
+Live view of AprilTag tracking from the USB webcam.
 
-  ros2 run msrr_localization tag_live_view --ip 192.168.72.114
+  ros2 run msrr_localization tag_live_view --device C270
 
 Thin red arrow = raw detection, thick cyan arrow = Kalman filtered pose
 (latency-compensated; grey + PRED when the tag is missed), yellow = where the tag
@@ -13,8 +13,8 @@ import time
 import cv2
 import numpy as np
 
-from msrr_localization.espcam import EspCam, FRAMESIZE_XGA
 from msrr_localization.tag_tracker import TagTracker
+from msrr_localization.usbcam import UsbCam
 
 
 def _arrow(img, x, y, th, length, color, thick):
@@ -41,16 +41,16 @@ def draw(frame, tracker, poses, show_raw=True):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[1])
-    ap.add_argument('--ip', default='192.168.72.114')
-    ap.add_argument('--framesize', type=int, default=FRAMESIZE_XGA)
-    ap.add_argument('--exposure', type=int, default=100,
-                    help='aec_value in sensor lines; -1 = auto exposure')
-    ap.add_argument('--no-config', action='store_true', help='leave camera settings as they are')
+    ap.add_argument('--device', default='C270',
+                    help='webcam name (part of), /dev/videoN or index')
+    ap.add_argument('--width', type=int, default=1280)
+    ap.add_argument('--height', type=int, default=720)
+    ap.add_argument('--exposure', type=int, default=-1,
+                    help='exposure in 100 us units (lower = less blur, darker); -1 = auto')
     args, _ = ap.parse_known_args(argv)              # ignore ROS args from ros2 run
 
-    cam = EspCam(args.ip)
-    if not args.no_config:
-        cam.configure(args.framesize, None if args.exposure < 0 else args.exposure)
+    cam = UsbCam(args.device, args.width, args.height)
+    cam.configure(exposure=None if args.exposure < 0 else args.exposure)
     tracker = TagTracker()
 
     show_bin, show_raw = False, True

@@ -1,9 +1,9 @@
 """
-AprilTag localization of the real modules (overhead ESP32-CAM), optionally with RViz.
+AprilTag localization of the real modules (overhead USB webcam), optionally with RViz.
 
     ros2 launch msrr_localization localization.launch.py
 
-config:=<file>  parameter file (default config/tag_pose.yaml: camera IP, tag map)
+config:=<file>  parameter file (default config/tag_pose.yaml: camera device, tag map)
 rviz:=false     no RViz
 Calibrate the floor first: ros2 run msrr_localization tag_calibrate --help
 """

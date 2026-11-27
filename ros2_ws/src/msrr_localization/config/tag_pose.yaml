@@ -1,9 +1,9 @@
 tag_pose_node:
   ros__parameters:
-    ip: '192.168.72.114'
-    framesize: 10              # 10 = XGA 1024x768; must match the calibration
-    exposure: 100              # aec_value in sensor lines (~0.053 ms each); -1 = auto
-    configure_camera: true
+    device: 'C270'             # webcam name (part of), /dev/videoN or index
+    width: 1280                # must match the calibration
+    height: 720
+    exposure: -1               # 100 us units (lower = less blur, darker); -1 = auto
     # '<tag id>:<module>', one per module. Tags not listed are drawn red in RViz.
     tag_map: ['1:module_1', '2:module_2', '3:module_3']
     pose_topic: tag/odom       # -> /module_i/tag/odom (algo_real.yaml reads this)

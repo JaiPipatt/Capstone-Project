@@ -18,15 +18,15 @@ Visualization Manager:
     Cell Size: 0.1
     Color: 160; 160; 164
     Plane: XY
-    Plane Cell Count: 30
+    Plane Cell Count: 20
     Normal Cell Count: 0
     Reference Frame: <Fixed Frame>
     Line Style:
       Line Width: 0.03
       Value: Lines
     Offset:
-      X: 0
-      Y: 0
+      X: 0.8
+      Y: -0.4
       Z: 0
   - Class: rviz_default_plugins/TF
     Name: TF
@@ -39,6 +39,17 @@ Visualization Manager:
     Update Interval: 0
     Frame Timeout: 2
   - Class: rviz_default_plugins/MarkerArray
+    Name: Plan (algo_node)
+    Enabled: true
+    Value: true
+    Namespaces: {}
+    Topic:
+      Depth: 5
+      Durability Policy: Volatile
+      History Policy: Keep Last
+      Reliability Policy: Reliable
+      Value: /algo/markers
+  - Class: rviz_default_plugins/MarkerArray
     Name: Tags (tag_pose_node)
     Enabled: true
     Value: true
@@ -49,6 +60,78 @@ Visualization Manager:
       History Policy: Keep Last
       Reliability Policy: Reliable
       Value: /tag/markers
+  - Class: rviz_default_plugins/Odometry
+    Name: Fused module_1
+    Enabled: true
+    Value: true
+    Keep: 1
+    Position Tolerance: 0.001
+    Angle Tolerance: 0.01
+    Shape:
+      Value: Arrow
+      Color: 255; 120; 0
+      Alpha: 1
+      Shaft Length: 0.12
+      Shaft Radius: 0.008
+      Head Length: 0.03
+      Head Radius: 0.02
+    Covariance:
+      Value: false
+    Topic:
+      Depth: 5
+      Durability Policy: Volatile
+      Filter size: 10
+      History Policy: Keep Last
+      Reliability Policy: Reliable
+      Value: /module_1/fused/odom
+  - Class: rviz_default_plugins/Odometry
+    Name: Fused module_2
+    Enabled: true
+    Value: true
+    Keep: 1
+    Position Tolerance: 0.001
+    Angle Tolerance: 0.01
+    Shape:
+      Value: Arrow
+      Color: 0; 200; 80
+      Alpha: 1
+      Shaft Length: 0.12
+      Shaft Radius: 0.008
+      Head Length: 0.03
+      Head Radius: 0.02
+    Covariance:
+      Value: false
+    Topic:
+      Depth: 5
+      Durability Policy: Volatile
+      Filter size: 10
+      History Policy: Keep Last
+      Reliability Policy: Reliable
+      Value: /module_2/fused/odom
+  - Class: rviz_default_plugins/Odometry
+    Name: Fused module_3
+    Enabled: true
+    Value: true
+    Keep: 1
+    Position Tolerance: 0.001
+    Angle Tolerance: 0.01
+    Shape:
+      Value: Arrow
+      Color: 200; 0; 255
+      Alpha: 1
+      Shaft Length: 0.12
+      Shaft Radius: 0.008
+      Head Length: 0.03
+      Head Radius: 0.02
+    Covariance:
+      Value: false
+    Topic:
+      Depth: 5
+      Durability Policy: Volatile
+      Filter size: 10
+      History Policy: Keep Last
+      Reliability Policy: Reliable
+      Value: /module_3/fused/odom
   - Class: rviz_default_plugins/Image
     Name: Tag camera
     Enabled: true

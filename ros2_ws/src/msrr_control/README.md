@@ -18,10 +18,10 @@ Dependencies: ROS 2 (Humble/Fortress setup used here), `numpy`, `scipy`,
 
 | | Simulation | Real robot |
 |---|---|---|
-| Launch file | `algo_sim.launch.py` | `algo_real.launch.py` |
+| Launch file | `algo_sim.launch.py` | `msrr_localization localization.launch.py` + `algo_real.launch.py` |
 | Parameters | `config/algo_sim.yaml` | `config/algo_real.yaml` |
-| Poses from | `/module_i/ground_truth/odom` (Gazebo) | `/module_i/tag/odom` (`tag_pose_node`) |
-| RViz config | `rviz/sim.rviz` | `rviz/real.rviz` (+ camera image, tag markers) |
+| Poses from | `/module_i/ground_truth/odom` (Gazebo) | `/module_i/fused/odom` (camera + encoders, `fusion_node`) |
+| RViz config | `rviz/sim.rviz` | `msrr_localization/rviz/localization.rviz` (opened by localization) |
 
 ## Run the assembly in simulation
 
@@ -47,14 +47,14 @@ runs the assembly. Log line `assembly finished` means done.
 ## Run the assembly on the real modules
 
 Before: hotspot and micro-ROS agent running, modules on (see
-`communcation/README.md`), camera IP and tag map set in
-`msrr_localization/config/tag_pose.yaml`, floor calibrated.
+`communcation/README.md`), camera, tag map and anchor tags set in
+`msrr_localization/config/tag_pose.yaml`.
 
 ```bash
-# Check localization first: tags in RViz, modules do not move
-ros2 launch msrr_control algo_real.launch.py algo:=false
+# Terminal 1: localization (camera + encoder fusion) and RViz; check the poses
+ros2 launch msrr_localization localization.launch.py
 
-# Then run the assembly
+# Terminal 2: the assembly (stop with Ctrl+C, localization keeps running)
 ros2 launch msrr_control algo_real.launch.py
 ```
 
@@ -76,8 +76,9 @@ namespace each (they can be switched on and off in RViz):
 
 Phase colours: grey wait, orange navigate/adjust, yellow approach, purple
 wheel_dock, green done, red failed or stale pose.
-On the real robot `real.rviz` also shows `/tag/markers` (tag poses, grey =
-predicted) and `/tag/debug_image` (camera view with detections).
+On the real robot the RViz opened by `localization.launch.py` shows the plan plus
+`/tag/markers` (tag poses, grey = predicted, yellow = anchors), the fused poses
+`/module_i/fused/odom` and `/tag/debug_image` (camera view with detections).
 
 ### Launch arguments
 
@@ -90,9 +91,11 @@ predicted) and `/tag/debug_image` (camera view with detections).
 | | `gazebo` | `true` | `false` = Gazebo already running |
 | | `rviz` | `true` | `false` = no RViz |
 | | `gui`, `spacing` | | passed to `sim.launch.py` |
-| `algo_real.launch.py` | `algo` | `true` | `false` = localization + RViz only, modules do not move |
+| `algo_real.launch.py` | `params` | `config/algo_real.yaml` | `algo_node` parameters (planner only) |
+| `localization.launch.py` (msrr_localization) | `config` | `config/tag_pose.yaml` | `tag_pose_node` parameters |
+| | `fusion` | `true` | `false` = camera only (then `pose_topic: tag/odom`) |
+| | `fusion_config` | `config/fusion.yaml` | `fusion_node` parameters |
 | | `rviz` | `true` | `false` = no RViz |
-| | `tag_config` | `msrr_localization/config/tag_pose.yaml` | `tag_pose_node` parameters |
 | `teleop.launch.py` | `module` | `module_1` | module to drive by keyboard |
 | | `sim` | `true` | `false` = do not start Gazebo (real robot) |
 | | `gui`, `num_modules`, `spacing` | | passed to `sim.launch.py` |
